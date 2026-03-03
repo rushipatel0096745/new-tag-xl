@@ -6,10 +6,12 @@ interface filter {
     text?: string;
 }
 
+import { decryptData } from "@/app/utils/encryption";
 import { getBySessionName } from "@/app/utils/helper";
 
 export const getCompanyList = async function (page: number, filters: filter[]) {
-    const sessionId = await getBySessionName("user-session");
+    // const sessionId = await getBySessionName("user-session");
+    const sessionId = await getSessionId();
 
     if (sessionId) {
         try {
@@ -35,7 +37,8 @@ export const getCompanyList = async function (page: number, filters: filter[]) {
 };
 
 export const getCompanyColumns = async () => {
-    const sessionId = await getBySessionName("user-session");
+    // const sessionId = await getBySessionName("user-session");
+    const sessionId = await getSessionId();
 
     if (sessionId) {
         try {
@@ -57,4 +60,18 @@ export const getCompanyColumns = async () => {
             console.log("error: ", error);
         }
     }
+};
+
+export const getUserData = async () => {
+    const encryptedUserData = await getBySessionName("user-session");
+    const userData = decryptData(encryptedUserData);
+    const user = userData?.user;
+    return user;
+};
+
+export const getSessionId = async () => {
+    const encryptedUserData = await getBySessionName("user-session");
+    const userData = decryptData(encryptedUserData);
+    const sessionId = userData?.sid;
+    return sessionId;
 };

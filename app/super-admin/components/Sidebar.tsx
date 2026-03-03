@@ -1,7 +1,10 @@
+"use client";
+
 import Link from "next/link";
-import React from "react";
+import React, { useState } from "react";
 
 const Sidebar = () => {
+    const [showMenu, setShowMenu] = useState(false);
     return (
         <div>
             <div className='flex items-center justify-center border-b-white border-b-1 text-white mt-5 mb-0 p-2 text-2xl'>
@@ -17,9 +20,7 @@ const Sidebar = () => {
                 </li>
                 <hr className=' border-white' />
                 <li>
-                    <Link
-                        href='/super-admin'
-                        className='flex items-center px-4 py-1.5 rounded-base hover:bg-red-500'>
+                    <Link href='/super-admin' className='flex items-center px-4 py-1.5 rounded-base hover:bg-red-500'>
                         <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
                             <g clipPath='url(#clip0_1292_1107)'>
                                 <path
@@ -48,9 +49,9 @@ const Sidebar = () => {
                     </Link>
                 </li>
                 <li>
-                    <Link
-                        href='/super-admin/users-and-roles'
-                        className='flex items-center px-4 py-1.5 text-body rounded-base hover:bg-red-500'>
+                    <div
+                        onMouseEnter={() => setShowMenu((prev) => !prev)}
+                        className='flex items-center px-4 py-1.5 text-body rounded-base hover:bg-red-500 group relative'>
                         <svg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 18 18' fill='none'>
                             <g clipPath='url(#clip0_1292_1107)'>
                                 <path
@@ -64,7 +65,24 @@ const Sidebar = () => {
                             </defs>
                         </svg>
                         <span className='ms-5'>User and Roles</span>
-                    </Link>
+                    </div>
+                </li>
+                <li onMouseLeave={() => setShowMenu((prev) => !prev)}>
+                    {showMenu && (
+                        <>
+                            <Link
+                                href='/super-admin/users-and-roles/users'
+                                className='flex items-center px-4 py-1.5 text-body rounded-base hover:bg-red-500'>
+                                <span className='ms-5'>Users</span>
+                            </Link>
+
+                            <Link
+                                href='/super-admin/users-and-roles/roles'
+                                className='flex items-center px-4 py-1.5 text-body rounded-base hover:bg-red-500'>
+                                <span className='ms-5'>Roles</span>
+                            </Link>
+                        </>
+                    )}
                 </li>
             </ul>
         </div>

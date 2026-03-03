@@ -1,5 +1,6 @@
 "use server";
 
+import { encryptData } from "@/app/utils/encryption";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 
@@ -31,12 +32,14 @@ export const login = async function (prevState: any, formData: FormData) {
         }
         console.log(result);
 
+        const encryptedData = encryptData(result);
+
         const cookieStore = await cookies();
-        cookieStore.set("user-session", result.sid, {
-            httpOnly: true, 
-            secure: false,
-            maxAge: 60 * 60 * 24 * 7, 
-            path: "/", 
+        cookieStore.set("user-session", encryptedData, {
+            httpOnly: false,
+            secure: process.env.NODE_ENV === "production",
+            maxAge: 60 * 60 * 24 * 7,
+            path: "/",
         });
 
         return {
@@ -45,6 +48,7 @@ export const login = async function (prevState: any, formData: FormData) {
         };
 
     } catch (error) {
+        console.log("error message: ", error)
         return {
             success: false,
             error: "Failed to connect to the server",

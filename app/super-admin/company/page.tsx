@@ -1,7 +1,8 @@
 "use client";
 
-import { getCompanyColumns, getCompanyList } from "@/app/services/super-admin/companyList";
+import { getCompanyColumns, getCompanyList, getUserData } from "@/app/services/super-admin/companyList";
 import { getBySessionName } from "@/app/utils/helper";
+import { Span } from "next/dist/trace";
 import Link from "next/link";
 import React, { Suspense, useEffect, useState } from "react";
 
@@ -25,36 +26,52 @@ interface Company {
     updated_at: string;
 }
 
-interface filter {
+interface Filter {
     field?: string;
     condition: string;
     text?: string;
 }
 
-interface column {
+interface Column {
     name: string;
     type: string;
 }
+
+const EMPTY_FILTER: Filter = { field: "", condition: "", text: "" };
 
 const CompanyPage = () => {
     const [sessionId, setSessionId] = useState<string>("");
     const [companyList, setCompanyList] = useState<Company[]>([]);
     const [page, setPage] = useState<number>(1);
-    const [filters, setFilters] = useState<filter[]>([]);
-    const [columns, setColumns] = useState<column[]>([]);
+    // const [filters, setFilters] = useState<filter[]>([]);
+
+    const [appliedFilters, setAppliedFilters] = useState<Filter[]>([]);
+
+    const [draftFilters, setDraftFilters] = useState<Filter[]>([{ ...EMPTY_FILTER }]);
+
+    const [columns, setColumns] = useState<Column[]>([]);
     const [conditions, setConditions] = useState<any>({});
     const [showFilter, setShowFilter] = useState<boolean>(false);
 
+    const [permissions, setPermissions] = useState<any[]>([]);
+
+    async function getUser() {
+        const user = await getUserData();
+        const permissions =user?.role?.permission?.company;
+        setPermissions(permissions);
+    }
+
     useEffect(() => {
-        const fetchSessionId = async () => {
-            const id = await getBySessionName("user-session");
-            setSessionId(id || "");
-        };
-        fetchSessionId();
+        // const fetchSessionId = async () => {
+        //     const id = await getBySessionName("user-session");
+        //     setSessionId(id || "");
+        // };
+        // fetchSessionId();
+        getUser();
     }, []);
 
     async function getList() {
-        const companies = await getCompanyList(page, filters);
+        const companies = await getCompanyList(page, appliedFilters);
         setCompanyList(companies || []);
     }
 
@@ -67,15 +84,39 @@ const CompanyPage = () => {
 
     useEffect(() => {
         getList();
-    }, [page, filters, sessionId]);
+        console.log('filters: ', appliedFilters)
+    }, [page, appliedFilters, sessionId]);
 
     useEffect(() => {
         getColumns();
     }, []);
 
-    function handleRest() {
+    function updateDraftFilter(index: number, key: keyof Filter, value: string) {
+        setDraftFilters((prev) => {
+            const updated = [...prev];
+            updated[index] = { ...updated[index], [key]: value };
+            return updated;
+        });
+    }
+
+    function addFilterRow() {
+        setDraftFilters((prev) => [...prev, { ...EMPTY_FILTER }]);
+    }
+
+    function removeFilterRow(index: number) {
+        setDraftFilters((prev) => prev.filter((_, i) => i !== index));
+    }
+
+    function handleApply() {
+        const valid = draftFilters.filter((f) => f.field && f.condition && f.text);
+        setAppliedFilters(valid);
         setPage(1);
-        setFilters([]);
+    }
+
+    function handleReset() {
+        setPage(1);
+        setAppliedFilters([]);
+        setDraftFilters([{ ...EMPTY_FILTER }]);
     }
 
     return (
@@ -87,15 +128,18 @@ const CompanyPage = () => {
             <div className='filters  border-2 border-black p-4 rounded-2xl mb-10'>
                 <div className='flex justify-between border-2 border-black p-4 rounded-2xl mb-5'>
                     <div className='title items-center'>
-                        <button className='text-xl' onClick={() => setShowFilter((prev) => !prev)}>
+                        <button className='text-xl cursor-pointer' onClick={() => setShowFilter((prev) => !prev)}>
                             Filters
                         </button>
                     </div>
                     <div className='actions'>
-                        <button className='border-2 rounded-2xl p-1 mr-2' type='button' onClick={handleRest}>
+                        <button
+                            className='border-2 rounded-2xl p-1 mr-2 cursor-pointer'
+                            type='button'
+                            onClick={handleReset}>
                             Reset
                         </button>
-                        <button className='border-2 rounded-2xl p-1' type='button'>
+                        <button className='border-2 rounded-2xl p-1 cursor-pointer' type='button' onClick={handleApply} >
                             Apply filter
                         </button>
                     </div>
@@ -103,45 +147,66 @@ const CompanyPage = () => {
 
                 {showFilter && (
                     <>
-                        <div className='grid grid-cols-[1fr_28px] gap-4 items-end'>
-                            <div className='flex gap-6 w-full'>
-                                <div className='flex-1'>
-                                    <label className='block text-sm font-medium text-gray-700'>Select the column</label>
-                                    <select id='columns' className='mt-1 w-full rounded-md border-2 border-gray-500'>
-                                        <option value=''>Select the column</option>
-                                        {columns.map((col) => (
-                                            <option value={col.name} key={col.name}>
-                                                {col.name}
-                                            </option>
-                                        ))}
-                                    </select>
+                        {draftFilters.map((filter, index) => (
+                            <div key={index} className='grid grid-cols-[1fr_28px] gap-4 items-end mb-4'>
+                                <div className='flex gap-6 w-full'>
+                                    <div className='flex-1'>
+                                        <label className='block text-sm font-medium text-gray-700'>
+                                            Select the column
+                                        </label>
+                                        <select
+                                            className='mt-1 w-full rounded-md border-2 border-gray-500'
+                                            value={filter.field}
+                                            onChange={(e) => updateDraftFilter(index, "field", e.target.value)}>
+                                            <option value=''>Select the column</option>
+                                            {columns.map((col) => (
+                                                <option value={col.name} key={col.name}>
+                                                    {col.name}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className='flex-1'>
+                                        <label className='block text-sm font-medium text-gray-700'>
+                                            Select the condition
+                                        </label>
+                                        <select
+                                            className='mt-1 w-full rounded-md border-2 border-gray-500'
+                                            value={filter.condition}
+                                            onChange={(e) => updateDraftFilter(index, "condition", e.target.value)}>
+                                            <option value=''>Select the condition</option>
+                                            {Object?.entries(conditions).map(([label, value]: any) => (
+                                                <option value={value} key={value}>
+                                                    {label}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div className='flex-1'>
+                                        <label className='block text-sm font-medium text-gray-700'>Enter value</label>
+                                        <input
+                                            type='text'
+                                            className='mt-1 w-full rounded-md border-2 border-gray-500'
+                                            value={filter.text}
+                                            onChange={(e) => updateDraftFilter(index, "text", e.target.value)}
+                                        />
+                                    </div>
                                 </div>
 
-                                <div className='flex-1'>
-                                    <label className='block text-sm font-medium text-gray-700'>
-                                        Select the condition
-                                    </label>
-                                    <select id='columns' className='mt-1 w-full rounded-md border-2 border-gray-500'>
-                                        <option value=''>Select the condition</option>
-                                        {Object?.entries(conditions).map(([label, value]) => (
-                                            <option value={value} key={value}>
-                                                {label}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-
-                                <div className='flex-1'>
-                                    <label className='block text-sm font-medium text-gray-700'>Enter value</label>
-                                    <input type='text' className='mt-1 w-full rounded-md border-2 border-gray-500' />
-                                </div>
+                                <button
+                                    className='text-red-500 hover:text-red-700'
+                                    onClick={() => removeFilterRow(index)}>
+                                    ✕
+                                </button>
                             </div>
-
-                            <button className='text-red-500 hover:text-red-700'>✕</button>
-                        </div>
+                        ))}
 
                         <div className='add-filter-field mt-3'>
-                          <button className="p-2 border rounded-xl">Add</button>
+                            <button className='p-2 border rounded-xl' onClick={addFilterRow}>
+                                + Add
+                            </button>
                         </div>
                     </>
                 )}
@@ -215,6 +280,10 @@ const CompanyPage = () => {
                                             </td>
                                             <td className='px-6 py-4'>{company.allowed_asset_limit}</td>
                                             <td className='px-6 py-4'>{company.subscription_validity}</td>
+                                            <td className='px-6 py-4'>
+                                                {permissions?.includes('update') && <span className="mr-2 border rounded-xl p-1">Update</span>}
+                                                {permissions?.includes('delete') && <span>Delete</span>}
+                                            </td>
                                         </tr>
                                     </Suspense>
                                 ))}
