@@ -294,3 +294,19 @@ const Users = () => {
 };
 
 export default Users;
+
+
+
+// import { Suspense } from "react";
+// import { getUsersList } from "@/app/services/super-admin/usersList";
+// import UsersTable from "../../components/UsersTable";
+
+// export default async function Page() {
+//   const users = await getUsersList(1, []);
+
+//   return (
+//     <Suspense fallback={<p className="text-2xl">Loading users...</p>}>
+//       <UsersTable initialUsers={users || []} />
+//     </Suspense>
+//   );
+// }
