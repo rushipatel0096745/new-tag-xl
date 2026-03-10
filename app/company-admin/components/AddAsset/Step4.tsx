@@ -1,9 +1,11 @@
-import React from 'react'
+import React from "react";
 
-const Step4 = () => {
-  return (
-    <div>Step4</div>
-  )
+interface Props {
+    prev: () => void;
 }
 
-export default Step4
+const Step4 = ({ prev }: Props) => {
+    return <div>Step4</div>;
+};
+
+export default Step4;

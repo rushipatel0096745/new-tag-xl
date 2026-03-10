@@ -54,11 +54,11 @@ const AssetAddPage = () => {
                                 </button>
                             </div>
                         </div>
-                    </div>
-                    <div className="asset-content">
-                      <form method="POST" className="block">
-                        <AddAsset />
-                      </form>
+                        <div className='card-box-body p-5.5'>
+                            <div className='asset-content'>
+                                <AddAsset />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

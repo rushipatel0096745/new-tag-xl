@@ -1,3 +1,5 @@
+"use server";
+
 import { getComapnyData, getCompanySessionId } from "./getComapnyData";
 
 export const getAllTagList = async function (page: number = 1, filters: any[] = []) {
@@ -14,7 +16,7 @@ export const getAllTagList = async function (page: number = 1, filters: any[] = 
                     "X-Company-ID": companyId,
                     "Content-Type": "application/json",
                 },
-                body: JSON  .stringify({
+                body: JSON.stringify({
                     page: page,
                     pageSize: 10,
                     filters: filters,
@@ -126,7 +128,7 @@ export const getTag = async function (id: number) {
 
     if (companyId && sessionId) {
         try {
-            const response = await fetch("https://tagxl.com/api/company/tag/get/"+id, {
+            const response = await fetch("https://tagxl.com/api/company/tag/get/" + id, {
                 method: "GET",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -137,7 +139,7 @@ export const getTag = async function (id: number) {
 
             const result = await response.json();
 
-            if(result.has_error) {
+            if (result.has_error) {
                 console.log(result);
                 return {
                     success: false,
@@ -151,7 +153,6 @@ export const getTag = async function (id: number) {
                 error: "",
                 data: result.tag,
             };
-
         } catch (error) {
             console.log("error: ", error);
             return {
@@ -161,14 +162,14 @@ export const getTag = async function (id: number) {
             };
         }
     } else {
-         return {
-                success: false,
-                error: "companyId or sessionId not found",
-                data: "",
-            };
+        return {
+            success: false,
+            error: "companyId or sessionId not found",
+            data: "",
+        };
     }
 };
- 
+
 export const updateTag = async function (id: number, prevState: any, formData: any) {
     "use server";
 
@@ -222,4 +223,58 @@ export const updateTag = async function (id: number, prevState: any, formData: a
     //             data: "",
     //         };
     // }
+};
+
+export const checkTagAssigned = async function (uid: string): Promise<{ success: boolean; message?: string; data?: any }> {
+    "use server";
+
+    const sessionId = await getCompanySessionId();
+    const companyData = await getComapnyData();
+    const companyId = companyData?.company_id;
+
+    if (companyId && sessionId) {
+        const response = await fetch("https://tagxl.com/api/company/tag/check-assigned", {
+            method: "POST",
+            headers: {
+                "X-Session-ID": sessionId,
+                "X-Company-ID": companyId,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ uid: uid }),
+        });
+
+        const result = await response.json();
+
+        if (result.has_error) {
+            // asset already assigned to the tag
+            if (result.error_code === "RECORD_ALREADY_USED") {
+                return {
+                    success: false,
+                    message: result.message,
+                };
+            }
+
+            // tag not found
+            if (result.error_code === "RECORD_NOT_FOUND") {
+                return {
+                    success: true,
+                    message: "tag not found",
+                };
+            }
+        }
+
+        // tag is created but not assigned to the any asset
+        if(!result.has_error) {
+            return {
+                success: true,
+                message: result.message,
+                data: result.tag
+            }
+        }
+    } else {
+        return {
+            success: false,
+            message: "session id or company id not found",
+        };
+    }
 };

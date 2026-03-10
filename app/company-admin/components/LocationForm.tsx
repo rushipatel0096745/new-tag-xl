@@ -132,7 +132,7 @@ const LocationForm = ({
                                 />
                                 <label
                                     htmlFor='name'
-                                    className=' absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none bg-transparent px-0.5 text-[14px] text-[#676767] transition-all duration-200
+                                    className='absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none bg-transparent px-0.5 text-[14px] text-[#676767] transition-all duration-200
                                                 peer-placeholder-shown:text-[14px] peer-placeholder-shown:top-1/2 peer-placeholder-shown:-translate-y-1/2
                                                 peer-focus:top-2 peer-focus:text-[10px]'>
                                     Location Name<span className='require ml-px text-red-600 inline-block'>*</span>

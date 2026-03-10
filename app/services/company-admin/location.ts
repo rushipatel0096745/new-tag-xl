@@ -1,3 +1,5 @@
+"use server";
+
 import { getComapnyData, getCompanySessionId } from "./getComapnyData";
 
 export const getAllLocations = async function (page: number = 1, filters: any[] = [], show_all_records: number = 0) {
