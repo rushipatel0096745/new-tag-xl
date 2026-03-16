@@ -3,7 +3,6 @@ import React, { Suspense } from "react";
 import AssetList from "../../components/AssetList";
 import Filter from "../../components/Filter";
 import { getAssetList } from "@/app/services/company-admin/assets";
-import { getComapnyData, getCompanySessionId } from "@/app/services/company-admin/getComapnyData";
 
 export interface Asset {
     id: number;

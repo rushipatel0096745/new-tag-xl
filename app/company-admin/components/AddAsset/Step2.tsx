@@ -63,6 +63,7 @@ const Step2 = ({ next, prev, updateForm, validate, errors, formData }: Props) =>
         } else {
             next();
         }
+        // next();
     };
 
     async function getLocations() {

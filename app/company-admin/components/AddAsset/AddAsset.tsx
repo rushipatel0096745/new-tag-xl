@@ -5,8 +5,13 @@ import Step1 from "./Step1";
 import Step4 from "./Step4";
 import Step3 from "./Step3";
 import Step2 from "./Step2";
+import { useRouter } from "next/navigation";
+import { createAsset } from "@/app/services/company-admin/assets";
 
 const AddAsset = () => {
+
+    const router = useRouter()
+
     const [currentStep, setCurrentStep] = useState(1);
 
     const [formData, setFormData] = useState({
@@ -16,11 +21,14 @@ const AddAsset = () => {
         name: "",
         location_id: "",
         batch_code: "",
-        image: null as File | null,
+        // image: null as File | null,
+        image: "",
         manual_template_id: "",
-        status: "",
-        oem_certificate: null as File | null,
-        third_party_certificate: null as File | null,
+        status: '',
+        // oem_certificate: null as File | null,
+        oem_certificate: "",
+        // third_party_certificate: null as File | null,
+        third_party_certificate: "",
         third_party_start_date: "",
         third_party_expiry_date: "",
         pre_use_template_id: "",
@@ -38,6 +46,34 @@ const AddAsset = () => {
             setErrors((prev: any) => ({ ...prev, [name]: "" }));
         }
     };
+
+    const handleSave = async function() {
+        // const data = formData
+        // console.log(data)
+
+        const assetFormData = new FormData();
+        assetFormData.append("tag_id", formData.tag_id)
+        assetFormData.append("name", formData.name)
+        assetFormData.append("location_id", formData.location_id)
+        assetFormData.append("batch_code", formData.batch_code)
+        assetFormData.append("image", formData.image)
+        assetFormData.append("manual_template_id", formData.manual_template_id)
+        assetFormData.append("status", formData.status || 0)
+        assetFormData.append("oem_certificate", formData.oem_certificate)
+        assetFormData.append("third_party_certificate", formData.third_party_certificate)
+        assetFormData.append("third_party_start_date", formData.third_party_start_date)
+        assetFormData.append("third_party_expiry_date", formData.third_party_expiry_date)
+        assetFormData.append("pre_use_template_id", formData.pre_use_template_id)
+        assetFormData.append("maintenance_template_id", formData.maintenance_template_id)
+
+        console.log([...assetFormData.entries()])
+
+        const response = await createAsset(assetFormData);
+
+        if(response.success) {
+            router.push("/company-admin/asset")
+        } 
+    }
 
     const requiredFields = ["tag_id", "name", "location_id", "batch_code", "oem_certificate"];
 
@@ -58,6 +94,11 @@ const AddAsset = () => {
 
         if (currentStep === 3) {
             if (!formData.oem_certificate) newErrors.oem_certificate = "OEM Certificate is required";
+        }
+
+        if(currentStep === 4) {
+            if(!formData.pre_use_template_id) newErrors.pre_use_template_id = "Selct the pre use template"
+            if(!formData.maintenance_template_id) newErrors.maintenance_template_id = "Selct the maintenance template"
         }
 
         setErrors(newErrors);
@@ -115,6 +156,7 @@ const AddAsset = () => {
                     validate={validate}
                     errors={errors}
                     formData={formData}
+                    handleSubmit={handleSave}
                 />
             )}
         </>

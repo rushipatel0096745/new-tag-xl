@@ -1,17 +1,25 @@
 import React, { useEffect } from "react";
 import PreuseTemplate from "./PreuseTemplate";
 import MaintenanceTemplate from "./MaintenanceTemplate";
+import BooleanInput from "./BooleanInput";
+import TextInput from "./TextInput";
 
 interface Props {
     next: () => void;
     prev: () => void;
     updateForm: (name: string, value: any) => void;
+    handleSubmit: () => void;
     validate: () => boolean;
     errors: any;
     formData: any;
 }
 
-const Step4 = ({ prev, next, updateForm, formData, validate, errors }: Props) => {
+const Step4 = ({ prev, next, updateForm, formData, validate, errors, handleSubmit }: Props) => {
+    const handleTemplateSubmit = function (e: React.SubmitEvent<HTMLFormElement>): void {
+        e.preventDefault();
+        handleSubmit();
+    };
+
     useEffect(() => console.log(formData));
     return (
         <form action='' method='POST' className='block'>
@@ -33,6 +41,7 @@ const Step4 = ({ prev, next, updateForm, formData, validate, errors }: Props) =>
                                                 <select
                                                     name='manual_template_id'
                                                     id='manual_template_id'
+                                                    onChange={(e) => updateForm("manual_template_id", e.target.value)}
                                                     className='form-select text-[#17181a] box-border bg-[#f5f6fa] border border-[#efefef] rounded-[10px] w-full h-[44px] pt-[18px] px-[14px] pb-[8px] font-sans text-[14px] font-medium'>
                                                     <option value=''>Select Manual Template</option>
                                                     <option value={2}>asd</option>
@@ -52,11 +61,11 @@ const Step4 = ({ prev, next, updateForm, formData, validate, errors }: Props) =>
                     </div>
                 </div>
                 <div className='col w-full'>
-                    <PreuseTemplate updateForm={updateForm} errors={errors}/>
+                    <PreuseTemplate updateForm={updateForm} errors={errors} />
                 </div>
 
                 <div className='col w-full'>
-                    <MaintenanceTemplate updateForm={updateForm} errors={errors}/>
+                    <MaintenanceTemplate updateForm={updateForm} errors={errors} />
                 </div>
             </div>
             <div className='actions-btn next_step-btn flex items-center justify-between gap-2 mt-6 '>
@@ -77,7 +86,7 @@ const Step4 = ({ prev, next, updateForm, formData, validate, errors }: Props) =>
                 <button
                     // onClick={handleSubmit}
                     type='submit'
-                    // onClick={handleSave}
+                    onClick={(e) => handleTemplateSubmit(e)}
                     className='btn continue py-2.5 pr-3 pl-3.5 ml-auto all-unset cursor-pointer text-center bg-[#263f94] border border-[#263f94] text-white box-border rounded-[40px] justify-center items-center gap-[6px] h-[38px] px-[14px] py-[10px] text-[14px] font-500 transition-all duration-200 inline-flex'>
                     Continue
                     <svg

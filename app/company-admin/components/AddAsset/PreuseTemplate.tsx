@@ -5,6 +5,7 @@ import {
 } from "@/app/services/company-admin/templates";
 import React, { useEffect, useState } from "react";
 import BooleanInput from "./BooleanInput";
+import TextInput from "./TextInput";
 
 interface Props {
     updateForm: (name: string, value: any) => void;
@@ -16,11 +17,21 @@ const PreuseTemplate = ({ updateForm, errors }: Props) => {
 
     const [selectOption, setSelectOption] = useState<string>();
 
-    const [questions, setQuestions] = useState<any>();
+    const [questions, setQuestions] = useState<any>([]);
 
-    const inputsArray = [<BooleanInput />];
+    const questionRenderer = function (questionType: string): React.ReactNode {
+        // console.log("question renderer called");
+        switch (questionType) {
+            case "boolean":
+                return <BooleanInput />;
+            case "text":
+                return <TextInput />;
+            default:
+                return <TextInput />;
+        }
+    };
 
-    function handleSelection(e) {
+    function handleSelection(e: any) {
         const value = e.target.value;
         if (value == "") {
             setQuestions([]);
@@ -29,6 +40,7 @@ const PreuseTemplate = ({ updateForm, errors }: Props) => {
 
         getQuestions(value);
         setSelectOption(value);
+        console.log("questions: ", questions);
     }
 
     async function getQuestions(id: number) {
@@ -47,6 +59,8 @@ const PreuseTemplate = ({ updateForm, errors }: Props) => {
 
     return (
         <div className='card-box-inner border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
+            <pre>{JSON.stringify(questions, null, 2)}</pre>
+
             <div className='card-box-block pre-use-template is-active block'>
                 <div className='card-box-block_head mb-4'>
                     <h4 className='h3 title text-[18px] font-semibold leading-6'>Pre use check template</h4>
@@ -87,45 +101,37 @@ const PreuseTemplate = ({ updateForm, errors }: Props) => {
                             </div>
                         </div>
                         <div className='col w-full'>
-                            {questions.length !== 0 &&
-                                questions.map((q) => (
-                                    <div className='card-box-inner border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
-                                        <h3 className='h3 title mb-4 title text-[18px] font-semibold leading-6'>
-                                            All Questions
-                                        </h3>
-                                        <div className='all-questions-wrapper'>
-                                            <h5 className='h5 title mb-3 text-[14px] font-semibold leading-6'>
-                                                Template Questions
-                                            </h5>
-                                            <ul className='template-questions bg-[#f5f6fa] border border-solid border-[#efefef] px-4 pt-4 pl-8 flex flex-col gap-[6px] list-none'>
-                                                <li className='list-item'>
+                            {questions.length !== 0 && (
+                                <div className='card-box-inner border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
+                                    <h3 className='h3 title mb-4 text-[18px] font-semibold leading-6'>All Questions</h3>
+
+                                    <div className='all-questions-wrapper'>
+                                        <h5 className='h5 title mb-3 text-[14px] font-semibold leading-6'>
+                                            Template Questions
+                                        </h5>
+
+                                        <ul className='template-questions bg-[#f5f6fa] border border-solid border-[#efefef] px-4 pt-4 pl-8 flex flex-col gap-[6px] list-none'>
+                                            {questions.map((q: any) => (
+                                                <li key={q.id} className='list-item'>
                                                     <div className='template-question-item w-full'>
                                                         <p className='question font-semibold'>{q.question}</p>
-                                                        <div className='template-question-item-type mt-4'>
-                                                            <div className='template-question-item-type_label mb-2.5 text-[#797979]'>
-                                                                Question Type :
-                                                            </div>
-                                                            <BooleanInput/>
-                                                            <hr className='border-0 m-4 border-t border-solid border-[#ebebeb] h-px p-0 block' />
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                {/* <li className='list-item'>
-                                                    <div className='template-question-item w-full'>
-                                                        <p className='question font-semibold'>Remarks?</p>
+
                                                         <div className='template-question-item-type mt-4'>
                                                             <div className='template-question-item-type_label mb-2.5 text-[#797979]'>
                                                                 Question Type :
                                                             </div>
 
-                                                            <hr className='border-0 border-t border-solid border-[#ebebeb] h-px p-0 block m-4' />
+                                                            {questionRenderer(q.type)}
+
+                                                            <hr className='border-0 m-4 border-t border-solid border-[#ebebeb]' />
                                                         </div>
                                                     </div>
-                                                </li> */}
-                                            </ul>
-                                        </div>
+                                                </li>
+                                            ))}
+                                        </ul>
                                     </div>
-                                ))}
+                                </div>
+                            )}
                         </div>
                         <div className='col w-full'>
                             <div className='card-box-inner  border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>

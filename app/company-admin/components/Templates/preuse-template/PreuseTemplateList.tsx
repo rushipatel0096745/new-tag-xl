@@ -1,42 +1,32 @@
-"use client"
+"use client";
 
+import {
+    PreuseQuestion,
+    PreuseTemplate,
+} from "@/app/company-admin/(admin)/template-master/pre-use-check-template/page";
 import Link from "next/link";
 import React, { useState } from "react";
-import { Asset } from "../(admin)/asset/page";
-import { deleteAsset } from "@/app/services/company-admin/assets";
-import { useRouter } from "next/navigation";
 
-interface AssetProps {
-    assets: Asset[];
+interface Props {
+    list: PreuseTemplate[];
 }
 
-const AssetList = ({ assets }: AssetProps) => {
-
-    const router = useRouter();
-
-    const [showMsg, setShowMsg] = useState<string>('')
-
-    const handleDelete = async function (id: number) {
-        const response = await deleteAsset(id)
-        if(response.success) {
-            setShowMsg("Asset deleted successfully")
-            router.refresh()
-        } else {
-            setShowMsg("Failed to delet the Asset")
-        }
-    }
+const PreuseTemplateList = ({ list }: Props) => {
+    const [showMsg, setShowMsg] = useState("");
 
     return (
         <div className='card-box bg-[#fff] border-gray-700 rounded-[18px] shadow-3xl shadow-white px-3 py-5.5'>
             <div className='card-box_head border-b border-b-[#ededed] px-4 py-5.5 flex justify-between items-center'>
-                <h3 className='h3 text-[18px] font-semibold leading-6'>Asset List</h3>
-                {
-                    showMsg && <div className="text-yellow-600"><p>{showMsg}</p></div>
-                }
+                <h3 className='h3 text-[18px] font-semibold leading-6'>Preuse Template List</h3>
+                {showMsg && (
+                    <div className='text-yellow-600'>
+                        <p>{showMsg}</p>
+                    </div>
+                )}
                 <div className='actions-btn flex gap-2 items-center'>
                     <Link
                         className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
-                        href='/company-admin/asset/add'>
+                        href='/company-admin/template-master/pre-use-check-template/add'>
                         <span className='icon-circle'>
                             <svg
                                 xmlns='http://www.w3.org/2000/svg'
@@ -52,7 +42,67 @@ const AssetList = ({ assets }: AssetProps) => {
                                 />
                             </svg>
                         </span>
-                        <span className='button-label text-[#1a1a1a] capitalize ml-2'>Add asset</span>
+                        <span className='button-label text-[#1a1a1a] capitalize ml-2'>Add</span>
+                    </Link>
+                    <Link
+                        className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
+                        href='/company-admin/template-master/manual-template'>
+                        <span className='icon-circle'>
+                            <svg
+                                xmlns='http://www.w3.org/2000/svg'
+                                width={20}
+                                height={20}
+                                viewBox='0 0 20 20'
+                                fill='none'>
+                                <path
+                                    fillRule='evenodd'
+                                    clipRule='evenodd'
+                                    d='M10 4C10.355 4 10.6429 4.28782 10.6429 4.64286V9.35714H15.3571C15.7122 9.35714 16 9.64496 16 10C16 10.355 15.7122 10.6429 15.3571 10.6429H10.6429V15.3571C10.6429 15.7122 10.355 16 10 16C9.64496 16 9.35714 15.7122 9.35714 15.3571V10.6429H4.64286C4.28782 10.6429 4 10.355 4 10C4 9.64496 4.28782 9.35714 4.64286 9.35714H9.35714V4.64286C9.35714 4.28782 9.64496 4 10 4Z'
+                                    fill='#845ADF'
+                                />
+                            </svg>
+                        </span>
+                        <span className='button-label text-[#1a1a1a] capitalize ml-2'>Manual Template</span>
+                    </Link>
+                    <Link
+                        className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
+                        href='/company-admin/template-master/maintenance-check-template'>
+                        <span className='icon-circle'>
+                            <svg
+                                xmlns='http://www.w3.org/2000/svg'
+                                width={20}
+                                height={20}
+                                viewBox='0 0 20 20'
+                                fill='none'>
+                                <path
+                                    fillRule='evenodd'
+                                    clipRule='evenodd'
+                                    d='M10 4C10.355 4 10.6429 4.28782 10.6429 4.64286V9.35714H15.3571C15.7122 9.35714 16 9.64496 16 10C16 10.355 15.7122 10.6429 15.3571 10.6429H10.6429V15.3571C10.6429 15.7122 10.355 16 10 16C9.64496 16 9.35714 15.7122 9.35714 15.3571V10.6429H4.64286C4.28782 10.6429 4 10.355 4 10C4 9.64496 4.28782 9.35714 4.64286 9.35714H9.35714V4.64286C9.35714 4.28782 9.64496 4 10 4Z'
+                                    fill='#845ADF'
+                                />
+                            </svg>
+                        </span>
+                        <span className='button-label text-[#1a1a1a] capitalize ml-2'>Maintenance Check Template</span>
+                    </Link>
+                    <Link
+                        className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
+                        href='/company-admin/template-master/pre-use-check-template'>
+                        <span className='icon-circle'>
+                            <svg
+                                xmlns='http://www.w3.org/2000/svg'
+                                width={20}
+                                height={20}
+                                viewBox='0 0 20 20'
+                                fill='none'>
+                                <path
+                                    fillRule='evenodd'
+                                    clipRule='evenodd'
+                                    d='M10 4C10.355 4 10.6429 4.28782 10.6429 4.64286V9.35714H15.3571C15.7122 9.35714 16 9.64496 16 10C16 10.355 15.7122 10.6429 15.3571 10.6429H10.6429V15.3571C10.6429 15.7122 10.355 16 10 16C9.64496 16 9.35714 15.7122 9.35714 15.3571V10.6429H4.64286C4.28782 10.6429 4 10.355 4 10C4 9.64496 4.28782 9.35714 4.64286 9.35714H9.35714V4.64286C9.35714 4.28782 9.64496 4 10 4Z'
+                                    fill='#845ADF'
+                                />
+                            </svg>
+                        </span>
+                        <span className='button-label text-[#1a1a1a] capitalize ml-2'>Pre Use Chcek Template</span>
                     </Link>
                 </div>
             </div>
@@ -63,64 +113,33 @@ const AssetList = ({ assets }: AssetProps) => {
                         <table className='table text-left border-collapse w-full text-[#111c43] border rounded-md text-[14px] leading-5 overflow-hidden'>
                             <thead className='bg-[#f5f6fa] table-header-group align-middle'>
                                 <tr className='table-row border border-solid border-[#f5f6f1]'>
-                                    <th style={{ width: 50 }} className='p-2 font-medium'>
+                                    <th style={{ width: 25 }} className='p-2 font-medium'>
                                         Id
                                     </th>
-                                    <th style={{ width: "calc(26% - 50px)" }} className='p-2 font-medium'>
-                                        UID
+                                    <th style={{ width: 50 }} className='p-2 font-medium'>
+                                        Template Title
                                     </th>
-                                    <th style={{ width: "18%" }} className='p-2 font-medium'>
-                                        Asset Name
-                                    </th>
-                                    <th style={{ width: "14%" }} className='p-2 font-medium'>
-                                        Tag Type
-                                    </th>
-                                    <th style={{ width: "14%" }} className='p-2 font-medium'>
-                                        Batch Code
-                                    </th>
-                                    <th style={{ width: "14%" }} className='p-2 font-medium'>
-                                        Status
-                                    </th>
-                                    <th style={{ width: "14%" }} className='p-2 font-medium'>
+
+                                    <th style={{ width: 25 }} className='p-2 font-medium'>
                                         Action
                                     </th>
                                 </tr>
                             </thead>
                             <tbody className='table-row-group align-middle '>
-                                {assets?.map((asset) => {
+                                {list?.map((temp) => {
                                     return (
                                         <tr
                                             className='table-row border-1 border-solid border-[#f5f6f1] align-middle'
-                                            key={asset.id}>
-                                            <td className='text-[13px] p-2 font-medium text-[#474a54]'>{asset.id}</td>
-                                            <td className='text-[13px] p-2 font-medium text-[#474a54]'>
-                                                {asset.tag.uid}
-                                            </td>
-                                            <td className='text-[13px] p-2 font-medium text-[#474a54]'>{asset.name}</td>
-                                            <td className='text-[13px] p-2 font-medium text-[#474a54]'>
-                                                {asset.tag.tag_type}
-                                            </td>
-                                            <td className='text-[13px] p-2 font-medium text-[#474a54]'>
-                                                {asset.batch_code}
-                                            </td>
-                                            <td className='text-[13px] p-2 font-medium text-[#474a54]'>
-                                                {asset.status == 0 && (
-                                                    <span className='status processing text-green-500 bg-[#c9f4d2] border border-solid rounded-[40px] uppercase py-[2px] px-2.5 text-[10px] inline-block font-extrabold tracking-[0.5px] '>
-                                                        GOOD
-                                                    </span>
-                                                )}
-                                                {asset.status == 1 && (
-                                                    <span className='status processing text-[#f5a623] bg-[#fff7e6] border border-solid rounded-[40px] uppercase py-[2px] px-2.5 text-[10px] inline-block font-extrabold tracking-[0.5px] '>
-                                                        WARNING
-                                                    </span>
-                                                )}
-                                            </td>
+                                            key={temp.id}>
+                                            <td className='text-[13px] p-2 font-medium text-[#474a54]'>{temp.id}</td>
+                                            <td className='text-[13px] p-2 font-medium text-[#474a54]'>{temp.title}</td>
+
                                             <td className='p-2'>
                                                 <div className='actions-btn flex gap-2 items-center'>
                                                     <div className='actions-btn flex gap-2 items-center'>
                                                         <Link
                                                             className='icon-button edit inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
-                                                            href={`/company-admin/asset/edit/${asset.id}`}>
+                                                            href={`/company-admin/template-master/pre-use-check-template/edit/${temp.id}`}>
                                                             <span className='icon-circle'>
                                                                 <svg
                                                                     xmlns='http://www.w3.org/2000/svg'
@@ -134,10 +153,9 @@ const AssetList = ({ assets }: AssetProps) => {
                                                                     />
                                                                 </svg>
                                                             </span>
-                                                            {/* <span className='tooltip'>Edit</span> */}
                                                         </Link>
                                                         <button
-                                                            onClick={()=> handleDelete(Number(asset.id))}
+                                                            // onClick={() => handleDelete(Number(asset.id))}
                                                             className='icon-button delete inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
                                                             type='button'>
                                                             <span className='icon-circle'>
@@ -153,7 +171,6 @@ const AssetList = ({ assets }: AssetProps) => {
                                                                     />
                                                                 </svg>
                                                             </span>
-                                                            {/* <span className='tooltip'>Delete</span> */}
                                                         </button>
                                                     </div>
                                                 </div>
@@ -170,21 +187,4 @@ const AssetList = ({ assets }: AssetProps) => {
     );
 };
 
-export default AssetList;
-
-{
-    /* <div className='pagination'>
-                <span className='pagination-text'>
-                    Total: <span className='bold'>1 Records | Page 1 of 1 </span>
-                </span>
-                <div className='pagination-buttons'>
-                    <button className='pagination-btn prev' disabled=''>
-                        «
-                    </button>
-                    <button className='pagination-btn active'>1</button>
-                    <button className='pagination-btn next' disabled=''>
-                        »
-                    </button>
-                </div>
-            </div> */
-}
+export default PreuseTemplateList;

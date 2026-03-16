@@ -10,12 +10,14 @@ interface Props {
 }
 
 const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) => {
-    function handleSave() {
+    function handleSave(e: any) {
+        e.preventDefault();
         if (!validate()) {
             return;
         } else {
             next();
         }
+        // next();
     }
 
     const SELECT_TRIGGER = "CUSTOM";

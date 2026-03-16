@@ -1,6 +1,63 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import BooleanInput from "./BooleanInput";
+import TextInput from "./TextInput";
+import {
+    getMaintenanceTemplateList,
+    getMaintenanceTemplateQuestions,
+    PreUseTemplate,
+} from "@/app/services/company-admin/templates";
 
-const MaintenanceTemplate = () => {
+interface Props {
+    updateForm: (name: string, value: any) => void;
+    errors: any;
+}
+
+const MaintenanceTemplate = ({ updateForm, errors }: Props) => {
+    const [list, setList] = useState<PreUseTemplate[]>([]);
+
+    const [selectOption, setSelectOption] = useState<string>();
+
+    const [questions, setQuestions] = useState<any>([]);
+
+    const questionRenderer = function (questionType: string): React.ReactNode {
+        // console.log("question renderer called");
+        switch (questionType) {
+            case "boolean":
+                return <BooleanInput />;
+            case "text":
+                return <TextInput />;
+            default:
+                return <TextInput />;
+        }
+    };
+
+    function handleSelection(e: any) {
+        const value = e.target.value;
+        if (value == "") {
+            setQuestions([]);
+            return;
+        }
+
+        getQuestions(value);
+        setSelectOption(value);
+        console.log("questions: ", questions);
+    }
+
+    async function getQuestions(id: number) {
+        const result = await getMaintenanceTemplateQuestions(Number(id));
+        setQuestions(result);
+    }
+
+    async function getList() {
+        const result = await getMaintenanceTemplateList();
+        setList(result);
+    }
+
+    useEffect(() => {
+        getList();
+        // console.log("list: ", list)
+    }, []);
+
     return (
         <div className='card-box-inner border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
             <div className='card-box-block pre-use-template is-active block'>
@@ -14,22 +71,67 @@ const MaintenanceTemplate = () => {
                                 <h4 className='h5 title mb-3 text-[14px] font-semibold leading-6'>Template</h4>
                                 <div className='fancy-input select relative'>
                                     <select
-                                        id='pre_use_template_id'
-                                        name='pre_use_template_id'
+                                        id='maintenance_template_id'
+                                        name='maintenance_template_id'
+                                        onChange={(e) => {
+                                            updateForm("maintenance_template_id", e.target.value);
+                                            handleSelection(e);
+                                        }}
                                         className='form-select text-[#17181a] box-border bg-[#f5f6fa] border border-[#efefef] rounded-[10px] w-full h-[44px] pt-[18px] px-[14px] pb-[8px] font-sans text-[14px] font-medium'>
                                         <option value=''>Select</option>
-                                        <option value={1}>Default</option>
+                                        {list.map((item) => (
+                                            <option value={item.id} key={item.id}>
+                                                {item.title}
+                                            </option>
+                                        ))}
                                     </select>
                                     <label
                                         htmlFor='pre_use_template_id'
                                         className='form-label text-[#676767] pointer-events-none bg-transparent px-[2px] text-[14px] transition-all duration-200 absolute top-1/2 left-[12px] -translate-y-1/2'>
                                         Select Template<span className='require'>*</span>
                                     </label>
+                                    {errors.maintenance_template_id && (
+                                        <div className='text-red-500'>
+                                            <p>{errors.maintenance_template_id}</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
                         <div className='col w-full'>
-                            <div className='card-box-inner border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
+                            {questions.length !== 0 && (
+                                <div className='card-box-inner border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
+                                    <h3 className='h3 title mb-4 text-[18px] font-semibold leading-6'>All Questions</h3>
+
+                                    <div className='all-questions-wrapper'>
+                                        <h5 className='h5 title mb-3 text-[14px] font-semibold leading-6'>
+                                            Template Questions
+                                        </h5>
+
+                                        <ul className='template-questions bg-[#f5f6fa] border border-solid border-[#efefef] px-4 pt-4 pl-8 flex flex-col gap-[6px] list-none'>
+                                            {questions.map((q: any) => (
+                                                <li key={q.id} className='list-item'>
+                                                    <div className='template-question-item w-full'>
+                                                        <p className='question font-semibold'>{q.question}</p>
+
+                                                        <div className='template-question-item-type mt-4'>
+                                                            <div className='template-question-item-type_label mb-2.5 text-[#797979]'>
+                                                                Question Type :
+                                                            </div>
+
+                                                            {questionRenderer(q.type)}
+
+                                                            <hr className='border-0 m-4 border-t border-solid border-[#ebebeb]' />
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* <div className='card-box-inner border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
                                 <h3 className='h3 title mb-4 title text-[18px] font-semibold leading-6'>
                                     All Questions
                                 </h3>
@@ -98,7 +200,7 @@ const MaintenanceTemplate = () => {
                                         </li>
                                     </ul>
                                 </div>
-                            </div>
+                            </div> */}
                         </div>
                         <div className='col w-full'>
                             <div className='card-box-inner  border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>

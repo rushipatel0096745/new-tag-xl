@@ -53,7 +53,8 @@ const Step1 = ({ next, updateForm, validate, errors, formData }: Props) => {
         setTagList({ ...tagList, tag_type: type });
     };
 
-    const handleSave = async () => {
+    const handleSave = async (event: React.SubmitEvent<HTMLFormElement>) => {
+        event.preventDefault();
         // if (tagList.tag_type === "" || tagList.uid === "") {
         //     // console.log("form data", tagList);
         //     setError("Please fill required fields");
@@ -74,7 +75,7 @@ const Step1 = ({ next, updateForm, validate, errors, formData }: Props) => {
 
         if (checkAssigned?.success) {
             setTagList(initialList);
-            
+
             // tag is created but not assigned to any asset
             if (checkAssigned?.data) {
                 setTagData(checkAssigned.data);
@@ -93,6 +94,7 @@ const Step1 = ({ next, updateForm, validate, errors, formData }: Props) => {
             // setAssignError("");
             // next();
         }
+        // next()
     };
 
     const tagTypeOptions: { label: string; value: TagType; text: string }[] = [
@@ -177,7 +179,7 @@ const Step1 = ({ next, updateForm, validate, errors, formData }: Props) => {
                     )}
                     <button
                         onClick={handleSave}
-                        type='button'
+                        type='submit'
                         className='btn continue py-2.5 pr-3 pl-3.5 ml-auto all-unset cursor-pointer text-center bg-[#263f94] border border-[#263f94] text-white box-border rounded-[40px] justify-center items-center gap-[6px] h-[38px] px-[14px] py-[10px] text-[14px] font-500 transition-all duration-200 inline-flex'>
                         Continue
                         <svg
