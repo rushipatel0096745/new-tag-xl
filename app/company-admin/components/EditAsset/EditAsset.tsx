@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import React, { use, useEffect, useState } from "react";
-import { AssetData, Question } from "../../(admin)/asset/edit/[id]/page";
+import { AssetData } from "../../(admin)/asset/edit/[id]/page";
 import { getAssetLocations } from "@/app/services/company-admin/location";
 import {
     getMaintenanceTemplateAssetList,

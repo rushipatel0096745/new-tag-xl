@@ -33,7 +33,7 @@ const PreuseTemplatePage = async () => {
 
                     {/* asset list */}
                     <Suspense fallback={<p>Loading....</p>}>
-                        <PreuseTemplateList list={list} />
+                        <PreuseTemplateList tempList={list} />
                     </Suspense>
                 </div>
             </div>

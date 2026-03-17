@@ -3,12 +3,15 @@
 import { clientFetch, getCompanyId, getCompanyUserPermissions, getSessionId } from "@/app/utils/user-helper";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import UpdateQuestionModal from "./UpdateQuestionModal";
+import UpdateQuestionModal from "../maintenance-template/UpdateQuestionModal";
+import { title } from "process";
+
+type QuestionType = "boolean" | "text" | "checkbox" | "select";
 
 type Question = {
     id?: number;
     question: string;
-    type: string;
+    type: QuestionType;
     options?: string[] | null;
 };
 
@@ -23,9 +26,7 @@ type FormattedQuestion = {
     multiselect_value?: OptionMap;
 };
 
-const MaintenaceTemplateAdd = () => {
-    const [maintenaceFrequency, setMaintenanceFrequency] = useState("");
-    const [customFrequency, setCustomFrequency] = useState("");
+const PreuseTemplateAdd = () => {
     const [title, setTitle] = useState("");
     const [showMsg, setShowMsg] = useState("");
     const [permitted, setPermitted] = useState<boolean>();
@@ -35,7 +36,7 @@ const MaintenaceTemplateAdd = () => {
 
     function checkPermission() {
         const permission = getCompanyUserPermissions();
-        const flag = permission.maintenance_template.includes("create");
+        const flag = permission.pre_use_template.includes("create");
         console.log(flag);
         return flag;
     }
@@ -44,9 +45,9 @@ const MaintenaceTemplateAdd = () => {
         setPermitted(checkPermission());
     }, []);
 
-    const questionTypes = {
-        boolean: "Yes/No",
-        text: "Textfield",
+    const questionTypes: Record<QuestionType, string> = {
+        boolean: "Boolean",
+        text: "Text",
         checkbox: "Checkbox",
         select: "Select",
     };
@@ -60,16 +61,14 @@ const MaintenaceTemplateAdd = () => {
         { id: 901, question: "Remarks?", type: "text" },
     ];
 
-    const SELECT_TRIGGER = "custom";
-
     const [newMaintenanceQuestions, setNewMaintenanceQuestions] = useState<Question[]>([]);
     const [maintenanceQuestionText, setMaintenanceQuestionText] = useState("");
-    const [maintenanceQuestionType, setMaintenanceQuestionType] = useState("");
+    const [maintenanceQuestionType, setMaintenanceQuestionType] = useState<QuestionType>();
     const [maintenanceQuestionOptions, setMaintenanceQuestionOptions] = useState<string[]>([]);
     const [maintenanceQuestionOption, setMaintenanceQuestionOption] = useState("");
 
     const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
-    const [error, setError] = useState({});
+    const [error, setError] = useState<any>({});
 
     // Save updated question from modal
     function handleSaveUpdatedQuestion(updated: Question) {
@@ -85,7 +84,7 @@ const MaintenaceTemplateAdd = () => {
         const questionObj: Question = {
             id: Date.now(),
             question: maintenanceQuestionText,
-            type: maintenanceQuestionType,
+            type: maintenanceQuestionType as QuestionType,
             options:
                 maintenanceQuestionType === "boolean" || maintenanceQuestionType === "text"
                     ? null
@@ -108,7 +107,7 @@ const MaintenaceTemplateAdd = () => {
         setMaintenanceQuestionOption("");
     }
 
-    function deleteNewMaintenaceQuestion(id: number) {
+    function deleteNewMaintenaceQuestion(id: number | undefined) {
         setNewMaintenanceQuestions(newMaintenanceQuestions.filter((q) => q.id !== id));
     }
 
@@ -160,7 +159,6 @@ const MaintenaceTemplateAdd = () => {
             return;
         }
         let questions = [] as FormattedQuestion[];
-        const frequency = maintenaceFrequency || customFrequency;
         const defaultQuestions: FormattedQuestion[] = fixedQuestions.map(({ id, ...rest }) => rest);
         if (newMaintenanceQuestions.length !== 0) {
             questions = formatQuestionBody(newMaintenanceQuestions);
@@ -169,7 +167,6 @@ const MaintenaceTemplateAdd = () => {
         const data = {
             title: title,
             questions: questions,
-            maintenance_frequency: Number(frequency),
         };
         console.log("template create data: ", data);
 
@@ -178,7 +175,7 @@ const MaintenaceTemplateAdd = () => {
 
     async function createTemplate(data: any) {
         try {
-            const result = await clientFetch("/company/maintenance-template/create", {
+            const result = await clientFetch("/company/pre-use-template/create", {
                 method: "POST",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -213,11 +210,11 @@ const MaintenaceTemplateAdd = () => {
             )}
             <div className='main flex flex-col p-6 bg-white rounded-lg shadow-sm'>
                 <div className='header flex items-center justify-between mb-6'>
-                    <h4 className='text-xl font-semibold text-gray-800'>Add Maintenance Template</h4>
+                    <h4 className='text-xl font-semibold text-gray-800'>Add Pre Use Template</h4>
                     {showMsg && <p className='text-green-600'>{showMsg}</p>}
                     <div className='flex gap-2'>
                         <Link
-                            href='/company-admin/template-master/maintenance-check-template'
+                            href='/company-admin/template-master/pre-use-check-template'
                             className='px-4 py-2 bg-yellow-400 hover:bg-yellow-500 rounded text-sm font-medium'>
                             Back
                         </Link>
@@ -247,34 +244,9 @@ const MaintenaceTemplateAdd = () => {
                         {error.title && <p className='text-red-600'>Title is required</p>}
                     </div>
 
-                    <div className='input-select flex flex-col justify-between gap-2'>
-                        <label className='form-label'>Maintenance Frequency</label>
-                        <select
-                            name=''
-                            className='form-input'
-                            id='form-label'
-                            onChange={(e) => setMaintenanceFrequency(e.target.value)}>
-                            <option value='7'>7</option>
-                            <option value='15'>15</option>
-                            <option value='30'>30</option>
-                            <option value='60'>60</option>
-                            <option value='custom'>Custom</option>
-                        </select>
-                        {SELECT_TRIGGER === maintenaceFrequency && (
-                            <input
-                                type='number'
-                                className='form-input'
-                                onChange={(e) => {
-                                    setCustomFrequency(e.target.value);
-                                    // setMaintenanceFrequency("");
-                                }}
-                            />
-                        )}
-                    </div>
-
                     <div className='selected-pre-use-quetions border-3 border-solid border-[#f5f6fa] p-5.5 flex flex-wrap'>
                         <div className='title w-full'>
-                            <h5 className='font-semibold'>Add New Asset-Specific Maintenance Template Questions</h5>
+                            <h5 className='font-semibold'>Add New Asset-Specific Pre Use Template Questions</h5>
                         </div>
                         <div className='new-questions flex flex-col gap-4 justify-between p-2.5 border-2 rounded-xl border-solid border-gray-400 w-full'>
                             <div className='input w-full p-2.5'>
@@ -429,4 +401,4 @@ const MaintenaceTemplateAdd = () => {
     );
 };
 
-export default MaintenaceTemplateAdd;
+export default PreuseTemplateAdd;

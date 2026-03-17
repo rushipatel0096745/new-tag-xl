@@ -1,15 +1,97 @@
 "use client";
 
 import { MaintenanceTemplate } from "@/app/company-admin/(admin)/template-master/maintenance-check-template/page";
+import { clientFetch, getCompanyId, getCompanyUserPermissions, getSessionId } from "@/app/utils/user-helper";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 
 interface Props {
-    list: MaintenanceTemplate[];
+    tmpList: MaintenanceTemplate[];
 }
 
-const MaintenanceTemplateList = ({ list }: Props) => {
+const MaintenanceTemplateList = ({ tmpList }: Props) => {
+    const [list, setList] = useState<MaintenanceTemplate[]>(tmpList);
     const [showMsg, setShowMsg] = useState("");
+    const [permitted, setPermitted] = useState<boolean>();
+    const [permError, setPermError] = useState("");
+
+    const router = useRouter();
+
+    const sessionId = getSessionId("company-user-session");
+    const companyId = getCompanyId("company-user-session");
+
+    function checkPermission(perm: string) {
+        const permission = getCompanyUserPermissions();
+        const flag = permission.manual_template.includes(perm);
+        console.log(flag);
+        return flag;
+    }
+
+    async function getTemplate() {
+        try {
+            const result = await clientFetch("/company/maintenance-template/list", {
+                method: "POST",
+                headers: {
+                    "X-Session-ID": sessionId,
+                    "X-Company-ID": companyId,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    page: 1,
+                    page_size: 10,
+                    filters: [],
+                }),
+            });
+
+            console.log("API response:", result);
+
+            if (result?.has_error) {
+                console.error("Template deletion failed:", result.message);
+                return;
+            }
+
+            setList(result.maintenance_templates);
+        } catch (error) {
+            console.error("Create template error:", error);
+        }
+    }
+
+    async function deleteTemplate(id: number | string) {
+        if (!checkPermission("delete")) {
+            setPermError("Not allowed to delete!!");
+            return;
+        }
+
+        try {
+            const result = await clientFetch("/company/maintenance-template/delete/" + Number(id), {
+                method: "DELETE",
+                headers: {
+                    "X-Session-ID": sessionId,
+                    "X-Company-ID": companyId,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (result?.has_error) {
+                console.error("Template deletion failed:", result.message);
+                return;
+            }
+
+            setList((prev) => prev.filter((item) => item.id !== id));
+            setShowMsg("Template deleted successfully");
+        } catch (error) {
+            console.error("Delete template error:", error);
+        }
+    }
+
+    function handleUpdate(id: number): void {
+        if (!checkPermission("update")) {
+            setPermError("Not allowed to update!!");
+            return;
+        }
+        router.push(`/company-admin/template-master/maintenance-check-template/edit/${id}`);
+    }
 
     return (
         <div className='card-box bg-[#fff] border-gray-700 rounded-[18px] shadow-3xl shadow-white px-3 py-5.5'>
@@ -18,6 +100,11 @@ const MaintenanceTemplateList = ({ list }: Props) => {
                 {showMsg && (
                     <div className='text-yellow-600'>
                         <p>{showMsg}</p>
+                    </div>
+                )}
+                {permError && (
+                    <div className='text-red-600'>
+                        <p>{permError}</p>
                     </div>
                 )}
                 <div className='actions-btn flex gap-2 items-center'>
@@ -138,9 +225,9 @@ const MaintenanceTemplateList = ({ list }: Props) => {
                                             <td className='p-2'>
                                                 <div className='actions-btn flex gap-2 items-center'>
                                                     <div className='actions-btn flex gap-2 items-center'>
-                                                        <Link
-                                                            className='icon-button edit inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
-                                                            href={`/company-admin/template-master/maintenance-check-template/edit/${temp.id}`}>
+                                                        <button
+                                                            onClick={() => handleUpdate(temp.id)}
+                                                            className='icon-button edit inline-flex items-center justify-center cursor-pointer p-0 decoration-0'>
                                                             <span className='icon-circle'>
                                                                 <svg
                                                                     xmlns='http://www.w3.org/2000/svg'
@@ -154,9 +241,9 @@ const MaintenanceTemplateList = ({ list }: Props) => {
                                                                     />
                                                                 </svg>
                                                             </span>
-                                                        </Link>
+                                                        </button>
                                                         <button
-                                                            // onClick={() => handleDelete(Number(asset.id))}
+                                                            onClick={() => deleteTemplate(Number(temp.id))}
                                                             className='icon-button delete inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
                                                             type='button'>
                                                             <span className='icon-circle'>

@@ -32,7 +32,7 @@ const ManualMasterPage = async () => {
 
                     {/* asset list */}
                     <Suspense fallback={<p>Loading....</p>}>
-                        <ManualTemplateList list={manualTemplateList}/>
+                        <ManualTemplateList tempList={manualTemplateList}/>
                     </Suspense>
                 </div>
             </div>

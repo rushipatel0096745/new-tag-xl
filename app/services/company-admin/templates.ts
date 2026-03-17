@@ -235,7 +235,7 @@ export const getMaintenanceTemplateAssetList = async function (
                     page: page,
                     pageSize: 10,
                     filters: filters,
-                    show_all_records
+                    show_all_records,
                 }),
             });
 
@@ -250,7 +250,11 @@ export const getMaintenanceTemplateAssetList = async function (
     return [];
 };
 
-export const getPreuseTemplateAssetList = async function (page: number = 1, filters: Filter[] = [], show_all_records: number = 1) {
+export const getPreuseTemplateAssetList = async function (
+    page: number = 1,
+    filters: Filter[] = [],
+    show_all_records: number = 1
+) {
     const sessionId = await getCompanySessionId();
     const companyData = await getComapnyData();
     const companyId = companyData?.company_id;
@@ -268,7 +272,7 @@ export const getPreuseTemplateAssetList = async function (page: number = 1, filt
                     page: page,
                     pageSize: 10,
                     filters: filters,
-                    show_all_records
+                    show_all_records,
                 }),
             });
 
@@ -282,3 +286,85 @@ export const getPreuseTemplateAssetList = async function (page: number = 1, filt
     }
     return [];
 };
+
+export const getMaintenanceTemplate = async function (id: number) {
+    const sessionId = await getCompanySessionId();
+    const companyData = await getComapnyData();
+    const companyId = companyData?.company_id;
+
+    if (companyId && sessionId) {
+        try {
+            const response = await fetch("https://tagxl.com/api/company/maintenance-template/get/"+id, {
+                method: "GET",
+                headers: {
+                    "X-Session-ID": sessionId,
+                    "X-Company-ID": companyId,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const result = await response.json();
+            // console.log(result);
+            return result?.maintenance_template || {};
+        } catch (error) {
+            console.log("error: ", error);
+            return {};
+        }
+    }
+    return [];
+};
+
+export const getPreuseTemplate = async function (id: number) {
+    const sessionId = await getCompanySessionId();
+    const companyData = await getComapnyData();
+    const companyId = companyData?.company_id;
+
+    if (companyId && sessionId) {
+        try {
+            const response = await fetch("https://tagxl.com/api/company/pre-use-template/get/"+id, {
+                method: "GET",
+                headers: {
+                    "X-Session-ID": sessionId,
+                    "X-Company-ID": companyId,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const result = await response.json();
+            // console.log(result);
+            return result?.pre_use_template || {};
+        } catch (error) {
+            console.log("error: ", error);
+            return {};
+        }
+    }
+    return [];
+};
+
+export const getManualTemplate = async function (id: number) {
+    const sessionId = await getCompanySessionId();
+    const companyData = await getComapnyData();
+    const companyId = companyData?.company_id;
+
+    if (companyId && sessionId) {
+        try {
+            const response = await fetch("https://tagxl.com/api/company/manual-template/get/"+id, {
+                method: "GET",
+                headers: {
+                    "X-Session-ID": sessionId,
+                    "X-Company-ID": companyId,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            const result = await response.json();
+            // console.log(result);
+            return result?.manual_template || {};
+        } catch (error) {
+            console.log("error: ", error);
+            return {};
+        }
+    }
+    return [];
+};
+

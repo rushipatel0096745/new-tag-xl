@@ -4,6 +4,7 @@ import { clientFetch, getCompanyId, getCompanyUserPermissions, getSessionId } fr
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import UpdateQuestionModal from "./UpdateQuestionModal";
+import { MaintenaceEditTemplate } from "@/app/company-admin/(admin)/template-master/maintenance-check-template/edit/[id]/page";
 
 type Question = {
     id?: number;
@@ -23,10 +24,14 @@ type FormattedQuestion = {
     multiselect_value?: OptionMap;
 };
 
-const MaintenaceTemplateAdd = () => {
-    const [maintenaceFrequency, setMaintenanceFrequency] = useState("");
+interface Props {
+    initialData: MaintenaceEditTemplate;
+}
+
+const MaintenanceTemplateEdit = ({ initialData }: Props) => {
+    const [maintenaceFrequency, setMaintenanceFrequency] = useState(String(initialData.maintenance_frequency));
     const [customFrequency, setCustomFrequency] = useState("");
-    const [title, setTitle] = useState("");
+    const [title, setTitle] = useState(initialData.title);
     const [showMsg, setShowMsg] = useState("");
     const [permitted, setPermitted] = useState<boolean>();
 
@@ -62,7 +67,12 @@ const MaintenaceTemplateAdd = () => {
 
     const SELECT_TRIGGER = "custom";
 
-    const [newMaintenanceQuestions, setNewMaintenanceQuestions] = useState<Question[]>([]);
+    let initialQuestions = reverseFormatQuestionBody(initialData.questions);
+
+    const fixedSet = new Set(fixedQuestions.map((q) => q.question));
+    initialQuestions = initialQuestions.filter((q) => !fixedSet.has(q.question));
+
+    const [newMaintenanceQuestions, setNewMaintenanceQuestions] = useState<Question[]>(initialQuestions || []);
     const [maintenanceQuestionText, setMaintenanceQuestionText] = useState("");
     const [maintenanceQuestionType, setMaintenanceQuestionType] = useState("");
     const [maintenanceQuestionOptions, setMaintenanceQuestionOptions] = useState<string[]>([]);
@@ -147,6 +157,24 @@ const MaintenaceTemplateAdd = () => {
         return newQuestions;
     }
 
+    function reverseFormatQuestionBody(questions: any[]) {
+        const newQuestions = questions?.map((q, index) => {
+            const newQuestion = {} as Question;
+            newQuestion.id = Date.now() + index;
+            newQuestion.question = q.question;
+            newQuestion.type = q.type;
+            if (q.type === "select" || q.type === "checkbox") {
+                let options: string[] = [];
+                Object.entries(q.multiselect_value).map(([k, v]) => {
+                    options.push(k);
+                });
+                newQuestion.options = options;
+            }
+            return newQuestion;
+        });
+        return newQuestions;
+    }
+
     function validate() {
         const newError = {} as Record<string, string>;
         if (!title) newError.title = "Title is required";
@@ -173,13 +201,13 @@ const MaintenaceTemplateAdd = () => {
         };
         console.log("template create data: ", data);
 
-        await createTemplate(data);
+        await updateTemplate(data);
     }
 
-    async function createTemplate(data: any) {
+    async function updateTemplate(data: any) {
         try {
-            const result = await clientFetch("/company/maintenance-template/create", {
-                method: "POST",
+            const result = await clientFetch("/company/maintenance-template/update/" + initialData.id, {
+                method: "PUT",
                 headers: {
                     "X-Session-ID": sessionId,
                     "X-Company-ID": companyId,
@@ -213,7 +241,7 @@ const MaintenaceTemplateAdd = () => {
             )}
             <div className='main flex flex-col p-6 bg-white rounded-lg shadow-sm'>
                 <div className='header flex items-center justify-between mb-6'>
-                    <h4 className='text-xl font-semibold text-gray-800'>Add Maintenance Template</h4>
+                    <h4 className='text-xl font-semibold text-gray-800'>Edit Maintenance Template</h4>
                     {showMsg && <p className='text-green-600'>{showMsg}</p>}
                     <div className='flex gap-2'>
                         <Link
@@ -221,10 +249,6 @@ const MaintenaceTemplateAdd = () => {
                             className='px-4 py-2 bg-yellow-400 hover:bg-yellow-500 rounded text-sm font-medium'>
                             Back
                         </Link>
-
-                        <button className='px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded text-sm'>
-                            Delete
-                        </button>
 
                         <button
                             type='button'
@@ -253,6 +277,7 @@ const MaintenaceTemplateAdd = () => {
                             name=''
                             className='form-input'
                             id='form-label'
+                            value={maintenaceFrequency}
                             onChange={(e) => setMaintenanceFrequency(e.target.value)}>
                             <option value='7'>7</option>
                             <option value='15'>15</option>
@@ -429,4 +454,4 @@ const MaintenaceTemplateAdd = () => {
     );
 };
 
-export default MaintenaceTemplateAdd;
+export default MaintenanceTemplateEdit;

@@ -4,17 +4,18 @@ import {
     PreuseQuestion,
     PreuseTemplate,
 } from "@/app/company-admin/(admin)/template-master/pre-use-check-template/page";
+import { User } from "@/app/super-admin/users-and-roles/users/page";
 import { clientFetch, getCompanyId, getCompanyUserPermissions, getSessionId } from "@/app/utils/user-helper";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 interface Props {
-    tempList: PreuseTemplate[];
+    tempList: User[];
 }
 
-const PreuseTemplateList = ({ tempList }: Props) => {
-    const [list, setList] = useState<PreuseTemplate[]>(tempList);
+const UserList = ({ tempList }: Props) => {
+    const [list, setList] = useState<User[]>(tempList);
     const [showMsg, setShowMsg] = useState("");
     const [permitted, setPermitted] = useState<boolean>();
     const [permError, setPermError] = useState("");
@@ -24,16 +25,26 @@ const PreuseTemplateList = ({ tempList }: Props) => {
     const sessionId = getSessionId("company-user-session");
     const companyId = getCompanyId("company-user-session");
 
-    function checkPermission(perm: string) {
+    function checkPermission(module: string, perm: string) {
         const permission = getCompanyUserPermissions();
-        const flag = permission.manual_template.includes(perm);
+        const flag = permission?.[module]?.includes(perm);
         console.log(flag);
         return flag;
     }
 
+    // function handleCreate(path: string) {
+
+    // // }
+    const createRolePermission = checkPermission("role", "create");
+    const createUserPermission = checkPermission("user", "create");
+
+    useEffect(() => {
+        console.log(createRolePermission, createUserPermission)
+    }, [])
+
     async function getTemplate() {
         try {
-            const result = await clientFetch("/company/pre-use-template/list", {
+            const result = await clientFetch("/company/users/list", {
                 method: "POST",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -50,24 +61,24 @@ const PreuseTemplateList = ({ tempList }: Props) => {
             console.log("API response:", result);
 
             if (result?.has_error) {
-                console.error("Template deletion failed:", result.message);
+                console.error("users fetching failed:", result.message);
                 return;
             }
 
-            setList(result.pre_use_templates);
+            setList(result.users);
         } catch (error) {
             console.error("Create template error:", error);
         }
     }
 
     async function deleteTemplate(id: number | string) {
-        if (!checkPermission("delete")) {
+        if (checkPermission("user", "delete")) {
             setPermError("Not allowed to delete!!");
             return;
         }
 
         try {
-            const result = await clientFetch("/company/pre-use-template/delete/" + Number(id), {
+            const result = await clientFetch("/company/users/delete/" + Number(id), {
                 method: "DELETE",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -89,7 +100,7 @@ const PreuseTemplateList = ({ tempList }: Props) => {
     }
 
     function handleUpdate(id: number): void {
-        if (!checkPermission("update")) {
+        if (checkPermission("user", "update")) {
             setPermError("Not allowed to update!!");
             return;
         }
@@ -99,53 +110,62 @@ const PreuseTemplateList = ({ tempList }: Props) => {
     return (
         <div className='card-box bg-[#fff] border-gray-700 rounded-[18px] shadow-3xl shadow-white px-3 py-5.5'>
             <div className='card-box_head border-b border-b-[#ededed] px-4 py-5.5 flex justify-between items-center'>
-                <h3 className='h3 text-[18px] font-semibold leading-6'>Preuse Template List</h3>
+                <h3 className='h3 text-[18px] font-semibold leading-6'>Users List</h3>
                 {showMsg && (
                     <div className='text-yellow-600'>
                         <p>{showMsg}</p>
                     </div>
+                )}{" "}
+                {permError && (
+                    <div className='text-red-600'>
+                        <p>{permError}</p>
+                    </div>
                 )}
                 <div className='actions-btn flex gap-2 items-center'>
-                    <Link
-                        className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
-                        href='/company-admin/template-master/pre-use-check-template/add'>
-                        <span className='icon-circle'>
-                            <svg
-                                xmlns='http://www.w3.org/2000/svg'
-                                width={20}
-                                height={20}
-                                viewBox='0 0 20 20'
-                                fill='none'>
-                                <path
-                                    fillRule='evenodd'
-                                    clipRule='evenodd'
-                                    d='M10 4C10.355 4 10.6429 4.28782 10.6429 4.64286V9.35714H15.3571C15.7122 9.35714 16 9.64496 16 10C16 10.355 15.7122 10.6429 15.3571 10.6429H10.6429V15.3571C10.6429 15.7122 10.355 16 10 16C9.64496 16 9.35714 15.7122 9.35714 15.3571V10.6429H4.64286C4.28782 10.6429 4 10.355 4 10C4 9.64496 4.28782 9.35714 4.64286 9.35714H9.35714V4.64286C9.35714 4.28782 9.64496 4 10 4Z'
-                                    fill='#845ADF'
-                                />
-                            </svg>
-                        </span>
-                        <span className='button-label text-[#1a1a1a] capitalize ml-2'>Add</span>
-                    </Link>
-                    <Link
-                        className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
-                        href='/company-admin/template-master/manual-template'>
-                        <span className='icon-circle'>
-                            <svg
-                                xmlns='http://www.w3.org/2000/svg'
-                                width={20}
-                                height={20}
-                                viewBox='0 0 20 20'
-                                fill='none'>
-                                <path
-                                    fillRule='evenodd'
-                                    clipRule='evenodd'
-                                    d='M10 4C10.355 4 10.6429 4.28782 10.6429 4.64286V9.35714H15.3571C15.7122 9.35714 16 9.64496 16 10C16 10.355 15.7122 10.6429 15.3571 10.6429H10.6429V15.3571C10.6429 15.7122 10.355 16 10 16C9.64496 16 9.35714 15.7122 9.35714 15.3571V10.6429H4.64286C4.28782 10.6429 4 10.355 4 10C4 9.64496 4.28782 9.35714 4.64286 9.35714H9.35714V4.64286C9.35714 4.28782 9.64496 4 10 4Z'
-                                    fill='#845ADF'
-                                />
-                            </svg>
-                        </span>
-                        <span className='button-label text-[#1a1a1a] capitalize ml-2'>Manual Template</span>
-                    </Link>
+                    {createUserPermission && (
+                        <Link
+                            className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
+                            href='/company-admin/users-and-roles/users/add'>
+                            <span className='icon-circle'>
+                                <svg
+                                    xmlns='http://www.w3.org/2000/svg'
+                                    width={20}
+                                    height={20}
+                                    viewBox='0 0 20 20'
+                                    fill='none'>
+                                    <path
+                                        fillRule='evenodd'
+                                        clipRule='evenodd'
+                                        d='M10 4C10.355 4 10.6429 4.28782 10.6429 4.64286V9.35714H15.3571C15.7122 9.35714 16 9.64496 16 10C16 10.355 15.7122 10.6429 15.3571 10.6429H10.6429V15.3571C10.6429 15.7122 10.355 16 10 16C9.64496 16 9.35714 15.7122 9.35714 15.3571V10.6429H4.64286C4.28782 10.6429 4 10.355 4 10C4 9.64496 4.28782 9.35714 4.64286 9.35714H9.35714V4.64286C9.35714 4.28782 9.64496 4 10 4Z'
+                                        fill='#845ADF'
+                                    />
+                                </svg>
+                            </span>
+                            <span className='button-label text-[#1a1a1a] capitalize ml-2'>Add User</span>
+                        </Link>
+                    )}
+                    {createRolePermission && (
+                        <Link
+                            className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
+                            href='/company-admin/users-and-roles/roles/add'>
+                            <span className='icon-circle'>
+                                <svg
+                                    xmlns='http://www.w3.org/2000/svg'
+                                    width={20}
+                                    height={20}
+                                    viewBox='0 0 20 20'
+                                    fill='none'>
+                                    <path
+                                        fillRule='evenodd'
+                                        clipRule='evenodd'
+                                        d='M10 4C10.355 4 10.6429 4.28782 10.6429 4.64286V9.35714H15.3571C15.7122 9.35714 16 9.64496 16 10C16 10.355 15.7122 10.6429 15.3571 10.6429H10.6429V15.3571C10.6429 15.7122 10.355 16 10 16C9.64496 16 9.35714 15.7122 9.35714 15.3571V10.6429H4.64286C4.28782 10.6429 4 10.355 4 10C4 9.64496 4.28782 9.35714 4.64286 9.35714H9.35714V4.64286C9.35714 4.28782 9.64496 4 10 4Z'
+                                        fill='#845ADF'
+                                    />
+                                </svg>
+                            </span>
+                            <span className='button-label text-[#1a1a1a] capitalize ml-2'>Add Role</span>
+                        </Link>
+                    )}
                     <Link
                         className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
                         href='/company-admin/template-master/maintenance-check-template'>
@@ -164,7 +184,7 @@ const PreuseTemplateList = ({ tempList }: Props) => {
                                 />
                             </svg>
                         </span>
-                        <span className='button-label text-[#1a1a1a] capitalize ml-2'>Maintenance Check Template</span>
+                        <span className='button-label text-[#1a1a1a] capitalize ml-2'>All Users</span>
                     </Link>
                     <Link
                         className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
@@ -184,7 +204,7 @@ const PreuseTemplateList = ({ tempList }: Props) => {
                                 />
                             </svg>
                         </span>
-                        <span className='button-label text-[#1a1a1a] capitalize ml-2'>Pre Use Chcek Template</span>
+                        <span className='button-label text-[#1a1a1a] capitalize ml-2'>All Roles</span>
                     </Link>
                 </div>
             </div>
@@ -195,13 +215,19 @@ const PreuseTemplateList = ({ tempList }: Props) => {
                         <table className='table text-left border-collapse w-full text-[#111c43] border rounded-md text-[14px] leading-5 overflow-hidden'>
                             <thead className='bg-[#f5f6fa] table-header-group align-middle'>
                                 <tr className='table-row border border-solid border-[#f5f6f1]'>
-                                    <th style={{ width: 25 }} className='p-2 font-medium'>
+                                    <th style={{ width: 15 }} className='p-2 font-medium'>
                                         Id
                                     </th>
-                                    <th style={{ width: 50 }} className='p-2 font-medium'>
-                                        Template Title
+                                    <th style={{ width: 30 }} className='p-2 font-medium'>
+                                        Email
                                     </th>
 
+                                    <th style={{ width: 15 }} className='p-2 font-medium'>
+                                        First Name
+                                    </th>
+                                    <th style={{ width: 15 }} className='p-2 font-medium'>
+                                        Last Name
+                                    </th>
                                     <th style={{ width: 25 }} className='p-2 font-medium'>
                                         Action
                                     </th>
@@ -214,15 +240,19 @@ const PreuseTemplateList = ({ tempList }: Props) => {
                                             className='table-row border-1 border-solid border-[#f5f6f1] align-middle'
                                             key={temp.id}>
                                             <td className='text-[13px] p-2 font-medium text-[#474a54]'>{temp.id}</td>
-                                            <td className='text-[13px] p-2 font-medium text-[#474a54]'>{temp.title}</td>
-
+                                            <td className='text-[13px] p-2 font-medium text-[#474a54]'>{temp.email}</td>
+                                            <td className='text-[13px] p-2 font-medium text-[#474a54]'>
+                                                {temp.firstname}
+                                            </td>
+                                            <td className='text-[13px] p-2 font-medium text-[#474a54]'>
+                                                {temp.lastname}
+                                            </td>
                                             <td className='p-2'>
                                                 <div className='actions-btn flex gap-2 items-center'>
                                                     <div className='actions-btn flex gap-2 items-center'>
                                                         <button
-                                                        onClick={()=>handleUpdate(temp.id)}
-                                                            className='icon-button edit inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
-                                                            >
+                                                            onClick={() => handleUpdate(temp.id)}
+                                                            className='icon-button edit inline-flex items-center justify-center cursor-pointer p-0 decoration-0'>
                                                             <span className='icon-circle'>
                                                                 <svg
                                                                     xmlns='http://www.w3.org/2000/svg'
@@ -270,4 +300,4 @@ const PreuseTemplateList = ({ tempList }: Props) => {
     );
 };
 
-export default PreuseTemplateList;
+export default UserList;

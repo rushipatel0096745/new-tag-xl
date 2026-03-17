@@ -35,7 +35,7 @@ const MaintenanceCheckPage = async() => {
 
                     {/* asset list */}
                     <Suspense fallback={<p>Loading....</p>}>
-                        <MaintenanceTemplateList list={list} />
+                        <MaintenanceTemplateList tmpList={list} />
                     </Suspense>
                 </div>
             </div>
