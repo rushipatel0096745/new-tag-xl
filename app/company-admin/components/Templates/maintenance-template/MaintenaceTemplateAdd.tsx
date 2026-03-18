@@ -2,8 +2,8 @@
 
 import { clientFetch, getCompanyId, getCompanyUserPermissions, getSessionId } from "@/app/utils/user-helper";
 import Link from "next/link";
-import React, { useEffect, useState } from "react";
-import UpdateQuestionModal from "./UpdateQuestionModal";
+import React, { useEffect, useRef, useState } from "react";
+import UpdateQuestionModal from "../UpdateQuestionModal";
 
 type Question = {
     id?: number;
@@ -67,6 +67,18 @@ const MaintenaceTemplateAdd = () => {
     const [maintenanceQuestionType, setMaintenanceQuestionType] = useState("");
     const [maintenanceQuestionOptions, setMaintenanceQuestionOptions] = useState<string[]>([]);
     const [maintenanceQuestionOption, setMaintenanceQuestionOption] = useState("");
+
+    const dragItem = useRef<number | null>(null);
+    const dragOverItem = useRef<number | null>(null);
+
+    function handleDragSort() {
+        const items = [...newMaintenanceQuestions];
+        const draggedItem = items.splice(dragItem.current!, 1)[0];
+        items.splice(dragOverItem.current!, 0, draggedItem);
+        dragItem.current = null;
+        dragOverItem.current = null;
+        setNewMaintenanceQuestions(items);
+    }
 
     const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
     const [error, setError] = useState({});
@@ -383,7 +395,7 @@ const MaintenaceTemplateAdd = () => {
                                         <div className='title w-full'>
                                             <h5>New Asset-Specific Maintenace Template Questions</h5>
                                         </div>
-                                        {newMaintenanceQuestions.map((question) => {
+                                        {/* {newMaintenanceQuestions.map((question) => {
                                             const question_type = questionTypes[question.type];
 
                                             return (
@@ -412,6 +424,53 @@ const MaintenaceTemplateAdd = () => {
                                                                     className='bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 text-sm rounded'>
                                                                     Delete
                                                                 </button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })} */}
+
+                                        {newMaintenanceQuestions.map((question, index) => {
+                                            const question_type = questionTypes[question.type];
+
+                                            return (
+                                                <div
+                                                    className='selected-questions w-full'
+                                                    key={question.id}
+                                                    draggable
+                                                    onDragStart={() => (dragItem.current = index)}
+                                                    onDragEnter={() => (dragOverItem.current = index)}
+                                                    onDragEnd={handleDragSort}
+                                                    onDragOver={(e) => e.preventDefault()}
+                                                    style={{ cursor: "grab" }}>
+                                                    <div className='question-content flex justify-between p-2.5 border rounded-xl border-solid border-gray-400'>
+                                                        <div className='question-text'>
+                                                            <p>{question.question}</p>
+                                                        </div>
+                                                        <div className='question-type gap-2 flex justify-between'>
+                                                            <p className='text-black'>
+                                                                <span className='text-gray-500'>Type: </span>
+                                                                {question_type}
+                                                            </p>
+                                                            <div className='action-btn flex justify-between gap-1'>
+                                                                <button
+                                                                    type='button'
+                                                                    onClick={() => setEditingQuestion(question)}
+                                                                    className='bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 text-sm rounded'>
+                                                                    Update
+                                                                </button>
+                                                                <button
+                                                                    type='button'
+                                                                    onClick={() =>
+                                                                        deleteNewMaintenaceQuestion(question.id!)
+                                                                    }
+                                                                    className='bg-red-500 hover:bg-red-600 text-white py-1 px-2 text-sm rounded'>
+                                                                    Delete
+                                                                </button>
+                                                                <span className='text-gray-400 mr-2 select-none'>
+                                                                    ⠿
+                                                                </span>
                                                             </div>
                                                         </div>
                                                     </div>

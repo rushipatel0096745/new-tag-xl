@@ -97,11 +97,11 @@ const RoleList = ({ tempList }: Props) => {
     }
 
     function handleUpdate(id: number): void {
-        if (checkPermission("role", "update")) {
+        if (!checkPermission("role", "update")) {
             setPermError("Not allowed to update!!");
             return;
         }
-        router.push(`/company-admin/users-and-roles/role/edit/${id}`);
+        router.push(`/company-admin/users-and-roles/roles/edit/${id}`);
     }
 
     return (

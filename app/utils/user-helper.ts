@@ -38,6 +38,7 @@ export async function clientFetch(endpoint: string, options = {}) {
   if (!response.ok) {
     // Handle error states (e.g., 400-500 range)
     const errorData = await response.json();
+    console.log("error....", errorData)
     throw new Error(errorData.message || 'Something went wrong with the API request');
   }
 

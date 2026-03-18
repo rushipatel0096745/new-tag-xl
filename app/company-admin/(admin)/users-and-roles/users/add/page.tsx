@@ -1,9 +1,27 @@
-import React from 'react'
+import AddUser from "@/app/company-admin/components/UsersAndRoles/Users/AddUser";
+import React, { Suspense } from "react";
 
 const UsersAddPage = () => {
-  return (
-    <div>UsersAddPage</div>
-  )
-}
+    return (
+        <div className='main w-[calc(100%] min-h-[calc(100vh_-_60px)] text-[#111c43] mt-[60px] p-5.5 '>
+            <div className='page-content'>
+                <div className='page-head mb-6'>
+                    <h2 className='text-[20px] leading-[26px] font-semibold'>User</h2>
+                </div>
+                <div className='page-body'>
+                    <div className='card-box bg-[#fff] border-gray-700 rounded-[18px] shadow-3xl shadow-white px-3 py-5.5'>
+                        <div className='card-box-body p-5.5'>
+                            <div className='asset-content'>
+                                <Suspense fallback={<p>Loading....</p>}>
+                                    <AddUser />
+                                </Suspense>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
 
-export default UsersAddPage
+export default UsersAddPage;

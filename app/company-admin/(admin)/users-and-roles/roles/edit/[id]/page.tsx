@@ -1,7 +1,9 @@
-import AddRole from "@/app/company-admin/components/UsersAndRoles/Roles/AddRole";
+import EditRole from "@/app/company-admin/components/UsersAndRoles/Roles/EditRole";
 import React, { Suspense } from "react";
 
-const RoleAddPage = () => {
+const RoleEditPage = async ({ params }: { params: Promise<{ id: string }> }) => {
+    const { id } = await params;
+
     return (
         <div className='main w-[calc(100%] min-h-[calc(100vh_-_60px)] text-[#111c43] mt-[60px] p-5.5 '>
             <div className='page-content'>
@@ -13,7 +15,7 @@ const RoleAddPage = () => {
                         <div className='card-box-body p-5.5'>
                             <div className='asset-content'>
                                 <Suspense fallback={<p>Loading....</p>}>
-                                    <AddRole />
+                                    <EditRole id={id} />
                                 </Suspense>
                             </div>
                         </div>
@@ -24,4 +26,4 @@ const RoleAddPage = () => {
     );
 };
 
-export default RoleAddPage;
+export default RoleEditPage;

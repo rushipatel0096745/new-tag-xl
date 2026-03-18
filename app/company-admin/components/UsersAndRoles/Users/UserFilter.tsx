@@ -1,8 +1,50 @@
 "use client";
 
-import React from "react";
+import { clientFetch, getCompanyId, getSessionId } from "@/app/utils/user-helper";
+import React, { useEffect, useState } from "react";
 
-const Filter = () => {
+const UserFilter = () => {
+    const [filter, setFilter] = useState([]);
+    const [toggle, setToggle] = useState(false);
+    const [columns, setColumns] = useState([]);
+    const [conditions, setConditions] = useState<Record<string, string>>({});
+
+    const sessionId = getSessionId("company-user-session");
+    const companyId = getCompanyId("company-user-session");
+
+    async function getUserCols() {
+        try {
+            const result = await clientFetch("/company/table-columns/users", {
+                method: "GET",
+                headers: {
+                    "X-Session-ID": sessionId,
+                    "X-Company-ID": companyId,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            console.log("USER COLUMN API response:", result);
+
+            if (result?.has_error) {
+                console.error("users fetching failed:", result.message);
+                return;
+            }
+
+            setColumns(result.columns);
+            setConditions(result.conditions);
+        } catch (error) {
+            console.error("Column fetching error:", error);
+        }
+    }
+
+    useEffect(() => {
+        getUserCols();
+    }, []);
+
+    useEffect(() => {
+        console.log("columns: ", columns);
+    }, [columns]);
+
     return (
         <div className='card-box bg-[#fff] border-gray-700 rounded-[18px] shadow-3xl shadow-white px-3 py-5.5 filter-section mb-16'>
             <div className='card-box_head  filter-head grid grid-cols-[1fr_auto]'>
@@ -48,8 +90,70 @@ const Filter = () => {
                     </button>
                 </div>
             </div>
+
+            <form className='flex flex-col gap-6'>
+                <div className='grid grid-cols-2 gap-4'>
+                    {/* UID */}
+                    <div className='col-span-2'>
+                        <label className='form-label'>UID</label>
+                        <input type='text' className='form-input' />
+                    </div>
+
+                    {/* Name */}
+                    <div>
+                        <label className='form-label'>Name</label>
+                        <input
+                            type='text'
+                            className='form-input'
+                            // value={name}
+                            name='name'
+                            // onChange={(e) => setName(e.target.value)}
+                        />
+                    </div>
+
+                    {/* Location */}
+                    <div>
+                        <label className='form-label'>Location</label>
+                        <select
+                            className='form-input'
+                            // value={location}
+                            name='location_id'
+                            // onChange={(e) => setLocation(e.target.value)}>
+                            // {loactionList.map((location) => (
+                            //     <option value={location.id} key={location.id}>
+                            //         {location.name}
+                            //     </option>
+                            // ))}
+                        >
+                            <option>Test</option>
+                        </select>
+                    </div>
+
+                    {/* Batch Code */}
+                    <div>
+                        <label className='form-label'>Batch Code</label>
+                        <input
+                            type='text'
+                            className='form-input'
+                            // value={batchCode}
+                            name='batch_code'
+                            // onChange={(e) => setBatchCode(e.target.value)}
+                        />
+                    </div>
+
+                    {/* Status */}
+                    <div>
+                        <label className='form-label'>Status</label>
+                        <select className='form-input' name='status'>
+                            {/* onChange={(e) => setStatus(e.target.value)} */}
+                            <option value='1'>Active</option>
+                            <option value='0'>Inactive</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
         </div>
     );
 };
 
-export default Filter;
+export default UserFilter;

@@ -86,7 +86,7 @@ const AssetEditPage = async ({ params }: { params: Promise<{ id: string }> }) =>
                 </div>
                 <div className='page-body'>
                     <div className='card-box bg-[#fff] border-gray-700 rounded-[18px] shadow-3xl shadow-white px-3 py-5.5'>
-                        <div className='card-box_head border-b border-b-[#ededed] px-4 py-5.5 flex justify-between items-center'>
+                        {/* <div className='card-box_head border-b border-b-[#ededed] px-4 py-5.5 flex justify-between items-center'>
                             <h3 className='h3 text-[18px] font-semibold leading-6'>Add Asset</h3>
                             <div className='actions-btn flex gap-2 items-center'>
                                 <Link
@@ -128,7 +128,7 @@ const AssetEditPage = async ({ params }: { params: Promise<{ id: string }> }) =>
                                     <span className='button-label text-[#1a1a1a] capitalize ml-2'>Save</span>
                                 </button>
                             </div>
-                        </div>
+                        </div> */}
                         <div className='card-box-body p-5.5'>
                             <div className='asset-content'>
                                 <Suspense fallback={<p>Loading....</p>}>
