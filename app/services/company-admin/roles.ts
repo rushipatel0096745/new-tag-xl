@@ -6,13 +6,13 @@ type Filter = {
     text: string;
 };
 
-export const GetUserList = async function (page: number = 1, pageSize: number = 10, filters: Filter[] = []) {
+export const GetRoleList = async function (page: number = 1, pageSize: number = 10, filters: Filter[] = []) {
     const companyId = getCompanyId("company-user-session");
     const sessionId = getSessionId("company-user-session");
 
     // console.log("company id: ", companyId);
 
-    const result = await clientFetch("/company/users/list", {
+    const result = await clientFetch("/company/role/list", {
         method: "POST",
         headers: {
             "X-Session-ID": sessionId,

@@ -1,0 +1,839 @@
+ "columns": [
+        {
+            "name": "id",
+            "type": "INTEGER"
+        },
+        {
+            "name": "firstname",
+            "type": "VARCHAR"
+        },
+        {
+            "name": "lastname",
+            "type": "VARCHAR"
+        },
+        {
+            "name": "email",
+            "type": "VARCHAR"
+        },
+        {
+            "name": "password",
+            "type": "VARCHAR"
+        },
+        {
+            "name": "last_logged_in",
+            "type": "DATETIME"
+        },
+        {
+            "name": "role_id",
+            "type": "INTEGER"
+        }
+    ]
+
+
+create a filter ui component with the above column data
+for datetime type i want to have ui as from and to fields 
+and for other type use text input and for integer use number fields
+
+filter state should be like this [{field: "", condition: "", text: ""}]
+
+for date if user provided only form then in condtion property for that field should be "gte" and if both 
+from and to are given then in condtion property for that field should be "between" and if only to is given then 
+it should be "lte"
+for between condition it should store dates in array for text property 
+
+for all othre fileds condtion should be "contains"
+
+
+
+import React from "react";
+
+const FilterComponent = () => {
+  const [filters, setFilters] = React.useState([]);
+
+  const handleChange = (field, value, subField = null) => {
+    setFilters(prev => {
+      const otherFilters = prev.filter(f => f.field !== field);
+      let condition = "contains";
+      let text = value;
+
+      const column = columns.find(c => c.name === field);
+
+      if (column.type === "INTEGER") {
+        // For number inputs, always 'contains' (or could use '=' depending on needs)
+        text = value;
+      } else if (column.type === "DATETIME") {
+        const existingFilter = prev.find(f => f.field === field) || {};
+        const from = subField === "from" ? value : existingFilter.from;
+        const to = subField === "to" ? value : existingFilter.to;
+
+        if (from && to) {
+          condition = "between";
+          text = [from, to];
+        } else if (from) {
+          condition = "gte";
+          text = from;
+        } else if (to) {
+          condition = "lte";
+          text = to;
+        } else {
+          return otherFilters; // no filter if empty
+        }
+
+        return [...otherFilters, { field, condition, text, from, to }];
+      }
+
+      return [...otherFilters, { field, condition, text }];
+    });
+  };
+
+  return (
+    <div>
+      {columns.map(col => (
+        <div key={col.name} style={{ marginBottom: "1rem" }}>
+          <label>{col.name}</label>
+          {col.type === "DATETIME" ? (
+            <div style={{ display: "flex", gap: "0.5rem" }}>
+              <input
+                type="date"
+                placeholder="From"
+                onChange={e => handleChange(col.name, e.target.value, "from")}
+              />
+              <input
+                type="date"
+                placeholder="To"
+                onChange={e => handleChange(col.name, e.target.value, "to")}
+              />
+            </div>
+          ) : col.type === "INTEGER" ? (
+            <input
+              type="number"
+              onChange={e => handleChange(col.name, e.target.value)}
+            />
+          ) : (
+            <input
+              type="text"
+              onChange={e => handleChange(col.name, e.target.value)}
+            />
+          )}
+        </div>
+      ))}
+
+      <pre>{JSON.stringify(filters, null, 2)}</pre>
+    </div>
+  );
+};
+
+export default FilterComponent;
+
+in this for between i dont want to have from and to propert for that field because this cant be send to the api
+
+
+
+
+
+
+"use client";
+
+import { useState, useCallback } from "react";
+
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+type ColumnType = "INTEGER" | "VARCHAR" | "DATETIME";
+
+interface Column {
+  name: string;
+  type: ColumnType;
+}
+
+interface FilterState {
+  field: string;
+  condition: string;
+  text: string | string[];
+}
+
+interface DateRange {
+  from: string;
+  to: string;
+}
+
+// ─── Column definitions ───────────────────────────────────────────────────────
+
+const COLUMNS: Column[] = [
+  { name: "id", type: "INTEGER" },
+  { name: "firstname", type: "VARCHAR" },
+  { name: "lastname", type: "VARCHAR" },
+  { name: "email", type: "VARCHAR" },
+  { name: "password", type: "VARCHAR" },
+  { name: "last_logged_in", type: "DATETIME" },
+  { name: "role_id", type: "INTEGER" },
+];
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function getColumnType(fieldName: string): ColumnType {
+  return COLUMNS.find((c) => c.name === fieldName)?.type ?? "VARCHAR";
+}
+
+function buildFilterEntry(
+  field: string,
+  type: ColumnType,
+  value: string | DateRange
+): FilterState | null {
+  if (type === "DATETIME") {
+    const { from, to } = value as DateRange;
+    if (!from && !to) return null;
+    if (from && to)
+      return { field, condition: "between", text: [from, to] };
+    if (from) return { field, condition: "gte", text: from };
+    return { field, condition: "lte", text: to };
+  }
+  const text = (value as string).trim();
+  if (!text) return null;
+  return { field, condition: "contains", text };
+}
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function FieldBadge({ type }: { type: ColumnType }) {
+  const map: Record<ColumnType, { label: string; color: string }> = {
+    INTEGER: { label: "INT", color: "#f59e0b" },
+    VARCHAR: { label: "STR", color: "#6366f1" },
+    DATETIME: { label: "DATE", color: "#10b981" },
+  };
+  const { label, color } = map[type];
+  return (
+    <span
+      style={{
+        fontSize: "0.6rem",
+        fontFamily: "'JetBrains Mono', monospace",
+        letterSpacing: "0.06em",
+        padding: "2px 6px",
+        borderRadius: "4px",
+        background: `${color}22`,
+        color,
+        border: `1px solid ${color}44`,
+        fontWeight: 700,
+        userSelect: "none",
+      }}
+    >
+      {label}
+    </span>
+  );
+}
+
+// ─── Main Component ───────────────────────────────────────────────────────────
+
+export default function FilterPanel({
+  onApply,
+}: {
+  onApply?: (filters: FilterState[]) => void;
+}) {
+  // Per-field raw input state
+  const [textValues, setTextValues] = useState<Record<string, string>>({});
+  const [dateValues, setDateValues] = useState<Record<string, DateRange>>({});
+
+  const setTextField = (field: string, val: string) =>
+    setTextValues((p) => ({ ...p, [field]: val }));
+
+  const setDateField = (field: string, key: "from" | "to", val: string) =>
+    setDateValues((p) => ({
+      ...p,
+      [field]: { ...(p[field] ?? { from: "", to: "" }), [key]: val },
+    }));
+
+  const clearAll = useCallback(() => {
+    setTextValues({});
+    setDateValues({});
+  }, []);
+
+  const buildFilters = useCallback((): FilterState[] => {
+    const results: FilterState[] = [];
+    for (const col of COLUMNS) {
+      const type = col.type;
+      if (type === "DATETIME") {
+        const dv = dateValues[col.name] ?? { from: "", to: "" };
+        const entry = buildFilterEntry(col.name, type, dv);
+        if (entry) results.push(entry);
+      } else {
+        const entry = buildFilterEntry(
+          col.name,
+          type,
+          textValues[col.name] ?? ""
+        );
+        if (entry) results.push(entry);
+      }
+    }
+    return results;
+  }, [textValues, dateValues]);
+
+  const handleApply = () => {
+    const filters = buildFilters();
+    onApply?.(filters);
+    console.log("Applied filters:", JSON.stringify(filters, null, 2));
+  };
+
+  return (
+    <>
+      <div className="fp-root">
+        <div className="fp-panel">
+          {/* Header */}
+          <div className="fp-header">
+            <div className="fp-title">
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                <path
+                  d="M2 4h12M4 8h8M6 12h4"
+                  stroke="#6366f1"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </svg>
+              Filters
+              {activeCount > 0 && (
+                <span className="fp-badge">{activeCount} active</span>
+              )}
+            </div>
+            <button className="fp-clear-btn" onClick={clearAll}>
+              Clear all
+            </button>
+          </div>
+
+          {/* Fields grid */}
+          <div className="fp-grid">
+            {COLUMNS.map((col) => {
+              const type = col.type;
+              return (
+                <div className="fp-row" key={col.name}>
+                  {/* Label */}
+                  <div className="fp-label-cell">
+                    <FieldBadge type={type} />
+                    <span className="fp-field-name">{col.name}</span>
+                  </div>
+
+                  {/* Input */}
+                  <div className="fp-input-cell">
+                    {type === "DATETIME" ? (
+                      <div className="fp-date-row">
+                        <input
+                          className="fp-input"
+                          type="datetime-local"
+                          value={dateValues[col.name]?.from ?? ""}
+                          onChange={(e) =>
+                            setDateField(col.name, "from", e.target.value)
+                          }
+                          title="From"
+                        />
+                        <span className="fp-date-sep">→</span>
+                        <input
+                          className="fp-input"
+                          type="datetime-local"
+                          value={dateValues[col.name]?.to ?? ""}
+                          onChange={(e) =>
+                            setDateField(col.name, "to", e.target.value)
+                          }
+                          title="To"
+                        />
+                      </div>
+                    ) : type === "INTEGER" ? (
+                      <input
+                        className="fp-input"
+                        type="number"
+                        placeholder={`Filter by ${col.name}…`}
+                        value={textValues[col.name] ?? ""}
+                        onChange={(e) => setTextField(col.name, e.target.value)}
+                      />
+                    ) : (
+                      <input
+                        className="fp-input"
+                        type="text"
+                        placeholder={`Filter by ${col.name}…`}
+                        value={textValues[col.name] ?? ""}
+                        onChange={(e) => setTextField(col.name, e.target.value)}
+                      />
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Footer */}
+          <div className="fp-footer">
+            <button className="fp-apply-btn" onClick={handleApply}>
+              Apply filters
+              {activeCount > 0 && (
+                <span className="fp-apply-count">{activeCount}</span>
+              )}
+            </button>
+          </div>
+
+          {/* Live preview */}
+          {liveFilters.length > 0 && (
+            <div className="fp-preview">
+              <div className="fp-preview-title">// live filter state</div>
+              <pre
+                className="fp-preview-code"
+                dangerouslySetInnerHTML={{
+                  __html: colorizeJson(
+                    JSON.stringify(liveFilters, null, 2)
+                  ),
+                }}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </>
+  );
+}
+
+
+
+
+
+
+
+"use client";
+
+import { clientFetch, getCompanyId, getSessionId } from "@/app/utils/user-helper";
+import React, { useCallback, useEffect, useState } from "react";
+
+interface Column {
+    name: string;
+    type: string;
+}
+
+type Filters = Record<string, string | string[]>;
+
+// ─── FilterField ────────────────────────────────────────────────────────────
+
+interface FilterFieldProps {
+    col: Column;
+    value: string | string[];
+    onChange: (name: string, value: string | string[]) => void;
+}
+
+const FilterField = React.memo(({ col, value, onChange }: FilterFieldProps) => {
+    const label = col.name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+
+    if (col.type === "DATETIME") {
+        const [from, to] = Array.isArray(value) ? value : ["", ""];
+        return (
+            <div className="col-span-2">
+                <label>{label}</label>
+                <div className="grid grid-cols-2 gap-2">
+                    <input
+                        type="date"
+                        className="form-input"
+                        value={from}
+                        onChange={(e) => onChange(col.name, [e.target.value, to])}
+                    />
+                    <input
+                        type="date"
+                        className="form-input"
+                        value={to}
+                        onChange={(e) => onChange(col.name, [from, e.target.value])}
+                    />
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className="col-span-1">
+            <label>{label}</label>
+            <input
+                type={col.type === "INTEGER" ? "number" : "text"}
+                className="form-input"
+                value={value as string}
+                onChange={(e) => onChange(col.name, e.target.value)}
+            />
+        </div>
+    );
+});
+
+FilterField.displayName = "FilterField";
+
+// ─── UserFilter ──────────────────────────────────────────────────────────────
+
+export default function UserFilter() {
+    const [columns, setColumns] = useState<Column[]>([]);
+    const [filters, setFilters] = useState<Filters>({});
+    const [open, setOpen] = useState(false);
+
+    useEffect(() => {
+        const sessionId = getSessionId("company-user-session");
+        const companyId = getCompanyId("company-user-session");
+
+        clientFetch("/company/table-columns/users", {
+            method: "GET",
+            headers: {
+                "X-Session-ID": sessionId,
+                "X-Company-ID": companyId,
+                "Content-Type": "application/json",
+            },
+        })
+            .then((res) => {
+                if (res?.has_error) throw new Error(res.message);
+                setColumns(res.columns);
+            })
+            .catch((err) => console.error("Failed to fetch columns:", err));
+    }, []);
+
+    const handleChange = useCallback((name: string, value: string | string[]) => {
+        setFilters((prev) => ({ ...prev, [name]: value }));
+    }, []);
+
+    const handleReset = () => setFilters({});
+
+    // Build the filter payload when applying
+    const buildPayload = () =>
+        Object.entries(filters).flatMap(([field, value]) => {
+            if (!value || (Array.isArray(value) && !value[0] && !value[1])) return [];
+
+            const [from, to] = Array.isArray(value) ? value : [];
+
+            if (Array.isArray(value)) {
+                if (from && to) return [{ field, condition: "between", text: [from, to] }];
+                if (from)        return [{ field, condition: "gte", text: from }];
+                if (to)          return [{ field, condition: "lte", text: to }];
+                return [];
+            }
+
+            return [{ field, condition: "contains", text: value }];
+        });
+
+    const handleApply = () => {
+        const payload = buildPayload();
+        console.log("Applying filters:", payload);
+        // call your API here
+    };
+
+    const visibleColumns = columns.filter((col) => col.name !== "password");
+
+    return (
+        <div className="card-box bg-white border-gray-700 rounded-[18px] shadow-3xl px-3 py-5 filter-section mb-16">
+            {/* Header */}
+            <div
+                className="grid grid-cols-[1fr_auto] cursor-pointer"
+                onClick={() => setOpen((prev) => !prev)}>
+                <h3 className="text-[18px] font-semibold leading-6 flex items-center">Filters</h3>
+
+                <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
+                    <ActionButton onClick={handleReset} icon={<ResetIcon />} label="Reset" />
+                    <ActionButton onClick={handleApply} icon={<FilterIcon />} label="Apply filter" primary />
+                </div>
+            </div>
+
+            {/* Filter Fields */}
+            {open && (
+                <div className="grid grid-cols-2 gap-4 mt-6">
+                    {visibleColumns.map((col) => (
+                        <FilterField
+                            key={col.name}
+                            col={col}
+                            value={filters[col.name] ?? (col.type === "DATETIME" ? ["", ""] : "")}
+                            onChange={handleChange}
+                        />
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ─── Small reusable button ───────────────────────────────────────────────────
+
+function ActionButton({
+    onClick,
+    icon,
+    label,
+    primary = false,
+}: {
+    onClick: () => void;
+    icon: React.ReactNode;
+    label: string;
+    primary?: boolean;
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            className="bg-white border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium">
+            <span className="icon-circle">{icon}</span>
+            <span className={`capitalize ml-2 ${primary ? "text-[#845ADF]" : "text-[#1a1a1a]"}`}>{label}</span>
+        </button>
+    );
+}
+
+function ResetIcon() {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none">
+            <path d="M2 21V16C2 15.4477 2.44772 15 3 15H8C8.55228 15 9 15.4477 9 16C9 16.5523 8.55228 17 8 17H5.41406L5.95508 17.541L6.26562 17.8271C7.84922 19.2168 9.88571 19.9906 12.002 19.999C14.123 19.9985 16.1574 19.1571 17.6572 17.6572C19.1575 16.1569 20 14.1217 20 12C20 11.4477 20.4477 11 21 11C21.5523 11 22 11.4477 22 12C22 14.6522 20.9467 17.1959 19.0713 19.0713C17.1959 20.9467 14.6522 22 12 22H11.9961C9.22205 21.9895 6.5599 20.9066 4.56543 18.9785L5.27441 18.2441L5.25977 18.2598L4.56543 18.9785C4.56138 18.9746 4.55672 18.9708 4.55273 18.9668L4 18.4141V21C4 21.5523 3.55228 22 3 22C2.44772 22 2 21.5523 2 21ZM2 12C2 9.34784 3.05335 6.80407 4.92871 4.92871C6.80407 3.05335 9.34784 2 12 2H12.0039L12.5225 2.01465C14.9359 2.14027 17.2373 3.07585 19.0537 4.66992L19.4473 5.0332L20 5.58594V3C20 2.44772 20.4477 2 21 2C21.5523 2 22 2.44772 22 3V8C22 8.55228 21.5523 9 21 9H16C15.4477 9 15 8.55228 15 8C15 7.44772 15.4477 7 16 7H18.5859L18.0449 6.45898L17.7344 6.17285C16.1505 4.78301 14.1137 4.00816 11.9971 4C9.8764 4.00078 7.84237 4.84317 6.34277 6.34277C4.84248 7.84306 4 9.87827 4 12C4 12.5523 3.55228 13 3 13C2.44772 13 2 12.5523 2 12Z" fill="#919191" />
+        </svg>
+    );
+}
+
+function FilterIcon() {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width={24} height={24} viewBox="0 0 24 24" fill="none">
+            <path d="M19 17C19 15.8954 18.1046 15 17 15C15.8954 15 15 15.8954 15 17C15 18.1046 15.8954 19 17 19C18.1046 19 19 18.1046 19 17ZM7 3C8.86657 3 10.4336 4.27874 10.875 6.00781C10.916 6.00271 10.9577 6 11 6H20C20.5523 6 21 6.44772 21 7C21 7.55228 20.5523 8 20 8H11C10.9576 8 10.916 7.99633 10.875 7.99121C10.4339 9.72075 8.8669 11 7 11C4.79086 11 3 9.20914 3 7C3 4.79086 4.79086 3 7 3ZM21 17C21 19.2091 19.2091 21 17 21C15.1362 21 13.57 19.7252 13.126 18H5C4.44772 18 4 17.5523 4 17C4 16.4477 4.44772 16 5 16H13.126C13.57 14.2748 15.1362 13 17 13C19.2091 13 21 14.7909 21 17ZM5 7C5 8.10457 5.89543 9 7 9C8.10457 9 9 8.10457 9 7C9 5.89543 8.10457 5 7 5C5.89543 5 5 5.89543 5 7Z" fill="#845ADF" />
+        </svg>
+    );
+}
+
+
+
+
+"use client";
+
+import { clientFetch, getCompanyId, getSessionId } from "@/app/utils/user-helper";
+import React, { useCallback, useEffect, useState } from "react";
+
+interface ColumnItem {
+    name: string;
+    type: string;
+}
+
+interface FilterObj {
+    field: string;
+    condition: string;
+    text: string | string[];
+}
+
+interface FilterFieldProps {
+    colName: string;
+    type: string;
+    value: string | string[];
+    onFilterChange: (field: string, type: string, value: string) => void;
+}
+
+// ✅ React.memo prevents re-render unless props actually change
+const FilterField = React.memo(function FilterField({ colName, type, value, onFilterChange }: FilterFieldProps) {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index?: number) => {
+        if (type === "DATETIME" && index !== undefined) {
+            const arr: string[] = Array.isArray(value) ? [...value] : ["", ""];
+            arr[index] = e.target.value;
+            onFilterChange(colName, type, arr.join("|"));
+        } else {
+            onFilterChange(colName, type, e.target.value);
+        }
+    };
+
+    return (
+        <div className={type === "DATETIME" ? "col-span-3" : "col-span-1"}>
+            <label>{colName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</label>
+            {type === "DATETIME" ? (
+                <div className='grid grid-cols-2 gap-2'>
+                    <input
+                        type='date'
+                        className='form-input'
+                        onChange={(e) => handleChange(e, 0)}
+                        value={Array.isArray(value) ? value[0] : ""}
+                    />
+                    <input
+                        type='date'
+                        className='form-input'
+                        onChange={(e) => handleChange(e, 1)}
+                        value={Array.isArray(value) ? value[1] : ""}
+                    />
+                </div>
+            ) : type === "INTEGER" ? (
+                <input type='number' className='form-input' value={value as string} onChange={handleChange} />
+            ) : (
+                <input type='text' className='form-input' value={value as string} onChange={handleChange} />
+            )}
+        </div>
+    );
+});
+
+const UserFilter = () => {
+    const [filters, setFilters] = useState<FilterObj[]>([]);
+    const [toggle, setToggle] = useState(false);
+    const [columns, setColumns] = useState<ColumnItem[]>([]);
+    const [conditions, setConditions] = useState<Record<string, string>>({});
+
+    const sessionId = getSessionId("company-user-session");
+    const companyId = getCompanyId("company-user-session");
+
+    useEffect(() => {
+        async function getUserCols() {
+            try {
+                const result = await clientFetch("/company/table-columns/users", {
+                    method: "GET",
+                    headers: {
+                        "X-Session-ID": sessionId,
+                        "X-Company-ID": companyId,
+                        "Content-Type": "application/json",
+                    },
+                });
+
+                if (result?.has_error) {
+                    console.error("users fetching failed:", result.message);
+                    return;
+                }
+
+                setColumns(result.columns);
+                setConditions(result.conditions);
+            } catch (error) {
+                console.error("Column fetching error:", error);
+            }
+        }
+
+        getUserCols();
+    }, []);
+
+    // ✅ useCallback so the function reference is stable across re-renders
+    const handleFilterChange = useCallback((field: string, type: string, value: string) => {
+        setFilters((prev) => {
+            let condition = "contains";
+            let text: string | string[] = value;
+
+            if (type === "DATETIME") {
+                const [from = "", to = ""] = value.split("|");
+
+                // ✅ Always store as array — no more overriding back to string
+                text = [from, to];
+
+                if (from && to) {
+                    condition = "between";
+                } else if (from) {
+                    condition = "gte";
+                } else if (to) {
+                    condition = "lte";
+                }
+            }
+
+            const existing = prev.find((f) => f.field === field);
+
+            if (existing) {
+                return prev.map((f) => (f.field === field ? { ...f, condition, text } : f));
+            } else {
+                return [...prev, { field, condition, text }];
+            }
+        });
+    }, []); // ✅ Empty deps — setFilters is stable, no other external deps
+
+    return (
+        <div className='card-box bg-[#fff] border-gray-700 rounded-[18px] shadow-3xl shadow-white px-3 py-5.5 filter-section mb-16'>
+            <div
+                className='card-box_head filter-head grid grid-cols-[1fr_auto]'
+                onClick={() => setToggle((prev) => !prev)}>
+                <div className='title-wrapper filter-trigger cursor-pointer h-full w-full flex items-center'>
+                    <h3 className='title h3 text-[18px] font-semibold leading-6'>Filters</h3>
+                </div>
+                <div className='actions-btn flex items-center gap-2 icon-text-button primary cursor-pointer'>
+                    <button
+                        className='icon-text-button default bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
+                        type='button'
+                        onClick={(e) => { e.stopPropagation(); setFilters([]); }}>
+                        <span className='icon-circle'>
+                            <svg xmlns='http://www.w3.org/2000/svg' width={24} height={24} viewBox='0 0 24 24' fill='none'>
+                                <path d='M2 21V16C2 15.4477 2.44772 15 3 15H8C8.55228 15 9 15.4477 9 16C9 16.5523 8.55228 17 8 17H5.41406L5.95508 17.541L6.26562 17.8271C7.84922 19.2168 9.88571 19.9906 12.002 19.999C14.123 19.9985 16.1574 19.1571 17.6572 17.6572C19.1575 16.1569 20 14.1217 20 12C20 11.4477 20.4477 11 21 11C21.5523 11 22 11.4477 22 12C22 14.6522 20.9467 17.1959 19.0713 19.0713C17.1959 20.9467 14.6522 22 12 22H11.9961C9.22205 21.9895 6.5599 20.9066 4.56543 18.9785L5.27441 18.2441L5.25977 18.2598L4.56543 18.9785C4.56138 18.9746 4.55672 18.9708 4.55273 18.9668L4 18.4141V21C4 21.5523 3.55228 22 3 22C2.44772 22 2 21.5523 2 21ZM2 12C2 9.34784 3.05335 6.80407 4.92871 4.92871C6.80407 3.05335 9.34784 2 12 2H12.0039L12.5225 2.01465C14.9359 2.14027 17.2373 3.07585 19.0537 4.66992L19.4473 5.0332L20 5.58594V3C20 2.44772 20.4477 2 21 2C21.5523 2 22 2.44772 22 3V8C22 8.55228 21.5523 9 21 9H16C15.4477 9 15 8.55228 15 8C15 7.44772 15.4477 7 16 7H18.5859L18.0449 6.45898L17.7344 6.17285C16.1505 4.78301 14.1137 4.00816 11.9971 4C9.8764 4.00078 7.84237 4.84317 6.34277 6.34277C4.84248 7.84306 4 9.87827 4 12C4 12.5523 3.55228 13 3 13C2.44772 13 2 12.5523 2 12Z' fill='#919191' />
+                            </svg>
+                        </span>
+                        <span className='button-label text-[#1a1a1a] capitalize ml-2'>Reset</span>
+                    </button>
+                    <button
+                        className='icon-text-button primary bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
+                        type='button'
+                        onClick={(e) => e.stopPropagation()}>
+                        <span className='icon-circle'>
+                            <svg xmlns='http://www.w3.org/2000/svg' width={24} height={24} viewBox='0 0 24 24' fill='none'>
+                                <path d='M19 17C19 15.8954 18.1046 15 17 15C15.8954 15 15 15.8954 15 17C15 18.1046 15.8954 19 17 19C18.1046 19 19 18.1046 19 17ZM7 3C8.86657 3 10.4336 4.27874 10.875 6.00781C10.916 6.00271 10.9577 6 11 6H20C20.5523 6 21 6.44772 21 7C21 7.55228 20.5523 8 20 8H11C10.9576 8 10.916 7.99633 10.875 7.99121C10.4339 9.72075 8.8669 11 7 11C4.79086 11 3 9.20914 3 7C3 4.79086 4.79086 3 7 3ZM21 17C21 19.2091 19.2091 21 17 21C15.1362 21 13.57 19.7252 13.126 18H5C4.44772 18 4 17.5523 4 17C4 16.4477 4.44772 16 5 16H13.126C13.57 14.2748 15.1362 13 17 13C19.2091 13 21 14.7909 21 17ZM5 7C5 8.10457 5.89543 9 7 9C8.10457 9 9 8.10457 9 7C9 5.89543 8.10457 5 7 5C5.89543 5 5 5.89543 5 7Z' fill='#845ADF' />
+                            </svg>
+                        </span>
+                        <span className='button-label text-[#1a1a1a] capitalize ml-2'>Apply filter</span>
+                    </button>
+                </div>
+            </div>
+
+            <form className='flex flex-col gap-6' onSubmit={(e) => e.preventDefault()}>
+                <div className='grid grid-cols-2 gap-4'>
+                    {columns
+                        .filter((col) => col.name !== "password")
+                        .map((col) => {
+                            const filter = filters.find((f) => f.field === col.name);
+                            return (
+                                <FilterField
+                                    key={col.name}
+                                    colName={col.name}
+                                    type={col.type}
+                                    value={filter ? filter.text : col.type === "DATETIME" ? ["", ""] : ""}
+                                    onFilterChange={handleFilterChange}
+                                />
+                            );
+                        })}
+                </div>
+            </form>
+        </div>
+    );
+};
+
+export default UserFilter;
+
+
+this is from filter component and filter state is passed
+const applyFilter = function() {
+        Cookies.set("company_user_filter", JSON.stringify(filters));
+        window.dispatchEvent(new Event("filtersChanged"))
+}
+
+this is from table component 
+ useEffect(() => {
+        async function fetchUsers() {
+            const cookieFilters = Cookies.get("company_user_filters");
+            let parsedFilters = null;
+            if (cookieFilters) {
+                parsedFilters = JSON.parse(cookieFilters);
+            }
+            console.log("parsed filters: ", parsedFilters)
+            const response = await GetUserList(page, pageSize, parsedFilters);
+            console.log("list response....", response)
+
+            if (response.has_error && response.message === "Permission denied") {
+                setError({ permission: "Permission Denied" });
+                setLoading(false);
+                return;
+            }
+
+            if (response.has_error && response.message === "Asset not found") {
+                setLoading(false);
+                setList([]);
+                setTotal(0);
+                return;
+            }
+            if (!response.has_error && response.message === "Assets fetched successfully") {
+                setList(response.users);
+                setError({});
+                setTotal(response.total);
+                setLoading(false);
+                return;
+            }
+            if (response.has_error && response.message === "Invalid or expired session") {
+                setLoading(false);
+                alert("Session is over, Please Login Again.");
+                Cookies.remove("company_user_session");
+                window.location.reload();
+                return;
+            }
+            if (response.has_error) {
+                setLoading(false);
+                setError({ api: response.message });
+                setList([]);
+                setTotal(0);
+                return;
+            }
+        }
+
+        fetchUsers();
+
+        const handleFiltersChanged = () => fetchUsers();
+        window.addEventListener("filtersChanged", handleFiltersChanged);
+
+        return () => {
+            window.removeEventListener("filtersChanged", handleFiltersChanged);
+        };
+    }, [page, pageSize]);
+
+    in this when value changes for the filter its not reflacting and keep getting parsed filters null
+

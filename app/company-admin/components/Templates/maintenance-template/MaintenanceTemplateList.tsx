@@ -4,7 +4,9 @@ import { MaintenanceTemplate } from "@/app/company-admin/(admin)/template-master
 import { clientFetch, getCompanyId, getCompanyUserPermissions, getSessionId } from "@/app/utils/user-helper";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import Cookies from 'js-cookie';
+import { GetMaintenanceTemplateList } from "@/app/services/company-admin/maintenance_template";
 
 interface Props {
     tmpList: MaintenanceTemplate[];
@@ -12,14 +14,82 @@ interface Props {
 
 const MaintenanceTemplateList = ({ tmpList }: Props) => {
     const [list, setList] = useState<MaintenanceTemplate[]>(tmpList);
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
     const [showMsg, setShowMsg] = useState("");
+    const [error, setError] = useState<{ [key: string]: string }>({});
+    const [loading, setLoading] = useState(true);
+    const [total, setTotal] = useState(0);
+
     const [permitted, setPermitted] = useState<boolean>();
     const [permError, setPermError] = useState("");
+    const [sessionId, setSessionId] = useState("");
+    const [companyId, setCompanyId] = useState("");
+    const [userRole, setUserRole] = useState<string[]>();
+    const [createRolePermission, setCreateRolePermission] = useState(false);
+    const [createUserPermission, setCreateUserPermission] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+        const role = getCompanyUserPermissions();
+        setUserRole(role.role);
+
+        async function fetchRoles() {
+            const cookieFilters = Cookies.get("company_maintenance_filter");
+            let parsedFilters = null;
+            if (cookieFilters) {
+                parsedFilters = JSON.parse(cookieFilters);
+            }
+            console.log("parsed filters: ", parsedFilters);
+            const response = await GetMaintenanceTemplateList(page, pageSize, parsedFilters);
+            console.log("list response....", response);
+
+            if (response.has_error && response.message === "Permission denied") {
+                setError({ permission: "Permission Denied" });
+                setLoading(false);
+                return;
+            }
+
+            if (response.has_error && response.message === "Asset not found") {
+                setLoading(false);
+                setList([]);
+                setTotal(0);
+                return;
+            }
+            if (!response.has_error && response.message === "Maintenance Template fetched successfully") {
+                setList(response.maintenance_templates);
+                setError({});
+                setTotal(response.total);
+                setLoading(false);
+                return;
+            }
+            if (response.has_error && response.message === "Invalid or expired session") {
+                setLoading(false);
+                alert("Session is over, Please Login Again.");
+                Cookies.remove("company_user_session");
+                window.location.reload();
+                return;
+            }
+            if (response.has_error) {
+                setLoading(false);
+                setError({ api: response.message });
+                setList([]);
+                setTotal(0);
+                return;
+            }
+        }
+
+        fetchRoles();
+
+        const handleFiltersChanged = () => fetchRoles();
+        window.addEventListener("MaintenanceFiltersChanged", handleFiltersChanged);
+
+        return () => {
+            window.removeEventListener("MaintenanceFiltersChanged", handleFiltersChanged);
+        };
+    }, [page, pageSize]);
 
     const router = useRouter();
-
-    const sessionId = getSessionId("company-user-session");
-    const companyId = getCompanyId("company-user-session");
 
     function checkPermission(perm: string) {
         const permission = getCompanyUserPermissions();

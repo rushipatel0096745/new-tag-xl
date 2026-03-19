@@ -1,4 +1,5 @@
 import Filter from "@/app/company-admin/components/Filter";
+import MaintenanceFilter from "@/app/company-admin/components/Templates/maintenance-template/MaintenanceFilter";
 import MaintenanceTemplateList from "@/app/company-admin/components/Templates/maintenance-template/MaintenanceTemplateList";
 import { getMaintenanceTemplateList } from "@/app/services/company-admin/templates";
 import React, { Suspense } from "react";
@@ -31,7 +32,7 @@ const MaintenanceCheckPage = async() => {
                 </div>
                 <div className='page-body'>
                     {/* filter */}
-                    <Filter />
+                    <MaintenanceFilter />
 
                     {/* asset list */}
                     <Suspense fallback={<p>Loading....</p>}>

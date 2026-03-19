@@ -1,7 +1,5 @@
-import Filter from "@/app/company-admin/components/Filter";
-import PreuseTemplateList from "@/app/company-admin/components/Templates/preuse-template/PreuseTemplateList";
+import RoleFilter from "@/app/company-admin/components/UsersAndRoles/Roles/RoleFilter";
 import RoleList from "@/app/company-admin/components/UsersAndRoles/Roles/RoleList";
-import UserList from "@/app/company-admin/components/UsersAndRoles/Users/UserList";
 import { getComapnyData, getCompanySessionId } from "@/app/services/company-admin/getComapnyData";
 import { clientFetch } from "@/app/utils/user-helper";
 import React, { Suspense } from "react";
@@ -57,7 +55,7 @@ const RoleListPage = async () => {
                 </div>
                 <div className='page-body'>
                     {/* filter */}
-                    <Filter />
+                    <RoleFilter />
 
                     {/* asset list */}
                     <Suspense fallback={<p>Loading....</p>}>

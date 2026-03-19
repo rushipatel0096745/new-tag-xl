@@ -5,7 +5,7 @@ function isBrowser() {
     return typeof window !== "undefined";
 }
 
-function getDataFromCookie(sessionName: string) {
+export function getDataFromCookie(sessionName: string) {
     const encryptedData = Cookies.get(sessionName);
     if (!encryptedData) return null;
 

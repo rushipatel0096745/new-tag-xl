@@ -61,7 +61,7 @@ const FilterField = React.memo(function ({ colName, type, value, onFilterChange 
     );
 });
 
-const UserFilter = () => {
+const RoleFilter = () => {
     // const [filters, setFilters] = useState<FilterObj[]>([]);
     const [toggle, setToggle] = useState(false);
     const [columns, setColumns] = useState<ColumnItem[]>([]);
@@ -80,9 +80,9 @@ const UserFilter = () => {
     const sessionId = getSessionId("company-user-session");
     const companyId = getCompanyId("company-user-session");
 
-    async function getUserCols() {
+    async function getRoleCols() {
         try {
-            const result = await clientFetch("/company/table-columns/users", {
+            const result = await clientFetch("/company/table-columns/roles", {
                 method: "GET",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -91,10 +91,10 @@ const UserFilter = () => {
                 },
             });
 
-            console.log("USER COLUMN API response:", result);
+            console.log("ROLE COLUMN API response:", result);
 
             if (result?.has_error) {
-                console.error("users fetching failed:", result.message);
+                console.error("roles fetching failed:", result.message);
                 return;
             }
 
@@ -106,16 +106,10 @@ const UserFilter = () => {
     }
 
     useEffect(() => {
-        getUserCols();
+        getRoleCols();
     }, []);
 
-    // useEffect(() => {
-    //     console.log("columns: ", columns);
-    // }, [columns]);
-
-    // useEffect(() => {
-    //     console.log("filters: ", filters);
-    // }, [filters]);
+    const HIDE_COLUMNS = ["description", "permission"]
 
     const handleFilterChange = useCallback((field: string, type: string, value: string) => {
         setFilters((prev) => {
@@ -148,19 +142,19 @@ const UserFilter = () => {
 
     const applyFilter = function () {
         console.log("filters: ", filters);
-        Cookies.set("company_user_filter", JSON.stringify(filters));
-        window.dispatchEvent(new Event("filtersChanged"));
+        Cookies.set("company_role_filter", JSON.stringify(filters));
+        window.dispatchEvent(new Event("RoleFiltersChanged"));
     };
 
     const resetFilter = function () {
         setToggle(false);
         setFilters([]);
-        Cookies.remove("company_user_filter");
-        window.dispatchEvent(new Event("filtersChanged"));
+        Cookies.remove("company_role_filter");
+        window.dispatchEvent(new Event("RoleFiltersChanged"));
     };
 
     useEffect(() => {
-        const cookieFilters = Cookies.get("company_user_filter");
+        const cookieFilters = Cookies.get("company_role_filter");
         setToggle(true);
 
         if (cookieFilters) {
@@ -172,42 +166,6 @@ const UserFilter = () => {
             }
         }
     }, []);
-
-    // const handleChange = (field: string, value: string, subField = null) => {
-    //     setFilters((prev) => {
-    //         const otherFilters = prev.filter((f) => f.field !== field);
-    //         let condition = "contains";
-    //         let text = value;
-
-    //         const column: ColumnItem = columns.find((c) => c.name === field);
-
-    //         if (column.type === "INTEGER") {
-    //             // For number inputs, always 'contains' (or could use '=' depending on needs)
-    //             text = value;
-    //         } else if (column.type === "DATETIME") {
-    //             const existingFilter = prev.find((f) => f.field === field) || {};
-    //             const from = subField === "from" ? value : existingFilter.from;
-    //             const to = subField === "to" ? value : existingFilter.to;
-
-    //             if (from && to) {
-    //                 condition = "between";
-    //                 text = [from, to];
-    //             } else if (from) {
-    //                 condition = "gte";
-    //                 text = from;
-    //             } else if (to) {
-    //                 condition = "lte";
-    //                 text = to;
-    //             } else {
-    //                 return otherFilters; // no filter if empty
-    //             }
-
-    //             return [...otherFilters, { field, condition, text }];
-    //         }
-
-    //         return [...otherFilters, { field, condition, text }];
-    //     });
-    // };
 
     return (
         <div className='card-box bg-[#fff] border-gray-700 rounded-[18px] shadow-3xl shadow-white px-3 py-5.5 filter-section mb-16'>
@@ -263,7 +221,7 @@ const UserFilter = () => {
                 <form className='flex flex-col gap-6'>
                     <div className='grid grid-cols-2 gap-4'>
                         {columns
-                            .filter((col) => col.name !== "password")
+                            .filter((col) => !HIDE_COLUMNS.includes(col.name) )
                             .map((col) => {
                                 const filter = filters.find((f) => f.field === col.name);
                                 return (
@@ -276,32 +234,6 @@ const UserFilter = () => {
                                     />
                                 );
                             })}
-
-                        {/* {columns
-                        .filter((col) => col.name !== "password")
-                        .map((col) => (
-                            <div key={col.name} style={{ marginBottom: "1rem" }}>
-                                <label>{col.name}</label>
-                                {col.type === "DATETIME" ? (
-                                    <div style={{ display: "flex", gap: "0.5rem" }}>
-                                        <input
-                                            type='date'
-                                            placeholder='From'
-                                            onChange={(e) => handleChange(col.name, e.target.value, "from")}
-                                        />
-                                        <input
-                                            type='date'
-                                            placeholder='To'
-                                            onChange={(e) => handleChange(col.name, e.target.value, "to")}
-                                        />
-                                    </div>
-                                ) : col.type === "INTEGER" ? (
-                                    <input type='number' onChange={(e) => handleChange(col.name, e.target.value)} />
-                                ) : (
-                                    <input type='text' onChange={(e) => handleChange(col.name, e.target.value)} />
-                                )}
-                            </div>
-                        ))} */}
                     </div>
                 </form>
             )}
@@ -309,4 +241,4 @@ const UserFilter = () => {
     );
 };
 
-export default UserFilter;
+export default RoleFilter;
