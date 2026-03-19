@@ -3,10 +3,21 @@
 import { clientFetch, getCompanyId, getSessionId } from "@/app/utils/user-helper";
 import React, { useEffect, useState } from "react";
 
+interface ColumnItem {
+    name: string;
+    type: string;
+}
+
+interface FilterObj {
+    field: string;
+    condition: string;
+    text: string | string[];
+}
+
 const UserFilter = () => {
-    const [filter, setFilter] = useState([]);
+    const [filters, setFilters] = useState<FilterObj[]>([]);
     const [toggle, setToggle] = useState(false);
-    const [columns, setColumns] = useState([]);
+    const [columns, setColumns] = useState<ColumnItem[]>([]);
     const [conditions, setConditions] = useState<Record<string, string>>({});
 
     const sessionId = getSessionId("company-user-session");
@@ -45,9 +56,92 @@ const UserFilter = () => {
         console.log("columns: ", columns);
     }, [columns]);
 
+    useEffect(() => {
+        console.log("filters: ", filters);
+    }, [filters]);
+
+    interface FilterFieldProps {
+        colName: string;
+        type: string;
+        value: string | string[];
+        onFilterChange: (field: string, type: string, value: string) => void;
+    }
+
+    function handleFilterChange(field: string, type: string, value: string) {
+        setFilters((prev) => {
+            let condition = "contains"; // default for INTEGER/VARCHAR
+            let text: string | string[] = value;
+
+            if (type === "DATETIME") {
+                const [from, to] = value.split("|");
+
+                if (from && to) {
+                    condition = "between";
+                    text = [from, to]; // store as array
+                } else if (from) {
+                    condition = "gte";
+                    text = from;
+                } else if (to) {
+                    condition = "lte";
+                    text = to;
+                } else {
+                    text = ""; // empty
+                }
+            }
+
+            const existing = prev.find((f) => f.field === field);
+
+            if (existing) {
+                return prev.map((f) => (f.field === field ? { ...f, condition, text } : f));
+            } else {
+                return [...prev, { field, condition, text }];
+            }
+        });
+    }
+
+    function FilterField({ colName, type, value, onFilterChange }: FilterFieldProps) {
+        const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index?: number) => {
+            if (type === "DATETIME" && index !== undefined) {
+                const arr: string[] = Array.isArray(value) ? [...value] : ["", ""];
+                arr[index] = e.target.value;
+                onFilterChange(colName, type, arr.join("|"));
+            } else {
+                onFilterChange(colName, type, e.target.value);
+            }
+        };
+
+        return (
+            <div className={type === "DATETIME" ? "col-span-3" : "col-span-1"}>
+                <label>{colName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</label>
+                {type === "DATETIME" ? (
+                    <div className='grid grid-cols-2 gap-2'>
+                        <input
+                            type='date'
+                            className='form-input'
+                            onChange={(e) => handleChange(e, 0)}
+                            value={Array.isArray(value) ? value[0] : ""}
+                        />
+                        <input
+                            type='date'
+                            className='form-input'
+                            onChange={(e) => handleChange(e, 1)}
+                            value={Array.isArray(value) ? value[1] : ""}
+                        />
+                    </div>
+                ) : type === "INTEGER" ? (
+                    <input type='number' className='form-input' value={value as string} onChange={handleChange} />
+                ) : (
+                    <input type='text' className='form-input' value={value as string} onChange={handleChange} />
+                )}
+            </div>
+        );
+    }
+
     return (
         <div className='card-box bg-[#fff] border-gray-700 rounded-[18px] shadow-3xl shadow-white px-3 py-5.5 filter-section mb-16'>
-            <div className='card-box_head  filter-head grid grid-cols-[1fr_auto]'>
+            <div
+                className='card-box_head  filter-head grid grid-cols-[1fr_auto]'
+                onClick={() => setToggle((prev) => !prev)}>
                 <div className='title-wrapper filter-trigger cursor-pointer h-full w-full flex items-center'>
                     <h3 className='title h3 h3 text-[18px] font-semibold leading-6'>Filters</h3>
                 </div>{" "}
@@ -93,63 +187,20 @@ const UserFilter = () => {
 
             <form className='flex flex-col gap-6'>
                 <div className='grid grid-cols-2 gap-4'>
-                    {/* UID */}
-                    <div className='col-span-2'>
-                        <label className='form-label'>UID</label>
-                        <input type='text' className='form-input' />
-                    </div>
-
-                    {/* Name */}
-                    <div>
-                        <label className='form-label'>Name</label>
-                        <input
-                            type='text'
-                            className='form-input'
-                            // value={name}
-                            name='name'
-                            // onChange={(e) => setName(e.target.value)}
-                        />
-                    </div>
-
-                    {/* Location */}
-                    <div>
-                        <label className='form-label'>Location</label>
-                        <select
-                            className='form-input'
-                            // value={location}
-                            name='location_id'
-                            // onChange={(e) => setLocation(e.target.value)}>
-                            // {loactionList.map((location) => (
-                            //     <option value={location.id} key={location.id}>
-                            //         {location.name}
-                            //     </option>
-                            // ))}
-                        >
-                            <option>Test</option>
-                        </select>
-                    </div>
-
-                    {/* Batch Code */}
-                    <div>
-                        <label className='form-label'>Batch Code</label>
-                        <input
-                            type='text'
-                            className='form-input'
-                            // value={batchCode}
-                            name='batch_code'
-                            // onChange={(e) => setBatchCode(e.target.value)}
-                        />
-                    </div>
-
-                    {/* Status */}
-                    <div>
-                        <label className='form-label'>Status</label>
-                        <select className='form-input' name='status'>
-                            {/* onChange={(e) => setStatus(e.target.value)} */}
-                            <option value='1'>Active</option>
-                            <option value='0'>Inactive</option>
-                        </select>
-                    </div>
+                    {columns
+                        .filter((col) => col.name !== "password")
+                        .map((col) => {
+                            const filter = filters.find((f) => f.field === col.name);
+                            return (
+                                <FilterField
+                                    key={col.name}
+                                    colName={col.name}
+                                    type={col.type}
+                                    value={filter ? filter.text : col.type === "DATETIME" ? ["", ""] : ""}
+                                    onFilterChange={handleFilterChange}
+                                />
+                            );
+                        })}
                 </div>
             </form>
         </div>

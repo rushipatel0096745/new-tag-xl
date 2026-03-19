@@ -178,3 +178,55 @@ export const UpdateQuestionModal = ({ question, onClose, onSave }: UpdateModalPr
 };
 
 export default UpdateQuestionModal
+
+
+// /lib/buildFilters.js
+
+export function buildFilters(values) {
+  const filters = [];
+
+  Object.keys(values).forEach((key) => {
+    const value = values[key];
+
+    // ❌ skip empty
+    if (!value || (typeof value === "object" && !value.from && !value.to)) {
+      return;
+    }
+
+    // 👉 DATETIME FIELD
+    if (key === "last_logged_in") {
+      const { from, to } = value;
+
+      if (from && to) {
+        filters.push({
+          column: key,
+          condition: "between",
+          value: [from, to],
+        });
+      } else if (from) {
+        filters.push({
+          column: key,
+          condition: "gte",
+          value: from,
+        });
+      } else if (to) {
+        filters.push({
+          column: key,
+          condition: "lte",
+          value: to,
+        });
+      }
+    }
+
+    // 👉 OTHER FIELDS
+    else if (key !== "password") {
+      filters.push({
+        column: key,
+        condition: "contains",
+        value: String(value),
+      });
+    }
+  });
+
+  return filters;
+}
