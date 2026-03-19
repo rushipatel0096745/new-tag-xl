@@ -14,6 +14,51 @@ interface FilterObj {
     text: string | string[];
 }
 
+interface FilterFieldProps {
+    colName: string;
+    type: string;
+    value: string | string[];
+    onFilterChange: (field: string, type: string, value: string) => void;
+}
+
+function FilterField({ colName, type, value, onFilterChange }: FilterFieldProps) {
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index?: number) => {
+        if (type === "DATETIME" && index !== undefined) {
+            const arr: string[] = Array.isArray(value) ? [...value] : ["", ""];
+            arr[index] = e.target.value;
+            onFilterChange(colName, type, arr.join("|"));
+        } else {
+            onFilterChange(colName, type, e.target.value);
+        }
+    };
+
+    return (
+        <div className={type === "DATETIME" ? "col-span-3" : "col-span-1"}>
+            <label>{colName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</label>
+            {type === "DATETIME" ? (
+                <div className='grid grid-cols-2 gap-2'>
+                    <input
+                        type='date'
+                        className='form-input'
+                        onChange={(e) => handleChange(e, 0)}
+                        value={Array.isArray(value) ? value[0] : ""}
+                    />
+                    <input
+                        type='date'
+                        className='form-input'
+                        onChange={(e) => handleChange(e, 1)}
+                        value={Array.isArray(value) ? value[1] : ""}
+                    />
+                </div>
+            ) : type === "INTEGER" ? (
+                <input type='number' className='form-input' value={value as string} onChange={handleChange} />
+            ) : (
+                <input type='text' className='form-input' value={value as string} onChange={handleChange} />
+            )}
+        </div>
+    );
+}
+
 const UserFilter = () => {
     const [filters, setFilters] = useState<FilterObj[]>([]);
     const [toggle, setToggle] = useState(false);
@@ -60,20 +105,14 @@ const UserFilter = () => {
         console.log("filters: ", filters);
     }, [filters]);
 
-    interface FilterFieldProps {
-        colName: string;
-        type: string;
-        value: string | string[];
-        onFilterChange: (field: string, type: string, value: string) => void;
-    }
-
     function handleFilterChange(field: string, type: string, value: string) {
         setFilters((prev) => {
             let condition = "contains"; // default for INTEGER/VARCHAR
             let text: string | string[] = value;
 
             if (type === "DATETIME") {
-                const [from, to] = value.split("|");
+                const [from="", to=""] = value.split("|");
+                text = [from, to]
 
                 if (from && to) {
                     condition = "between";
@@ -97,44 +136,6 @@ const UserFilter = () => {
                 return [...prev, { field, condition, text }];
             }
         });
-    }
-
-    function FilterField({ colName, type, value, onFilterChange }: FilterFieldProps) {
-        const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index?: number) => {
-            if (type === "DATETIME" && index !== undefined) {
-                const arr: string[] = Array.isArray(value) ? [...value] : ["", ""];
-                arr[index] = e.target.value;
-                onFilterChange(colName, type, arr.join("|"));
-            } else {
-                onFilterChange(colName, type, e.target.value);
-            }
-        };
-
-        return (
-            <div className={type === "DATETIME" ? "col-span-3" : "col-span-1"}>
-                <label>{colName.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}</label>
-                {type === "DATETIME" ? (
-                    <div className='grid grid-cols-2 gap-2'>
-                        <input
-                            type='date'
-                            className='form-input'
-                            onChange={(e) => handleChange(e, 0)}
-                            value={Array.isArray(value) ? value[0] : ""}
-                        />
-                        <input
-                            type='date'
-                            className='form-input'
-                            onChange={(e) => handleChange(e, 1)}
-                            value={Array.isArray(value) ? value[1] : ""}
-                        />
-                    </div>
-                ) : type === "INTEGER" ? (
-                    <input type='number' className='form-input' value={value as string} onChange={handleChange} />
-                ) : (
-                    <input type='text' className='form-input' value={value as string} onChange={handleChange} />
-                )}
-            </div>
-        );
     }
 
     return (
