@@ -1,76 +1,75 @@
 import EditAsset from "@/app/company-admin/components/EditAsset/EditAsset";
-import { getAssetById } from "@/app/services/company-admin/assets";
+import { getAssetById } from "@/app/services/company-admin/asset-actions";
 import Link from "next/link";
 import React, { Suspense } from "react";
 
 export interface AssetData {
-  id: number
-  tag: Tag
-  name: string
-  location: Location
-  batch_code: string
-  image: any
-  manual_template: ManualTemplate
-  status: number
-  oem_certificate: string
-  third_party_certificate: any[]
-  pre_use_template: PreUseTemplate
-  maintenance_template: MaintenanceTemplate
-  asset_pre_use_questions: any
-  asset_maintenance_questions: any
-  last_maintenance_check: any
-  last_pre_use_check: any
-  is_maintenance_required: boolean
-  is_asset_fail: boolean
-  is_certificate_expired: boolean
-  created_at: string
-  updated_at: string
+    id: number;
+    tag: Tag;
+    name: string;
+    location: Location;
+    batch_code: string;
+    image: any;
+    manual_template: ManualTemplate;
+    status: number;
+    oem_certificate: string;
+    third_party_certificate: any[];
+    pre_use_template: PreUseTemplate;
+    maintenance_template: MaintenanceTemplate;
+    asset_pre_use_questions: any;
+    asset_maintenance_questions: any;
+    last_maintenance_check: any;
+    last_pre_use_check: any;
+    is_maintenance_required: boolean;
+    is_asset_fail: boolean;
+    is_certificate_expired: boolean;
+    created_at: string;
+    updated_at: string;
 }
 
 export interface Tag {
-  id: number
-  uid: string
-  tag_type: string
+    id: number;
+    uid: string;
+    tag_type: string;
 }
 
 export interface Location {
-  id: number
-  location_name: string
+    id: number;
+    location_name: string;
 }
 
 export interface ManualTemplate {
-  id: number
-  name: string
-  description: string
-  files: File[]
+    id: number;
+    name: string;
+    description: string;
+    files: File[];
 }
 
 export interface File {
-  id: number
-  file_name: string
-  file_path: string
+    id: number;
+    file_name: string;
+    file_path: string;
 }
 
 export interface PreUseTemplate {
-  id: number
-  title: string
-  questions: Question[]
+    id: number;
+    title: string;
+    questions: Question[];
 }
 
-export interface  Question {
-  id: number
-  question: string
-  type: string
-  multiselect_value: any
+export interface Question {
+    id: number;
+    question: string;
+    type: string;
+    multiselect_value: any;
 }
 
 export interface MaintenanceTemplate {
-  id: number
-  title: string
-  maintenance_frequency: number
-  questions: Question[]
+    id: number;
+    title: string;
+    maintenance_frequency: number;
+    questions: Question[];
 }
-
 
 const AssetEditPage = async ({ params }: { params: Promise<{ id: string }> }) => {
     const { id } = await params;
@@ -132,7 +131,7 @@ const AssetEditPage = async ({ params }: { params: Promise<{ id: string }> }) =>
                         <div className='card-box-body p-5.5'>
                             <div className='asset-content'>
                                 <Suspense fallback={<p>Loading....</p>}>
-                                    <EditAsset initialData = {initialAssetData}/>
+                                    <EditAsset initialData={initialAssetData} />
                                 </Suspense>
                             </div>
                         </div>

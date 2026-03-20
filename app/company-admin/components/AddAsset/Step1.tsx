@@ -1,4 +1,4 @@
-import { checkTagAssigned } from "@/app/services/company-admin/tags";
+import { checkTagAssigned } from "@/app/services/company-admin/tags-actions";
 import React, { startTransition, useActionState, useEffect, useState } from "react";
 
 type TagType = "RFID" | "QR" | "Manual" | "";

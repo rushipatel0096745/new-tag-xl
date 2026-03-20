@@ -1,7 +1,7 @@
 import EditTag from "@/app/company-admin/components/EditTag";
 import Filter from "@/app/company-admin/components/Filter";
-import { getAssetList } from "@/app/services/company-admin/assets";
-import { getTag, updateTag } from "@/app/services/company-admin/tags";
+import { getAssetList } from "@/app/services/company-admin/asset-actions";
+import { getTag, updateTag } from "@/app/services/company-admin/tags-actions";
 import React, { Suspense } from "react";
 
 export interface Tag {

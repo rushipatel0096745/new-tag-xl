@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import React, { startTransition, useActionState, useState } from "react";
-import { Location } from "../(admin)/location-master/page";
+import { Location } from "../../(admin)/location-master/page";
 
 type ActionState = {
     success: boolean | null;

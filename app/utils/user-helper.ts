@@ -35,12 +35,12 @@ const API_BASE_URL = 'https://tagxl.com/api'
 export async function clientFetch(endpoint: string, options = {}) {
   const response = await fetch(`${API_BASE_URL}${endpoint}`, options);
 
-  if (!response.ok) {
-    // Handle error states (e.g., 400-500 range)
-    const errorData = await response.json();
-    console.log("error....", errorData)
-    throw new Error(errorData.message || 'Something went wrong with the API request');
-  }
+//   if (!response.ok) {
+//     // Handle error states (e.g., 400-500 range)
+//     const errorData = await response.json();
+//     console.log("error....", errorData)
+//     throw new Error(errorData.message || 'Something went wrong with the API request');
+//   }
 
   // Built-in JSON parsing
   return response.json();

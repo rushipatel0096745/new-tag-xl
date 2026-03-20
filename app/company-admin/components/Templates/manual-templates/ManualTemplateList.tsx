@@ -4,7 +4,9 @@ import { ManualTemplate } from "@/app/company-admin/(admin)/template-master/manu
 import { clientFetch, getCompanyId, getCompanyUserPermissions, getSessionId } from "@/app/utils/user-helper";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import Cookies from "js-cookie";
+import { GetManualTemplateList } from "@/app/services/company-admin/manual_template";
 
 interface Props {
     tempList: ManualTemplate[];
@@ -12,14 +14,79 @@ interface Props {
 
 const ManualTemplateList = ({ tempList }: Props) => {
     const [list, setList] = useState<ManualTemplate[]>(tempList);
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
     const [showMsg, setShowMsg] = useState("");
+    const [error, setError] = useState<{ [key: string]: string }>({});
+    const [loading, setLoading] = useState(true);
+    const [total, setTotal] = useState(0);
+
     const [permitted, setPermitted] = useState<boolean>();
     const [permError, setPermError] = useState("");
+    const [sessionId, setSessionId] = useState("");
+    const [companyId, setCompanyId] = useState("");
+    const [userRole, setUserRole] = useState<string[]>();
 
     const router = useRouter();
 
-    const sessionId = getSessionId("company-user-session");
-    const companyId = getCompanyId("company-user-session");
+    useEffect(() => {
+        const role = getCompanyUserPermissions();
+        setUserRole(role.role);
+
+        async function fetchRoles() {
+            const cookieFilters = Cookies.get("company_manual_filter");
+            let parsedFilters = null;
+            if (cookieFilters) {
+                parsedFilters = JSON.parse(cookieFilters);
+            }
+            console.log("parsed filters: ", parsedFilters);
+            const response = await GetManualTemplateList(page, pageSize, parsedFilters);
+            console.log("list response....", response);
+
+            if (response.has_error && response.message === "Permission denied") {
+                setError({ permission: "Permission Denied" });
+                setLoading(false);
+                return;
+            }
+
+            if (response.has_error && response.message === "Manual Templates not found") {
+                setLoading(false);
+                setList([]);
+                setTotal(0);
+                return;
+            }
+            if (!response.has_error && response.message === "Manual templates fetched successfully") {
+                setList(response.manual_templates);
+                setError({});
+                setTotal(response.total);
+                setLoading(false);
+                return;
+            }
+            if (response.has_error && response.message === "Invalid or expired session") {
+                setLoading(false);
+                alert("Session is over, Please Login Again.");
+                Cookies.remove("company_user_session");
+                window.location.reload();
+                return;
+            }
+            if (response.has_error) {
+                setLoading(false);
+                setError({ api: response.message });
+                setList([]);
+                setTotal(0);
+                return;
+            }
+        }
+
+        fetchRoles();
+
+        const handleFiltersChanged = () => fetchRoles();
+        window.addEventListener("ManualFiltersChanged", handleFiltersChanged);
+
+        return () => {
+            window.removeEventListener("ManualFiltersChanged", handleFiltersChanged);
+        };
+    }, [page, pageSize]);
 
     function checkPermission(perm: string) {
         const permission = getCompanyUserPermissions();
@@ -89,7 +156,7 @@ const ManualTemplateList = ({ tempList }: Props) => {
         }
     }
 
-    function handleUpdate(id: number) : void {
+    function handleUpdate(id: number): void {
         if (!checkPermission("update")) {
             setPermError("Not allowed to update!!");
             return;

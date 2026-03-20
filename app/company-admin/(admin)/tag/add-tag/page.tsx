@@ -1,5 +1,5 @@
 import AddTag from "@/app/company-admin/components/AddTag";
-import { createTags } from "@/app/services/company-admin/tags";
+import { createTags } from "@/app/services/company-admin/tags-actions";
 import Link from "next/link";
 import React, { Suspense } from "react";
 
@@ -79,7 +79,7 @@ const AddTagPage = () => {
                         </div>
                     </div>
                     <Suspense fallback={<p>Loading....</p>}>
-                        <AddTag action={createTags}/>
+                        <AddTag action={createTags} />
                     </Suspense>
                 </div>
             </div>

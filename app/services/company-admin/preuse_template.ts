@@ -1,4 +1,4 @@
-import { clientFetch, getCompanyId, getSessionId } from "@/app/utils/user-helper";
+import { clientFetch, getCompanyId, getDataFromCookie, getSessionId } from "@/app/utils/user-helper";
 
 type Filter = {
     field: string;
@@ -6,13 +6,13 @@ type Filter = {
     text: string;
 };
 
-export const GetTagList = async function (page: number = 1, pageSize: number = 10, filters: Filter[] = []) {
+export const GetPreUseTemplateList = async function (page: number = 1, pageSize: number = 10, filters: Filter[] = []) {
     const companyId = getCompanyId("company-user-session");
     const sessionId = getSessionId("company-user-session");
 
     // console.log("company id: ", companyId);
 
-    const result = await clientFetch("/company/tag/list", {
+    const result = await clientFetch("/company/pre-use-template/list", {
         method: "POST",
         headers: {
             "X-Session-ID": sessionId,

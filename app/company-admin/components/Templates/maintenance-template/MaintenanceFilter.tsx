@@ -24,15 +24,29 @@ interface FilterFieldProps {
 }
 
 const FilterField = React.memo(function ({ colName, type, value, onFilterChange }: FilterFieldProps) {
+    // const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index?: number) => {
+    //     if (type === "DATETIME" && index !== undefined) {
+    //         const arr: string[] = Array.isArray(value) ? [...value] : ["", ""];
+    //         arr[index] = e.target.value;
+    //         onFilterChange(colName, type, arr.join("|"));
+    //     } else {
+    //         onFilterChange(colName, type, e.target.value);
+    //     }
+    // };
+
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>, index?: number) => {
         if (type === "DATETIME" && index !== undefined) {
-            const arr: string[] = Array.isArray(value) ? [...value] : ["", ""];
-            arr[index] = e.target.value;
-            onFilterChange(colName, type, arr.join("|"));
+            const updated = [...dateValues];
+            updated[index] = e.target.value;
+
+            onFilterChange(colName, type, updated.join("|"));
         } else {
             onFilterChange(colName, type, e.target.value);
         }
     };
+
+    const dateValues: string[] =
+        type === "DATETIME" ? (Array.isArray(value) ? value : value ? [value, ""] : ["", ""]) : [];
 
     return (
         <div className={type === "DATETIME" ? "col-span-3" : "col-span-1"}>
@@ -43,13 +57,13 @@ const FilterField = React.memo(function ({ colName, type, value, onFilterChange 
                         type='date'
                         className='form-input'
                         onChange={(e) => handleChange(e, 0)}
-                        value={Array.isArray(value) ? value[0] : ""}
+                        value={dateValues[0]}
                     />
                     <input
                         type='date'
                         className='form-input'
                         onChange={(e) => handleChange(e, 1)}
-                        value={Array.isArray(value) ? value[1] : ""}
+                        value={dateValues[1]}
                     />
                 </div>
             ) : type === "INTEGER" ? (
@@ -119,14 +133,21 @@ const MaintenanceFilter = () => {
             if (type === "DATETIME") {
                 const [from = "", to = ""] = value.split("|");
 
-                text = [from, to];
-
                 if (from && to) {
                     condition = "between";
+                    text = [from, to];
                 } else if (from) {
                     condition = "gte";
+                    text = from;
                 } else if (to) {
                     condition = "lte";
+                    text = to;
+                } else {
+                    return prev.filter((f) => f.field !== field);
+                }
+            } else {
+                if (!value) {
+                    return prev.filter((f) => f.field !== field);
                 }
             }
 

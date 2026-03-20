@@ -1,7 +1,8 @@
 import React, { Suspense } from "react";
 import Filter from "../../components/Filter";
-import LocationList from "../../components/LocationList";
 import { getAllLocations } from "@/app/services/company-admin/location";
+import LocationList from "../../components/Location/LocationList";
+import LocationFilter from "../../components/Location/LocationFilter";
 
 export interface Location {
     id: number
@@ -21,7 +22,7 @@ const LocationMasterPage = async () => {
                 </div>
                 <div className='page-body'>
                     {/* filter */}
-                    <Filter />
+                    <LocationFilter />
 
                     {/* asset list */}
                     <Suspense fallback={<p>Loading....</p>}>

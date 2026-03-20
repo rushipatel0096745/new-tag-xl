@@ -1,6 +1,6 @@
 import Filter from "@/app/company-admin/components/Filter";
 import TagList from "@/app/company-admin/components/TagList";
-import { getUnassignedTagList } from "@/app/services/company-admin/tags";
+import { getUnassignedTagList } from "@/app/services/company-admin/tags-actions";
 import React, { Suspense } from "react";
 
 const UnassignedTagPage = async () => {

@@ -2,7 +2,7 @@ import {
     getPreuseTemplateList,
     getPreuseTemplateQuestions,
     PreUseTemplate,
-} from "@/app/services/company-admin/templates";
+} from "@/app/services/company-admin/template-actions";
 import React, { useEffect, useState } from "react";
 import BooleanInput from "./BooleanInput";
 import TextInput from "./TextInput";

@@ -5,7 +5,7 @@ import {
     getMaintenanceTemplateList,
     getMaintenanceTemplateQuestions,
     PreUseTemplate,
-} from "@/app/services/company-admin/templates";
+} from "@/app/services/company-admin/template-actions";
 
 interface Props {
     updateForm: (name: string, value: any) => void;

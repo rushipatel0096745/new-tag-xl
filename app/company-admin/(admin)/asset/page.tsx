@@ -2,7 +2,8 @@ import Link from "next/link";
 import React, { Suspense } from "react";
 import AssetList from "../../components/AssetList";
 import Filter from "../../components/Filter";
-import { getAssetList } from "@/app/services/company-admin/assets";
+import { getAssetList } from "@/app/services/company-admin/asset-actions";
+import AssetFilter from "../../components/AssetFilter";
 
 export interface Asset {
     id: number;
@@ -39,7 +40,7 @@ const AssetListPage = async () => {
                 </div>
                 <div className='page-body'>
                     {/* filter */}
-                    <Filter />
+                    <AssetFilter />
 
                     {/* asset list */}
                     <Suspense fallback={<p>Loading....</p>}>

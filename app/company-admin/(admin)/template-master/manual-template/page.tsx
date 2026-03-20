@@ -1,21 +1,21 @@
 import Filter from "@/app/company-admin/components/Filter";
+import ManualFilter from "@/app/company-admin/components/Templates/manual-templates/ManualFilter";
 import ManualTemplateList from "@/app/company-admin/components/Templates/manual-templates/ManualTemplateList";
-import { getManualTemplateList } from "@/app/services/company-admin/templates";
+import { getManualTemplateList } from "@/app/services/company-admin/template-actions";
 import React, { Suspense } from "react";
 
 export interface ManualTemplate {
-  id: number
-  name: string
-  description: string
-  files: File[]
+    id: number;
+    name: string;
+    description: string;
+    files: File[];
 }
 
 export interface File {
-  id: number
-  file_name: string
-  file_path: string
+    id: number;
+    file_name: string;
+    file_path: string;
 }
-
 
 const ManualMasterPage = async () => {
     const manualTemplateList = (await getManualTemplateList()) || [];
@@ -28,11 +28,11 @@ const ManualMasterPage = async () => {
                 </div>
                 <div className='page-body'>
                     {/* filter */}
-                    <Filter />
+                    <ManualFilter />
 
                     {/* asset list */}
                     <Suspense fallback={<p>Loading....</p>}>
-                        <ManualTemplateList tempList={manualTemplateList}/>
+                        <ManualTemplateList tempList={manualTemplateList} />
                     </Suspense>
                 </div>
             </div>

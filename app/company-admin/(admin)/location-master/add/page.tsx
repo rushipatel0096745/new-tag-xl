@@ -1,5 +1,5 @@
-import LocationForm from "@/app/company-admin/components/LocationForm";
-import { createLocation } from "@/app/services/company-admin/location";
+import LocationForm from "@/app/company-admin/components/Location/LocationForm";
+import { createLocation } from "@/app/services/company-admin/location-actions";
 import React, { Suspense } from "react";
 
 const LocationAddPage = () => {

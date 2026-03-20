@@ -1,11 +1,23 @@
-"use server";
+// "use server";
 
-import { getComapnyData, getCompanySessionId } from "./getComapnyData";
+import { clientFetch, getCompanyId, getSessionId } from "@/app/utils/user-helper";
+// import { getComapnyData, getCompanySessionId } from "./getComapnyData";
+
+type Filter = {
+    field: string;
+    condition: string;
+    text: string;
+};
 
 export const getAllLocations = async function (page: number = 1, filters: any[] = [], show_all_records: number = 0) {
-    const sessionId = await getCompanySessionId();
-    const companyData = await getComapnyData();
-    const companyId = companyData?.company_id;
+    // "use server";
+
+    // const sessionId = await getCompanySessionId();
+    // const companyData = await getComapnyData();
+    // const companyId = companyData?.company_id;
+
+    const companyId = getCompanyId("company-user-session");
+    const sessionId = getSessionId("company-user-session");
 
     if (companyId && sessionId) {
         try {
@@ -36,9 +48,14 @@ export const getAllLocations = async function (page: number = 1, filters: any[] 
 };
 
 export const getLocation = async function (id: number) {
-    const sessionId = await getCompanySessionId();
-    const companyData = await getComapnyData();
-    const companyId = companyData?.company_id;
+    // "use server";
+
+    // const sessionId = await getCompanySessionId();
+    // const companyData = await getComapnyData();
+    // const companyId = companyData?.company_id;
+
+    const companyId = getCompanyId("company-user-session");
+    const sessionId = getSessionId("company-user-session");
 
     if (companyId && sessionId) {
         try {
@@ -62,120 +79,16 @@ export const getLocation = async function (id: number) {
     return [];
 };
 
-export const createLocation = async function (prevState: any, formData: any) {
-    "use server";
-
-    console.log("data to be posted: ", formData);
-
-    // const sessionId = await getCompanySessionId();
-    // const companyData = await getComapnyData();
-    // const companyId = companyData?.company_id;
-
-    // if (companyId && sessionId) {
-    //     try {
-    //         const response = await fetch("https://tagxl.com/api/company/location/create", {
-    //             method: "POST",
-    //             headers: {
-    //                 "X-Session-ID": sessionId,
-    //                 "X-Company-ID": companyId,
-    //                 "Content-Type": "application/json",
-    //             },
-    //             body: JSON.stringify(formData),
-    //         });
-
-    //         const result = await response.json();
-
-    //         if(result.has_error) {
-    //             console.log(result);
-    //             return {
-    //                 success: false,
-    //                 error: "Unable to Update User",
-    //                 data: "",
-    //             };
-    //         }
-    //         console.log(result);
-    //         return {
-    //             success: true,
-    //             error: "",
-    //             data: "",
-    //         };
-
-    //     } catch (error) {
-    //         console.log("error: ", error);
-    //         return {
-    //             success: false,
-    //             error: "Failed to connect to the server",
-    //             data: "",
-    //         };
-    //     }
-    // } else {
-    //      return {
-    //             success: false,
-    //             error: "companyId or sessionId not found",
-    //             data: "",
-    //         };
-    // }
-};
-
-export const updateLocation = async function (id: number, prevState: any, formData: any) {
-    "use server";
-
-    console.log("data to be posted for update: ", formData);
-
-    // const sessionId = await getCompanySessionId();
-    // const companyData = await getComapnyData();
-    // const companyId = companyData?.company_id;
-
-    // if (companyId && sessionId) {
-    //     try {
-    //         const response = await fetch("https://tagxl.com/api/company/location/update/"+id, {
-    //             method: "POST",
-    //             headers: {
-    //                 "X-Session-ID": sessionId,
-    //                 "X-Company-ID": companyId,
-    //                 "Content-Type": "application/json",
-    //             },
-    //             body: JSON.stringify(formData),
-    //         });
-
-    //         const result = await response.json();
-
-    //         if(result.has_error) {
-    //             console.log(result);
-    //             return {
-    //                 success: false,
-    //                 error: "Unable to Update User",
-    //                 data: "",
-    //             };
-    //         }
-    //         console.log(result);
-    //         return {
-    //             success: true,
-    //             error: "",
-    //             data: "",
-    //         };
-
-    //     } catch (error) {
-    //         console.log("error: ", error);
-    //         return {
-    //             success: false,
-    //             error: "Failed to connect to the server",
-    //             data: "",
-    //         };
-    //     }
-    // } else {
-    //      return {
-    //             success: false,
-    //             error: "companyId or sessionId not found",
-    //             data: "",
-    //         };
-    // }
-};
 
 export const getAssetLocations = async function (show_all_records: number = 1) {
-    const sessionId = await getCompanySessionId();
-    const companyData = await getComapnyData();
-    const companyId = companyData?.company_id;
+    // "use server";
+
+    // const sessionId = await getCompanySessionId();
+    // const companyData = await getComapnyData();
+    // const companyId = companyData?.company_id;
+
+    const companyId = getCompanyId("company-user-session");
+    const sessionId = getSessionId("company-user-session");
 
     if (companyId && sessionId) {
         try {
@@ -200,4 +113,26 @@ export const getAssetLocations = async function (show_all_records: number = 1) {
         }
     }
     return [];
+};
+
+export const GetLocationList = async function (page: number = 1, pageSize: number = 10, filters: Filter[] = []) {
+    const companyId = getCompanyId("company-user-session");
+    const sessionId = getSessionId("company-user-session");
+
+    // console.log("company id: ", companyId);
+
+    const result = await clientFetch("/company/location/list", {
+        method: "POST",
+        headers: {
+            "X-Session-ID": sessionId,
+            "X-Company-ID": companyId,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            page,
+            pageSize,
+            filters,
+        }),
+    });
+    return result;
 };

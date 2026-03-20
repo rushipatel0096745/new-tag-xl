@@ -8,9 +8,9 @@ import {
     getMaintenanceTemplateAssetList,
     getManualTemplateAssetList,
     getPreuseTemplateAssetList,
-} from "@/app/services/company-admin/templates";
+} from "@/app/services/company-admin/template-actions";
 import { Location } from "../../(admin)/location-master/page";
-import { editAsset } from "@/app/services/company-admin/assets";
+import { editAsset } from "@/app/services/company-admin/asset-actions";
 import { useRouter } from "next/navigation";
 import UpdateQuestionModal from "../Templates/UpdateQuestionModal";
 

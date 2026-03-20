@@ -1,6 +1,7 @@
 import Filter from "@/app/company-admin/components/Filter";
+import TagFilter from "@/app/company-admin/components/TagFilter";
 import TagList from "@/app/company-admin/components/TagList";
-import { getAllTagList } from "@/app/services/company-admin/tags";
+import { getAllTagList } from "@/app/services/company-admin/tags-actions";
 import React, { Suspense } from "react";
 
 const ManageTagsPage = async () => {
@@ -15,7 +16,7 @@ const ManageTagsPage = async () => {
                 </div>
                 <div className='page-body'>
                     {/* filter */}
-                    <Filter />
+                    <TagFilter />
 
                     {/* asset list */}
                     <Suspense fallback={<p>Loading....</p>}>

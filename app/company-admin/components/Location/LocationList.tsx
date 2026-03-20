@@ -1,8 +1,81 @@
+"use client";
+
 import Link from "next/link";
-import React from "react";
-import { Location } from "../(admin)/location-master/page";
+import React, { useEffect, useState } from "react";
+import { Location } from "../../(admin)/location-master/page";
+import { getCompanyUserPermissions } from "@/app/utils/user-helper";
+import Cookies from "js-cookie";
+import { GetLocationList } from "@/app/services/company-admin/location";
 
 const LocationList = ({ locationList }: { locationList: Location[] }) => {
+    const [list, setList] = useState<Location[]>(locationList);
+    const [page, setPage] = useState(1);
+    const [pageSize, setPageSize] = useState(10);
+    const [showMsg, setShowMsg] = useState("");
+    const [error, setError] = useState<{ [key: string]: string }>({});
+    const [loading, setLoading] = useState(true);
+    const [total, setTotal] = useState(0);
+    const [userRole, setUserRole] = useState<string[]>();
+
+    useEffect(() => {
+        const role = getCompanyUserPermissions();
+        setUserRole(role.role);
+
+        async function fetchRoles() {
+            const cookieFilters = Cookies.get("company_location_filter");
+            let parsedFilters = null;
+            if (cookieFilters) {
+                parsedFilters = JSON.parse(cookieFilters);
+            }
+            console.log("parsed filters: ", parsedFilters);
+            const response = await GetLocationList(page, pageSize, parsedFilters);
+            console.log("list response....", response);
+
+            if (response.has_error && response.message === "Permission denied") {
+                setError({ permission: "Permission Denied" });
+                setLoading(false);
+                return;
+            }
+
+            if (response.has_error && response.message === "Asset not found") {
+                setLoading(false);
+                setList([]);
+                setTotal(0);
+                return;
+            }
+            if (!response.has_error && response.message === "Locations fetched successfully") {
+                setList(response.locations);
+                setError({});
+                setTotal(response.total);
+                setLoading(false);
+                return;
+            }
+            if (response.has_error && response.message === "Invalid or expired session") {
+                setLoading(false);
+                alert("Session is over, Please Login Again.");
+                Cookies.remove("company_user_session");
+                window.location.reload();
+                return;
+            }
+            if (response.has_error) {
+                setLoading(false);
+                setError({ api: response.message });
+                setList([]);
+                setTotal(0);
+                return;
+            }
+        }
+
+        fetchRoles();
+
+        const handleFiltersChanged = () => fetchRoles();
+        window.addEventListener("LocationFiltersChanged", handleFiltersChanged);
+
+        return () => {
+            window.removeEventListener("LocationFiltersChanged", handleFiltersChanged);
+        };
+    }, [page, pageSize]);
+
     return (
         <div className='card-box bg-[#fff] border-gray-700 rounded-[18px] shadow-3xl shadow-white px-3 py-5.5'>
             <div className='card-box_head border-b border-b-[#ededed] px-4 py-5.5 flex justify-between items-center'>
@@ -43,7 +116,7 @@ const LocationList = ({ locationList }: { locationList: Location[] }) => {
                                 </tr>
                             </thead>
                             <tbody className='table-row-group align-middle '>
-                                {locationList?.map((location) => {
+                                {list?.map((location) => {
                                     return (
                                         <tr
                                             className='table-row border-1 border-solid border-[#f5f6f1] align-middle'

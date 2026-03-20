@@ -1,5 +1,6 @@
-import LocationForm from "@/app/company-admin/components/LocationForm";
-import { getLocation, updateLocation } from "@/app/services/company-admin/location";
+import LocationForm from "@/app/company-admin/components/Location/LocationForm";
+import { getLocation } from "@/app/services/company-admin/location";
+import { updateLocation } from "@/app/services/company-admin/location-actions";
 import React, { Suspense } from "react";
 
 const LocationEditPage = async ({ params }: { params: Promise<{ id: string }> }) => {

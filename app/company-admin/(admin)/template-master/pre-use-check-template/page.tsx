@@ -1,22 +1,21 @@
 import Filter from "@/app/company-admin/components/Filter";
+import PreuseFilter from "@/app/company-admin/components/Templates/preuse-template/PreuseFilter";
 import PreuseTemplateList from "@/app/company-admin/components/Templates/preuse-template/PreuseTemplateList";
-import { getPreuseTemplateList } from "@/app/services/company-admin/templates";
+import { getPreuseTemplateList } from "@/app/services/company-admin/template-actions";
 import React, { Suspense } from "react";
 
 export interface PreuseTemplate {
-  id: number
-  title: string
-  questions: PreuseQuestion[]
+    id: number;
+    title: string;
+    questions: PreuseQuestion[];
 }
 
 export interface PreuseQuestion {
-  id: number
-  question: string
-  type: string
-  multiselect_value?: any
+    id: number;
+    question: string;
+    type: string;
+    multiselect_value?: any;
 }
-
-
 
 const PreuseTemplatePage = async () => {
     const list = (await getPreuseTemplateList()) || [];
@@ -29,7 +28,7 @@ const PreuseTemplatePage = async () => {
                 </div>
                 <div className='page-body'>
                     {/* filter */}
-                    <Filter />
+                    <PreuseFilter />
 
                     {/* asset list */}
                     <Suspense fallback={<p>Loading....</p>}>
