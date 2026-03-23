@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { use, useEffect, useRef, useState } from "react";
+import React, { use, useDebugValue, useEffect, useRef, useState } from "react";
 import { AssetData } from "../../(admin)/asset/edit/[id]/page";
 import { getAssetLocations } from "@/app/services/company-admin/location";
 import {
@@ -13,15 +13,19 @@ import { Location } from "../../(admin)/location-master/page";
 import { editAsset } from "@/app/services/company-admin/asset-actions";
 import { useRouter } from "next/navigation";
 import UpdateQuestionModal from "../Templates/UpdateQuestionModal";
+import { GetAsset } from "@/app/services/company-admin/assets";
 
 interface Props {
-    initialData: AssetData;
+    initialAssetData: AssetData;
+    id: string;
 }
+
+type QuestionType = "boolean" | "text" | "checkbox" | "select";
 
 type Question = {
     id: number;
     question: string;
-    type: string;
+    type: QuestionType;
     options?: string[] | null;
 };
 
@@ -32,7 +36,9 @@ type QuestionTypes = {
     checkbox: string;
 };
 
-const EditAsset = ({ initialData }: Props) => {
+const EditAsset = ({ initialAssetData, id }: Props) => {
+    // console.log(initialData)
+    const [initialData, setInitialData] = useState<AssetData | undefined>(initialAssetData)
     const [loactionList, setLocationList] = useState<Location[]>([]);
     const [manualTemplateList, setManualTemplateList] = useState([]);
     const [preuseTemplateList, setPreUseTemplateList] = useState([]);
@@ -41,19 +47,35 @@ const EditAsset = ({ initialData }: Props) => {
     const [preuseTemplateQuestions, setPreuseTemplateQuestions] = useState<Question[]>([]);
     const [maintenanceTemplateQuestions, setMaintenanceTemplateQuestions] = useState<Question[]>([]);
 
-    const [tagUid, setTagUid] = useState(initialData.tag.uid);
-    const [name, setName] = useState(initialData.name);
-    const [location, setLocation] = useState(Number(initialData.location.id));
-    const [batchCode, setBatchCode] = useState(initialData.batch_code);
-    const [status, setStatus] = useState(initialData.status);
-    const [manualTemplateId, setManualTemplateId] = useState(String(initialData.manual_template.id));
-    const [preuseTemplateId, setPreuseTemplateId] = useState(initialData.pre_use_template.id);
-    const [maintenanceTemplateId, setMaintenanceTemplateId] = useState(initialData.maintenance_template.id);
+    const [tagUid, setTagUid] = useState(initialData?.tag.uid);
+    const [name, setName] = useState(initialData?.name);
+    const [location, setLocation] = useState(Number(initialData?.location.id));
+    const [batchCode, setBatchCode] = useState(initialData?.batch_code);
+    const [status, setStatus] = useState(initialData?.status);
+    const [manualTemplateId, setManualTemplateId] = useState(String(initialData?.manual_template.id));
+    const [preuseTemplateId, setPreuseTemplateId] = useState<number | undefined>(initialData?.pre_use_template?.id);
+    const [maintenanceTemplateId, setMaintenanceTemplateId] = useState(initialData?.maintenance_template?.id);
     const [image, setImage] = useState<any>();
     const [third_party_certificate, set_third_party_certificate] = useState<any>();
 
     const [errors, setErrors] = useState<Record<string, string>>();
+    const [formError, setFormError] = useState("");
     const [showMsg, setShowMsg] = useState<string>();
+
+    useEffect(() => {
+        async function fetchAsset() {
+            const response = await GetAsset(Number(id))
+            if(!response.success) {
+                setFormError(response.error)
+                return;
+            }
+            if(response.success) {
+                setInitialData(response.data)
+            }
+        }
+
+        fetchAsset()
+    }, [])
 
     const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
     const [editingSource, setEditingSource] = useState<"preuse" | "maintenance" | null>(null);
@@ -114,8 +136,8 @@ const EditAsset = ({ initialData }: Props) => {
         // console.log(typeof initialData.manual_template.id);
         console.log(typeof manualTemplateId);
         getData();
-        setPreuseTemplateQuestions(initialData.pre_use_template.questions);
-        setMaintenanceTemplateQuestions(initialData.maintenance_template.questions);
+        setPreuseTemplateQuestions(initialData?.pre_use_template?.questions);
+        setMaintenanceTemplateQuestions(initialData?.maintenance_template?.questions);
         console.log("preuse id: ", preuseTemplateId);
     }, []);
 
@@ -125,10 +147,11 @@ const EditAsset = ({ initialData }: Props) => {
         text: "Textfield",
         checkbox: "Checkbox",
     };
+
     // ---------------------------------------------------------------------------------------
     // for dynamic addtion of maintenace template questions
     // const [existedMaintenanceQuestions, setExistedMaintenanceQuestions] = useState([]);
-    const intitalMaintenanceQuestions = reverseFormatQuestionBody(initialData.asset_maintenance_questions) || [];
+    const intitalMaintenanceQuestions = reverseFormatQuestionBody(initialData?.asset_maintenance_questions) || [];
     const [newMaintenanceQuestions, setNewMaintenanceQuestions] = useState<Question[]>(intitalMaintenanceQuestions);
     const [maintenanceQuestionText, setMaintenanceQuestionText] = useState("");
     const [maintenanceQuestionType, setMaintenanceQuestionType] = useState("");
@@ -143,7 +166,7 @@ const EditAsset = ({ initialData }: Props) => {
         const questionObj: Question = {
             id: Date.now(),
             question: maintenanceQuestionText,
-            type: maintenanceQuestionType,
+            type: maintenanceQuestionType as QuestionType,
             options:
                 maintenanceQuestionType === "boolean" || maintenanceQuestionType === "text"
                     ? null
@@ -182,7 +205,7 @@ const EditAsset = ({ initialData }: Props) => {
     // -----------------------------------------------------------------------------
     // for dynamic addtion of preuse template questions
     // const [existedMaintenanceQuestions, setExistedMaintenanceQuestions] = useState([]);
-    const intitalPreuseQuestions = reverseFormatQuestionBody(initialData.asset_pre_use_questions) || [];
+    const intitalPreuseQuestions = reverseFormatQuestionBody(initialData?.asset_pre_use_questions) || [];
     const [newPreuseQuestions, setNewPreuseQuestions] = useState<Question[]>(intitalPreuseQuestions);
     const [preuseQuestionText, setPreuseQuestionText] = useState("");
     const [preuseQuestionType, setPreuseQuestionType] = useState("");
@@ -289,6 +312,8 @@ const EditAsset = ({ initialData }: Props) => {
             if (response.success) {
                 setShowMsg("Asset updated successfully");
                 router.refresh();
+            } else if (!response.success && response.error) {
+                setFormError(response.error);
             } else {
                 setShowMsg("Asset not able to update");
             }
@@ -348,6 +373,7 @@ const EditAsset = ({ initialData }: Props) => {
             <div className='main flex flex-col p-6 bg-white rounded-lg shadow-sm'>
                 {/* Header */}
                 {showMsg && <div className='text-green-600'>{showMsg}</div>}
+                {/* {formError && <div className='text-red-500'>{formError}</div>} */}
                 <div className='header flex items-center justify-between mb-6'>
                     <h4 className='text-xl font-semibold text-gray-800'>Edit Asset</h4>
 
@@ -492,7 +518,7 @@ const EditAsset = ({ initialData }: Props) => {
                     <div className='col-6 w-full border-3 border-solid border-[#f5f6fa] p-5.5'>
                         <h3 className='mb-4 font-bold'>OEM Ceritficate</h3>
                         <div className='oem-certificate-block flex justify-between'>
-                            <p className='underline text-sm'>{initialData.oem_certificate}</p>
+                            <p className='underline text-sm'>{initialData?.oem_certificate}</p>
                             <button
                                 type='button'
                                 className='px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm'>
@@ -511,7 +537,7 @@ const EditAsset = ({ initialData }: Props) => {
                                 value={manualTemplateId}
                                 onChange={(e) => setManualTemplateId(e.target.value)}>
                                 <option value=''>Select</option>
-                                {manualTemplateList.map((temp) => (
+                                {manualTemplateList.map((temp: any) => (
                                     <option value={String(temp.id)} key={temp.id}>
                                         {temp.name}
                                     </option>
@@ -530,11 +556,12 @@ const EditAsset = ({ initialData }: Props) => {
                                     className='form-input'
                                     value={preuseTemplateId}
                                     onChange={(e) => {
-                                        setPreuseTemplateId(e.target.value);
+                                        const value = parseInt(e.target.value);
+                                        setPreuseTemplateId(value);
                                         handlePreuseQuestions(e.target.value);
                                     }}>
                                     <option value=''>Select</option>
-                                    {preuseTemplateList.map((tmp) => (
+                                    {preuseTemplateList.map((tmp: any) => (
                                         <option value={tmp.id} key={tmp.id}>
                                             {tmp.title}
                                         </option>
@@ -545,7 +572,7 @@ const EditAsset = ({ initialData }: Props) => {
                                 <h5 className='font-semibold'>All Pre Use Check Questions</h5>
                             </div>
 
-                            {preuseTemplateQuestions.length !== 0 && (
+                            {preuseTemplateQuestions?.length !== 0 && (
                                 <div className='selected-pre-use-quetions  border-3 border-solid border-[#f5f6fa] p-5.5 flex flex-wrap'>
                                     <div className='title w-full'>
                                         <h5>Selected Pre-Use Template Questions</h5>

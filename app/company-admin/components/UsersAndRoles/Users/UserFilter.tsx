@@ -161,9 +161,9 @@ const UserFilter = () => {
 
     useEffect(() => {
         const cookieFilters = Cookies.get("company_user_filter");
-        setToggle(true);
-
+        
         if (cookieFilters) {
+            setToggle(true);
             try {
                 const parsed = JSON.parse(cookieFilters);
                 setFilters(parsed);

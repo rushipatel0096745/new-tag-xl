@@ -1,23 +1,25 @@
 "use client";
 
+import { getCompanyUserPermissions } from "@/app/utils/user-helper";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { Asset } from "../(admin)/asset/page";
-import { deleteAsset } from "@/app/services/company-admin/asset-actions";
-import { useRouter } from "next/navigation";
-import { getCompanyUserPermissions } from "@/app/utils/user-helper";
 import Cookies from "js-cookie";
-import { GetAssetList } from "@/app/services/company-admin/assets";
+import { GetUnassignedTagList } from "@/app/services/company-admin/tags";
 
-interface AssetProps {
-    assets: Asset[];
+export interface Tag {
+    id: number;
+    uid: string;
+    tag_type: string;
+    is_assigned: boolean;
+    created_at: string;
+    updated_at: any;
 }
 
-const AssetList = ({ assets }: AssetProps) => {
-    const [list, setList] = useState<Asset[]>(assets);
+const UnassignTagList = ({ tagList }: { tagList: Tag[] }) => {
+    const [list, setList] = useState<Tag[]>(tagList);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
-    // const [showMsg, setShowMsg] = useState("");
+    const [showMsg, setShowMsg] = useState("");
     const [error, setError] = useState<{ [key: string]: string }>({});
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
@@ -25,16 +27,16 @@ const AssetList = ({ assets }: AssetProps) => {
 
     useEffect(() => {
         const role = getCompanyUserPermissions();
-        setUserRole(role.asset);
+        setUserRole(role.tags);
 
         async function fetchRoles() {
-            const cookieFilters = Cookies.get("company_asset_filter");
+            const cookieFilters = Cookies.get("company_tag_filter");
             let parsedFilters = null;
             if (cookieFilters) {
                 parsedFilters = JSON.parse(cookieFilters);
             }
             console.log("parsed filters: ", parsedFilters);
-            const response = await GetAssetList(page, pageSize, parsedFilters);
+            const response = await GetUnassignedTagList(page, pageSize, parsedFilters);
             console.log("list response....", response);
 
             if (response.has_error && response.message === "Permission denied") {
@@ -43,14 +45,14 @@ const AssetList = ({ assets }: AssetProps) => {
                 return;
             }
 
-            if (response.has_error && response.message === "Asset not found") {
+            if (response.has_error && response.message === "Tag not found") {
                 setLoading(false);
                 setList([]);
                 setTotal(0);
                 return;
             }
-            if (!response.has_error && response.message === "Assets fetched successfully") {
-                setList(response.assets);
+            if (!response.has_error && response.message === "Tags fetched successfully") {
+                setList(response.tags);
                 setError({});
                 setTotal(response.total);
                 setLoading(false);
@@ -75,41 +77,26 @@ const AssetList = ({ assets }: AssetProps) => {
         fetchRoles();
 
         const handleFiltersChanged = () => fetchRoles();
-        window.addEventListener("AssetFiltersChanged", handleFiltersChanged);
+        window.addEventListener("TagFiltersChanged", handleFiltersChanged);
 
         return () => {
-            window.removeEventListener("AssetFiltersChanged", handleFiltersChanged);
+            window.removeEventListener("TagFiltersChanged", handleFiltersChanged);
         };
     }, [page, pageSize]);
 
-    const router = useRouter();
-
-    const [showMsg, setShowMsg] = useState<string>("");
-
-    const handleDelete = async function (id: number) {
-        const response = await deleteAsset(id);
-        if (response.success) {
-            setShowMsg("Asset deleted successfully");
-            router.refresh();
-        } else {
-            setShowMsg("Failed to delet the Asset");
-        }
-    };
+    useEffect(() => {
+        console.log("tag permissions: ", userRole);
+    }, [userRole]);
 
     return (
         <div className='card-box bg-[#fff] border-gray-700 rounded-[18px] shadow-3xl shadow-white px-3 py-5.5'>
             <div className='card-box_head border-b border-b-[#ededed] px-4 py-5.5 flex justify-between items-center'>
-                <h3 className='h3 text-[18px] font-semibold leading-6'>Asset List</h3>
-                {showMsg && (
-                    <div className='text-yellow-600'>
-                        <p>{showMsg}</p>
-                    </div>
-                )}
+                <h3 className='h3 text-[18px] font-semibold leading-6'>Tag List</h3>
                 <div className='actions-btn flex gap-2 items-center'>
                     {userRole?.includes("create") && (
                         <Link
                             className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
-                            href='/company-admin/asset/add'>
+                            href='/company-admin/tag/add-tag'>
                             <span className='icon-circle'>
                                 <svg
                                     xmlns='http://www.w3.org/2000/svg'
@@ -125,85 +112,112 @@ const AssetList = ({ assets }: AssetProps) => {
                                     />
                                 </svg>
                             </span>
-                            <span className='button-label text-[#1a1a1a] capitalize ml-2'>Add asset</span>
+                            <span className='button-label text-[#1a1a1a] capitalize ml-2'>Add Tag</span>
                         </Link>
                     )}
+
+                    <Link
+                        className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
+                        href='/company-admin/tag/unassign-tag'>
+                        <span className='icon-circle'>
+                            <svg
+                                xmlns='http://www.w3.org/2000/svg'
+                                width={20}
+                                height={20}
+                                viewBox='0 0 20 20'
+                                fill='none'>
+                                <path
+                                    fillRule='evenodd'
+                                    clipRule='evenodd'
+                                    d='M10 4C10.355 4 10.6429 4.28782 10.6429 4.64286V9.35714H15.3571C15.7122 9.35714 16 9.64496 16 10C16 10.355 15.7122 10.6429 15.3571 10.6429H10.6429V15.3571C10.6429 15.7122 10.355 16 10 16C9.64496 16 9.35714 15.7122 9.35714 15.3571V10.6429H4.64286C4.28782 10.6429 4 10.355 4 10C4 9.64496 4.28782 9.35714 4.64286 9.35714H9.35714V4.64286C9.35714 4.28782 9.64496 4 10 4Z'
+                                    fill='#845ADF'
+                                />
+                            </svg>
+                        </span>
+                        <span className='button-label text-[#1a1a1a] capitalize ml-2'>Unassign Tags</span>
+                    </Link>
+                    <Link
+                        className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
+                        href='/company-admin/tag/manage-tags'>
+                        <span className='icon-circle'>
+                            <svg
+                                xmlns='http://www.w3.org/2000/svg'
+                                width={20}
+                                height={20}
+                                viewBox='0 0 20 20'
+                                fill='none'>
+                                <path
+                                    fillRule='evenodd'
+                                    clipRule='evenodd'
+                                    d='M10 4C10.355 4 10.6429 4.28782 10.6429 4.64286V9.35714H15.3571C15.7122 9.35714 16 9.64496 16 10C16 10.355 15.7122 10.6429 15.3571 10.6429H10.6429V15.3571C10.6429 15.7122 10.355 16 10 16C9.64496 16 9.35714 15.7122 9.35714 15.3571V10.6429H4.64286C4.28782 10.6429 4 10.355 4 10C4 9.64496 4.28782 9.35714 4.64286 9.35714H9.35714V4.64286C9.35714 4.28782 9.64496 4 10 4Z'
+                                    fill='#845ADF'
+                                />
+                            </svg>
+                        </span>
+                        <span className='button-label text-[#1a1a1a] capitalize ml-2'>All Tags</span>
+                    </Link>
                 </div>
             </div>
 
-            {error.permission && <p className='text-red-500'>{error.permission}</p>}
-
             <div>
                 <div className='card-box_body'>
+                    {error.permission && <p className='text-red-500'>{error.permission}</p>}
                     {userRole?.includes("list") ? (
                         <div className='table-wrapper'>
                             {list.length !== 0 ? (
-                                <>
-                                    <table className='table text-left border-collapse w-full text-[#111c43] border rounded-md text-[14px] leading-5 overflow-hidden'>
-                                        <thead className='bg-[#f5f6fa] table-header-group align-middle'>
-                                            <tr className='table-row border border-solid border-[#f5f6f1]'>
-                                                <th style={{ width: 50 }} className='p-2 font-medium'>
-                                                    Id
-                                                </th>
-                                                <th style={{ width: "calc(26% - 50px)" }} className='p-2 font-medium'>
-                                                    UID
-                                                </th>
-                                                <th style={{ width: "18%" }} className='p-2 font-medium'>
-                                                    Asset Name
-                                                </th>
-                                                <th style={{ width: "14%" }} className='p-2 font-medium'>
-                                                    Tag Type
-                                                </th>
-                                                <th style={{ width: "14%" }} className='p-2 font-medium'>
-                                                    Batch Code
-                                                </th>
-                                                <th style={{ width: "14%" }} className='p-2 font-medium'>
-                                                    Status
-                                                </th>
-                                                <th style={{ width: "14%" }} className='p-2 font-medium'>
-                                                    Action
-                                                </th>
-                                            </tr>
-                                        </thead>
-                                        <tbody className='table-row-group align-middle '>
-                                            {list?.map((asset) => {
-                                                return (
-                                                    <tr
-                                                        className='table-row border-1 border-solid border-[#f5f6f1] align-middle'
-                                                        key={asset.id}>
-                                                        <td className='text-[13px] p-2 font-medium text-[#474a54]'>
-                                                            {asset.id}
-                                                        </td>
-                                                        <td className='text-[13px] p-2 font-medium text-[#474a54]'>
-                                                            {asset.tag.uid}
-                                                        </td>
-                                                        <td className='text-[13px] p-2 font-medium text-[#474a54]'>
-                                                            {asset.name}
-                                                        </td>
-                                                        <td className='text-[13px] p-2 font-medium text-[#474a54]'>
-                                                            {asset.tag.tag_type}
-                                                        </td>
-                                                        <td className='text-[13px] p-2 font-medium text-[#474a54]'>
-                                                            {asset.batch_code}
-                                                        </td>
-                                                        <td className='text-[13px] p-2 font-medium text-[#474a54]'>
-                                                            {asset.status == 0 && (
-                                                                <span className='status processing text-green-500 bg-[#c9f4d2] border border-solid rounded-[40px] uppercase py-[2px] px-2.5 text-[10px] inline-block font-extrabold tracking-[0.5px] '>
-                                                                    GOOD
-                                                                </span>
-                                                            )}
-                                                            {asset.status == 1 && (
-                                                                <span className='status processing text-[#f5a623] bg-[#fff7e6] border border-solid rounded-[40px] uppercase py-[2px] px-2.5 text-[10px] inline-block font-extrabold tracking-[0.5px] '>
-                                                                    WARNING
-                                                                </span>
-                                                            )}
-                                                        </td>
-                                                        <td className='p-2'>
+                                <table className='table text-left border-collapse w-full text-[#111c43] border rounded-md text-[14px] leading-5 overflow-hidden'>
+                                    <thead className='bg-[#f5f6fa] table-header-group align-middle'>
+                                        <tr className='table-row border-1 border-solid border-[#f5f6f1]'>
+                                            <th style={{ width: 50 }} className='p-2 font-medium'>
+                                                Id
+                                            </th>
+                                            <th style={{ width: "calc(26% - 50px)" }} className='p-2 font-medium'>
+                                                UID
+                                            </th>
+
+                                            <th style={{ width: "14%" }} className='p-2 font-medium'>
+                                                Tag Type
+                                            </th>
+                                            <th style={{ width: "14%" }} className='p-2 font-medium'>
+                                                Assigned To
+                                            </th>
+
+                                            <th style={{ width: "14%" }} className='p-2 font-medium'>
+                                                Action
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className='table-row-group align-middle '>
+                                        {list?.map((tag) => {
+                                            return (
+                                                <tr
+                                                    className='table-row border-1 border-solid border-[#f5f6f1] align-middle'
+                                                    key={tag.id}>
+                                                    <td className='text-[13px] font-medium text-[#474a54]'>{tag.id}</td>
+                                                    <td className='text-[13px] font-medium text-[#474a54]'>
+                                                        {tag.uid}
+                                                    </td>
+                                                    <td className='text-[13px] font-medium text-[#474a54]'>
+                                                        {tag.tag_type}
+                                                    </td>
+                                                    <td className='text-[13px] font-medium text-[#474a54]'>
+                                                        {tag.is_assigned ? (
+                                                            <span className='status processing text-[#2aa466] bg-[#e0f2e9] border-[#2aa466] border border-solid rounded-[40px] uppercase px-[2px] py-2.5 text-[10px] inline font-extrabold tracking-[0.5px] '>
+                                                                ASSIGNED
+                                                            </span>
+                                                        ) : (
+                                                            <span className='status processing text-[#f56262] bg-[#fdecea] border-[#f56262] border border-solid rounded-[40px] uppercase px-[2px] py-2.5 text-[10px] inline font-extrabold tracking-[0.5px] '>
+                                                                NOT ASSIGNED
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                    <td>
+                                                        <div className='actions-btn flex gap-2 items-center'>
                                                             <div className='actions-btn flex gap-2 items-center'>
-                                                                <div className='actions-btn flex gap-2 items-center'>
+                                                                {userRole.includes("update") && (
                                                                     <Link
                                                                         className='icon-button edit inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
-                                                                        href={`/company-admin/asset/edit/${asset.id}`}>
+                                                                        href={`/company-admin/tag/edit/${tag.id}`}>
                                                                         <span className='icon-circle'>
                                                                             <svg
                                                                                 xmlns='http://www.w3.org/2000/svg'
@@ -217,10 +231,11 @@ const AssetList = ({ assets }: AssetProps) => {
                                                                                 />
                                                                             </svg>
                                                                         </span>
-                                                                        {/* <span className='tooltip'>Edit</span> */}
                                                                     </Link>
+                                                                )}
+
+                                                                {userRole.includes("delete") && (
                                                                     <button
-                                                                        onClick={() => handleDelete(Number(asset.id))}
                                                                         className='icon-button delete inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
                                                                         type='button'>
                                                                         <span className='icon-circle'>
@@ -236,17 +251,16 @@ const AssetList = ({ assets }: AssetProps) => {
                                                                                 />
                                                                             </svg>
                                                                         </span>
-                                                                        {/* <span className='tooltip'>Delete</span> */}
                                                                     </button>
-                                                                </div>
+                                                                )}
                                                             </div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
                             ) : (
                                 !error.permission && (
                                     <>
@@ -256,29 +270,12 @@ const AssetList = ({ assets }: AssetProps) => {
                             )}
                         </div>
                     ) : (
-                        !error.permission && <p>Permission Denied</p>
+                        <p>Permission Denied</p>
                     )}
                 </div>
             </div>
         </div>
-    );
+    );  
 };
 
-export default AssetList;
-
-{
-    /* <div className='pagination'>
-                <span className='pagination-text'>
-                    Total: <span className='bold'>1 Records | Page 1 of 1 </span>
-                </span>
-                <div className='pagination-buttons'>
-                    <button className='pagination-btn prev' disabled=''>
-                        «
-                    </button>
-                    <button className='pagination-btn active'>1</button>
-                    <button className='pagination-btn next' disabled=''>
-                        »
-                    </button>
-                </div>
-            </div> */
-}
+export default UnassignTagList;

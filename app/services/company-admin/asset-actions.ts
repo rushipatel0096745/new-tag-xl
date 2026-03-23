@@ -34,14 +34,14 @@ export const getAssetList = async function (page: number = 1, filters: any[] = [
     return [];
 };
 
-export const getAssetById = async function(id: number) {
-     const sessionId = await getCompanySessionId();
+export const getAssetById = async function (id: number) {
+    const sessionId = await getCompanySessionId();
     const companyData = await getComapnyData();
     const companyId = companyData?.company_id;
 
     if (companyId && sessionId) {
         try {
-            const response = await fetch("https://tagxl.com/api/company/asset/get/"+id, {
+            const response = await fetch("https://tagxl.com/api/company/asset/get/" + id, {
                 method: "GET",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -52,14 +52,14 @@ export const getAssetById = async function(id: number) {
 
             const result = await response.json();
             // console.log(result.asset);
-            return result?.asset || {};
+            return result
         } catch (error) {
             console.log("error: ", error);
             return [];
         }
     }
     return [];
-}
+};
 
 export const createAsset = async function (formData: FormData) {
     const sessionId = await getCompanySessionId();
@@ -79,16 +79,25 @@ export const createAsset = async function (formData: FormData) {
             });
 
             const result = await response.json();
+            console.log(result)
 
-            if (result.has_error) {
-                console.log(result);
+            // if (result.has_error) {
+            //     console.log(result);
+            //     return {
+            //         success: false,
+            //         error: "Unable to create asset",
+            //         data: "",
+            //     };
+            // }
+            if (result.has_error && result.error_code === "PERMISSION_DENIED") {
+                // console.log(result);
                 return {
                     success: false,
-                    error: "Unable to create asset",
+                    error: "PERMISSION DENIED",
                     data: "",
                 };
             }
-            console.log(result);
+            // console.log(result);
             return {
                 success: true,
                 error: "",
@@ -117,7 +126,7 @@ export const deleteAsset = async function (id: number) {
     const companyId = companyData?.company_id;
     if (companyId && sessionId) {
         try {
-            const response = await fetch("https://tagxl.com/api/company/asset/delete/"+id, {
+            const response = await fetch("https://tagxl.com/api/company/asset/delete/" + id, {
                 method: "DELETE",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -159,14 +168,14 @@ export const deleteAsset = async function (id: number) {
     }
 };
 
-export const editAsset = async function(id: number, formData: FormData) {
-     const sessionId = await getCompanySessionId();
+export const editAsset = async function (id: number, formData: FormData) {
+    const sessionId = await getCompanySessionId();
     const companyData = await getComapnyData();
     const companyId = companyData?.company_id;
 
     if (companyId && sessionId) {
         try {
-            const response = await fetch("https://tagxl.com/api/company/asset/update/"+id, {
+            const response = await fetch("https://tagxl.com/api/company/asset/update/" + id, {
                 method: "PUT",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -178,11 +187,10 @@ export const editAsset = async function(id: number, formData: FormData) {
 
             const result = await response.json();
 
-            if (result.has_error) {
-                console.log(result);
+            if (result.has_error && result.error_code === "PERMISSION_DENIED") {
                 return {
                     success: false,
-                    error: "Unable to create asset",
+                    error: "PERMISSION DENIED",
                     data: "",
                 };
             }
@@ -207,4 +215,4 @@ export const editAsset = async function(id: number, formData: FormData) {
             data: "",
         };
     }
-}
+};

@@ -1,5 +1,6 @@
 import Filter from "@/app/company-admin/components/Filter";
-import TagList from "@/app/company-admin/components/TagList";
+import TagFilter from "@/app/company-admin/components/TagFilter";
+import UnassignTagList from "@/app/company-admin/components/UnassignTagList";
 import { getUnassignedTagList } from "@/app/services/company-admin/tags-actions";
 import React, { Suspense } from "react";
 
@@ -14,11 +15,11 @@ const UnassignedTagPage = async () => {
                 </div>
                 <div className='page-body'>
                     {/* filter */}
-                    <Filter />
+                    <TagFilter />
 
                     {/* asset list */}
                     <Suspense fallback={<p>Loading....</p>}>
-                        <TagList tagList={tagList} />
+                        <UnassignTagList tagList={tagList} />
                     </Suspense>
                 </div>
             </div>

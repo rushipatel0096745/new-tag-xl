@@ -1,9 +1,9 @@
 import Link from "next/link";
 import React, { Suspense } from "react";
-import AssetList from "../../components/AssetList";
+import AssetList from "../../components/Asset/AssetList";
 import Filter from "../../components/Filter";
 import { getAssetList } from "@/app/services/company-admin/asset-actions";
-import AssetFilter from "../../components/AssetFilter";
+import AssetFilter from "../../components/Asset/AssetFilter";
 
 export interface Asset {
     id: number;

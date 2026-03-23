@@ -235,7 +235,7 @@ const AssetTable: React.FC = () => {
   };
   const totalPages = Math.ceil(total / pageSize);
   return (
-    <div className="card-box">
+    <div className="card-box">  
       <div className="card-box_head">
         <h3 className="title h3">Asset List</h3>
         <div className="actions-btn">

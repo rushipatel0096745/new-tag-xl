@@ -240,6 +240,8 @@ const RoleList = ({ tempList }: Props) => {
 
             <div>
                 <div className='card-box_body'>
+                    {error.permission && <p className='text-red-500'>{error.permission}</p>}
+
                     {userRole?.includes("list") ? (
                         <div className='table-wrapper'>
                             {list.length !== 0 ? (
@@ -327,7 +329,7 @@ const RoleList = ({ tempList }: Props) => {
                             )}
                         </div>
                     ) : (
-                        !error.permission && <p>Permission Denied</p>
+                        !error.permission && <p>Permission Denied</p>   
                     )}
                 </div>
             </div>

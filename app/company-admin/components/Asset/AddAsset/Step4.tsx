@@ -12,17 +12,19 @@ interface Props {
     validate: () => boolean;
     errors: any;
     formData: any;
+    formError: string;
 }
 
-const Step4 = ({ prev, next, updateForm, formData, validate, errors, handleSubmit }: Props) => {
+const Step4 = ({ prev, next, updateForm, formData, validate, errors, handleSubmit, formError }: Props) => {
     const handleTemplateSubmit = function (e: React.SubmitEvent<HTMLFormElement>): void {
         e.preventDefault();
         handleSubmit();
     };
 
-    useEffect(() => console.log(formData));
+    // useEffect(() => console.log(formData), []);
     return (
         <form action='' method='POST' className='block'>
+            {formError && <p className='text-red-500'>{formError}</p>}
             <div className='row flex gap-4 w-full flex-wrap'>
                 <div className='col w-full'>
                     <div className='card-box-inner border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>

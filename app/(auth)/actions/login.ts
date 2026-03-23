@@ -35,7 +35,7 @@ export const login = async function (prevState: any, formData: FormData) {
         const encryptedData = encryptData(result);
 
         const cookieStore = await cookies();
-        cookieStore.set("user-session", encryptedData, {
+        cookieStore.set("super-user-session", encryptedData, {
             httpOnly: false,
             secure: process.env.NODE_ENV === "production",
             maxAge: 60 * 60 * 24 * 7,

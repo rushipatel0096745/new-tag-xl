@@ -10,7 +10,7 @@ interface ColumnItem {
     type: string;
 }
 
-const TagFilter = () => {
+const AlertsFilter = () => {
     const [toggle, setToggle] = useState(false);
     const [columns, setColumns] = useState<ColumnItem[]>([]);
     const [conditions, setConditions] = useState<Record<string, string>>({});
@@ -35,9 +35,9 @@ const TagFilter = () => {
     const sessionId = getSessionId("company-user-session");
     const companyId = getCompanyId("company-user-session");
 
-    async function getTagCols() {
+    async function getAlertsCols() {
         try {
-            const result = await clientFetch("/company/table-columns/tags", {
+            const result = await clientFetch("/company/table-columns/asset_alerts", {
                 method: "GET",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -73,24 +73,24 @@ const TagFilter = () => {
         });
         console.log("filters: ", draftFilters);
         console.log("formated filters: ", filtersArr);
-        Cookies.set("company_tag_filter", JSON.stringify(filtersArr));
-        window.dispatchEvent(new Event("TagFiltersChanged"));
+        Cookies.set("company_alert_filter", JSON.stringify(filtersArr));
+        window.dispatchEvent(new Event("AlertFiltersChanged"));
     };
 
     const resetFilter = function () {
         setToggle(false);
         setDraftFilters([]);
-        Cookies.remove("company_tag_filter");
-        window.dispatchEvent(new Event("TagFiltersChanged"));
+        Cookies.remove("company_alert_filter");
+        window.dispatchEvent(new Event("AlertFiltersChanged"));
     };
 
     useEffect(() => {
-        getTagCols();
+        getAlertsCols();
     }, []);
 
     // load values from cookie
     useEffect(() => {
-        const savedFilters = Cookies.get("company_tag_filter");
+        const savedFilters = Cookies.get("company_alert_filter");
         if (!savedFilters) return;
 
         try {
@@ -173,8 +173,7 @@ const TagFilter = () => {
         return filter.text === "1";
     };
 
-    const CHECKBOX_FIELDS = ["is_asset_failure", "is_maintenance_failure"];
-    const RADIO_FIELDS = ["is_assigned"];
+    const HIDDEN_FIELDS = ["pre_use_answers_id", "maintenance_answers_id", "note", "generated_by", "unique_key_active"];
 
     return (
         <>
@@ -230,89 +229,132 @@ const TagFilter = () => {
                 {toggle && (
                     <form className='flex flex-col gap-6'>
                         <div className='grid grid-cols-2 gap-4'>
-                            {columns.map((col) => {
-                                if (col.type === "DATETIME") {
-                                    return (
-                                        <div className='col-span-1' key={col.name}>
-                                            <label>
-                                                {col.name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-                                            </label>
-                                            <div className='grid grid-cols-2 gap-2'>
+                            {columns
+                                .filter((col) => !HIDDEN_FIELDS.includes(col.name))
+                                .map((col) => {
+                                    if (col.type === "DATETIME") {
+                                        return (
+                                            <div className='col-span-1' key={col.name}>
+                                                <label>
+                                                    {col.name
+                                                        .replace(/_/g, " ")
+                                                        .replace(/\b\w/g, (c) => c.toUpperCase())}
+                                                </label>
+                                                <div className='grid grid-cols-2 gap-2'>
+                                                    <input
+                                                        type='date'
+                                                        className='form-input'
+                                                        placeholder='From'
+                                                        value={getDateValue(col.name, 0)}
+                                                        onChange={(e) =>
+                                                            handleFilterChange(col.name, col.type, e.target.value, 0)
+                                                        }
+                                                    />
+                                                    <input
+                                                        type='date'
+                                                        className='form-input'
+                                                        placeholder='To'
+                                                        value={getDateValue(col.name, 1)}
+                                                        onChange={(e) =>
+                                                            handleFilterChange(col.name, col.type, e.target.value, 1)
+                                                        }
+                                                    />
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
+                                    if (col.name === "status") {
+                                        return (
+                                            <div className='col-span-1' key={col.name}>
+                                                <label>
+                                                    {col.name
+                                                        .replace(/_/g, " ")
+                                                        .replace(/\b\w/g, (c) => c.toUpperCase())}
+                                                </label>
+                                                <div className='flex items-center gap-4'>
+                                                    <select
+                                                        name={col.name}
+                                                        id={`id-${col.name}`}
+                                                        className='form-input'
+                                                        value={getTextValue(col.name)}
+                                                        onChange={(e) =>
+                                                            handleFilterChange(col.name, col.type, e.target.value, 0)
+                                                        }>
+                                                        <option value=''>Select Type</option>
+                                                        <option value='0'>Pending</option>
+                                                        <option value='1'>Processing</option>
+                                                        <option value='1'>Completed</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
+                                    if (col.name === "alert_type") {
+                                        return (
+                                            <div className='col-span-1' key={col.name}>
+                                                <label>
+                                                    {col.name
+                                                        .replace(/_/g, " ")
+                                                        .replace(/\b\w/g, (c) => c.toUpperCase())}
+                                                </label>
+                                                <div className='flex items-center gap-4'>
+                                                    <select
+                                                        name={col.name}
+                                                        id={`id-${col.name}`}
+                                                        className='form-input'
+                                                        value={getTextValue(col.name)}
+                                                        onChange={(e) =>
+                                                            handleFilterChange(col.name, col.type, e.target.value, 0)
+                                                        }>
+                                                        <option value=''>Select Type</option>
+                                                        {[
+                                                            "fail_maintenance_check",
+                                                            "fail_pre_use_check",
+                                                            "maintenance_due",
+                                                            "certificate_expired",
+                                                        ].map((type) => (
+                                                            <option value={type} key={type}>
+                                                                {type
+                                                                    .replace(/_/g, " ")
+                                                                    .replace(/\b\w/g, (c) => c.toUpperCase())}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        );
+                                    }
+
+                                    if (col.type === "INTEGER" || col.type === "BIGINT") {
+                                        return (
+                                            <div className='col-span-1' key={col.name}>
+                                                <label>
+                                                    {col.name
+                                                        .replace(/_/g, " ")
+                                                        .replace(/\b\w/g, (c) => c.toUpperCase())}
+                                                </label>
                                                 <input
-                                                    type='date'
+                                                    type='number'
                                                     className='form-input'
-                                                    placeholder='From'
-                                                    value={getDateValue(col.name, 0)}
+                                                    value={getTextValue(col.name)}
                                                     onChange={(e) =>
                                                         handleFilterChange(col.name, col.type, e.target.value, 0)
                                                     }
                                                 />
-                                                <input
-                                                    type='date'
-                                                    className='form-input'
-                                                    placeholder='To'
-                                                    value={getDateValue(col.name, 1)}
-                                                    onChange={(e) =>
-                                                        handleFilterChange(col.name, col.type, e.target.value, 1)
-                                                    }
-                                                />
                                             </div>
-                                        </div>
-                                    );
-                                }
+                                        );
+                                    }
 
-                                if (RADIO_FIELDS?.includes(col.name)) {
-                                    return (
-                                        <div className='col-span-1' key={col.name}>
-                                            <label>
-                                                {col.name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-                                            </label>
-                                            <div className='flex items-center gap-4'>
-                                                {[
-                                                    { label: "Assigned", value: "1" },
-                                                    { label: "Not Assigned", value: "0" },
-                                                ].map((option) => (
-                                                    <label
-                                                        key={option.value}
-                                                        className='flex items-center gap-1 cursor-pointer'>
-                                                        <input
-                                                            type='radio'
-                                                            name={col.name}
-                                                            value={option.value}
-                                                            checked={getTextValue(col.name) === option.value}
-                                                            onChange={(e) =>
-                                                                handleFilterChange(
-                                                                    col.name,
-                                                                    col.type,
-                                                                    e.target.value,
-                                                                    0
-                                                                )
-                                                            }
-                                                        />
-                                                        <span className='capitalize'>{option.label}</span>
-                                                    </label>
-                                                ))}
-                                                {getTextValue(col.name) && (
-                                                    <button
-                                                        type='button'
-                                                        className='text-xs text-gray-400 underline'
-                                                        onClick={() => handleFilterChange(col.name, col.type, "", 0)}>
-                                                        Clear
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    );
-                                }
-
-                                if (col.type === "INTEGER" || col.type === "BIGINT") {
+                                    // input type TEXT
                                     return (
                                         <div className='col-span-1' key={col.name}>
                                             <label>
                                                 {col.name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
                                             </label>
                                             <input
-                                                type='number'
+                                                type='text'
                                                 className='form-input'
                                                 value={getTextValue(col.name)}
                                                 onChange={(e) =>
@@ -321,50 +363,7 @@ const TagFilter = () => {
                                             />
                                         </div>
                                     );
-                                }
-
-                                if (col.name === "tag_type") {
-                                    return (
-                                        <div className='col-span-1' key={col.name}>
-                                            <label>
-                                                {col.name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-                                            </label>
-                                            <div className='flex items-center gap-4'>
-                                                <select
-                                                    name={col.name}
-                                                    id={`id-${col.name}`}
-                                                    className='form-input'
-                                                    value={getTextValue(col.name)}
-                                                    onChange={(e) =>
-                                                        handleFilterChange(col.name, col.type, e.target.value, 0)
-                                                    }>
-                                                    <option value=''>Select Type</option>
-                                                    {["RFID", "QR", "Manual"].map((type) => (
-                                                        <option value={type} key={type}>
-                                                            {type}
-                                                        </option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
-                                    );
-                                }
-
-                                // input type TEXT
-                                return (
-                                    <div className='col-span-1' key={col.name}>
-                                        <label>
-                                            {col.name.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
-                                        </label>
-                                        <input
-                                            type='text'
-                                            className='form-input'
-                                            value={getTextValue(col.name)}
-                                            onChange={(e) => handleFilterChange(col.name, col.type, e.target.value, 0)}
-                                        />
-                                    </div>
-                                );
-                            })}
+                                })}
                         </div>
                     </form>
                 )}
@@ -373,4 +372,4 @@ const TagFilter = () => {
     );
 };
 
-export default TagFilter;
+export default AlertsFilter;

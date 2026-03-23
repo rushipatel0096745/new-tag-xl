@@ -4,7 +4,7 @@ import { getCompanyUserPermissions } from "@/app/utils/user-helper";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
-import { GetTagList } from "@/app/services/company-admin/tags";
+import { GetTagList, GetUnassignedTagList } from "@/app/services/company-admin/tags";
 
 export interface Tag {
     id: number;
@@ -161,7 +161,9 @@ const TagList = ({ tagList }: { tagList: Tag[] }) => {
 
             <div>
                 <div className='card-box_body'>
-                    {userRole?.includes("list") ? (
+                    {error.permission && <p className="text-red-500">{error.permission}</p>}
+                    {          
+                    userRole?.includes("list") ? (
                         <div className='table-wrapper'>
                             {list.length !== 0 ? (
                                 <table className='table text-left border-collapse w-full text-[#111c43] border rounded-md text-[14px] leading-5 overflow-hidden'>

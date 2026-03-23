@@ -35,6 +35,7 @@ const AddAsset = () => {
     });
 
     const [errors, setErrors] = useState<any>({});
+    const [formError, setFormError] = useState("");
 
     const updateForm = function (name: string, value: any) {
         setFormData((prev) => ({
@@ -69,8 +70,15 @@ const AddAsset = () => {
 
         const response = await createAsset(assetFormData);
 
+        console.log("response for create asset: ", response);
+
         if (response.success) {
             router.push("/company-admin/asset");
+            return;
+        }
+
+        if (!response.success && response.error) {
+            setFormError(response.error);
         }
     };
 
@@ -156,6 +164,7 @@ const AddAsset = () => {
                     errors={errors}
                     formData={formData}
                     handleSubmit={handleSave}
+                    formError={formError}
                 />
             )}
         </>

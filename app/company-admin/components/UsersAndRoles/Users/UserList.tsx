@@ -290,6 +290,8 @@ const UserList = ({ tempList }: Props) => {
 
                 <div>
                     <div className='card-box_body'>
+                        {error.permission && <p className='text-red-500'>{error.permission}</p>}
+
                         {userRole?.includes("list") ? (
                             <div className='table-wrapper'>
                                 {list.length !== 0 ? (

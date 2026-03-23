@@ -90,13 +90,12 @@ const AssetFilter = () => {
 
     // load values from cookie
     useEffect(() => {
-        setToggle(true);
         const savedFilters = Cookies.get("company_asset_filter");
         if (!savedFilters) return;
-
+        
         try {
             const parsed: DraftFilter[] = JSON.parse(savedFilters);
-
+            
             const restored = parsed.map((filter) => {
                 if (filter.condition === "gte" && typeof filter.text === "string") {
                     return { ...filter, text: [filter.text, ""] };
@@ -106,6 +105,7 @@ const AssetFilter = () => {
                 }
                 return filter;
             });
+            setToggle(true);
 
             setDraftFilters(restored);
         } catch (e) {

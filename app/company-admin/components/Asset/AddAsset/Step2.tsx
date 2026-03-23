@@ -1,5 +1,5 @@
 import React, { use, useEffect, useState } from "react";
-import { Location } from "../../(admin)/location-master/page";
+import { Location } from "../../../(admin)/location-master/page";
 import { getAllLocations } from "@/app/services/company-admin/location";
 import { useForm } from "react-hook-form";
 

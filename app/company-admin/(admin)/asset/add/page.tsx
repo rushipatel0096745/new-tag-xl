@@ -1,4 +1,4 @@
-import AddAsset from "@/app/company-admin/components/AddAsset/AddAsset";
+import AddAsset from "@/app/company-admin/components/Asset/AddAsset/AddAsset";
 import Link from "next/link";
 import React from "react";
 
