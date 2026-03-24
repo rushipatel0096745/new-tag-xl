@@ -5,6 +5,7 @@ import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import UpdateQuestionModal from "../UpdateQuestionModal";
 import { MaintenaceEditTemplate } from "@/app/company-admin/(admin)/template-master/maintenance-check-template/edit/[id]/page";
+import { GetMaintenanceTemplate } from "@/app/services/company-admin/maintenance_template";
 
 type Question = {
     id?: number;
@@ -26,30 +27,47 @@ type FormattedQuestion = {
 
 interface Props {
     initialData: MaintenaceEditTemplate;
+    id: string;
 }
 
-const MaintenanceTemplateEdit = ({ initialData }: Props) => {
-    const [maintenaceFrequency, setMaintenanceFrequency] = useState(String(initialData.maintenance_frequency));
+const MaintenanceTemplateEdit = ({ id }: Props) => {
+    const [initialData, setInitialData] = useState<MaintenaceEditTemplate>();
+    const [maintenaceFrequency, setMaintenanceFrequency] = useState("");
     const [customFrequency, setCustomFrequency] = useState("");
-    const [title, setTitle] = useState(initialData.title);
+    const [title, setTitle] = useState("");
     const [showMsg, setShowMsg] = useState("");
-    const [permitted, setPermitted] = useState<boolean>();
+    const [permitted, setPermitted] = useState("");
 
     const sessionId = getSessionId("company-user-session");
     const companyId = getCompanyId("company-user-session");
 
-    function checkPermission() {
-        const permission = getCompanyUserPermissions();
-        const flag = permission.maintenance_template.includes("create");
-        console.log(flag);
-        return flag;
+    async function fetchTemplate() {
+        const result = await GetMaintenanceTemplate(Number(id));
+        console.log("response for maintenance template: ", result);
+        if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+            setPermitted(result.message || "Permission denied to update");
+        }
+        if (!result.has_error) {
+            setInitialData(result?.maintenance_template);
+        }
     }
 
     useEffect(() => {
-        setPermitted(checkPermission());
+        fetchTemplate();
     }, []);
 
-    const questionTypes = {
+    useEffect(() => {
+        setMaintenanceFrequency(String(initialData?.maintenance_frequency));
+        initialData?.title && setTitle(initialData?.title);
+
+        let initialQuestions = initialData?.questions && reverseFormatQuestionBody(initialData.questions);
+        const fixedSet = new Set(fixedQuestions.map((q) => q.question));
+        initialQuestions = initialQuestions?.filter((q) => !fixedSet.has(q.question));
+
+        initialQuestions && setNewMaintenanceQuestions(initialQuestions);
+    }, [initialData]);
+
+    const questionTypes: Record<string, string> = {
         boolean: "Yes/No",
         text: "Textfield",
         checkbox: "Checkbox",
@@ -67,12 +85,7 @@ const MaintenanceTemplateEdit = ({ initialData }: Props) => {
 
     const SELECT_TRIGGER = "custom";
 
-    let initialQuestions = reverseFormatQuestionBody(initialData.questions);
-
-    const fixedSet = new Set(fixedQuestions.map((q) => q.question));
-    initialQuestions = initialQuestions.filter((q) => !fixedSet.has(q.question));
-
-    const [newMaintenanceQuestions, setNewMaintenanceQuestions] = useState<Question[]>(initialQuestions || []);
+    const [newMaintenanceQuestions, setNewMaintenanceQuestions] = useState<Question[]>([]);
     const [maintenanceQuestionText, setMaintenanceQuestionText] = useState("");
     const [maintenanceQuestionType, setMaintenanceQuestionType] = useState("");
     const [maintenanceQuestionOptions, setMaintenanceQuestionOptions] = useState<string[]>([]);
@@ -91,7 +104,7 @@ const MaintenanceTemplateEdit = ({ initialData }: Props) => {
     }
 
     const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
-    const [error, setError] = useState({});
+    const [error, setError] = useState<{ [key: string]: string }>({});
 
     // Save updated question from modal
     function handleSaveUpdatedQuestion(updated: Question) {
@@ -218,7 +231,7 @@ const MaintenanceTemplateEdit = ({ initialData }: Props) => {
 
     async function updateTemplate(data: any) {
         try {
-            const result = await clientFetch("/company/maintenance-template/update/" + initialData.id, {
+            const result = await clientFetch("/company/maintenance-template/update/" + initialData?.id, {
                 method: "PUT",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -230,12 +243,16 @@ const MaintenanceTemplateEdit = ({ initialData }: Props) => {
 
             console.log("API response:", result);
 
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to update");
+                return;
+            }
             if (result?.has_error) {
                 console.error("Template creation failed:", result.message);
                 return;
             }
 
-            setShowMsg(result?.message || "Template created successfully");
+            setShowMsg(result?.message || "Template updated successfully");
         } catch (error) {
             console.error("Create template error:", error);
         }
@@ -254,7 +271,10 @@ const MaintenanceTemplateEdit = ({ initialData }: Props) => {
             <div className='main flex flex-col p-6 bg-white rounded-lg shadow-sm'>
                 <div className='header flex items-center justify-between mb-6'>
                     <h4 className='text-xl font-semibold text-gray-800'>Edit Maintenance Template</h4>
+
                     {showMsg && <p className='text-green-600'>{showMsg}</p>}
+                    {permitted && <p className='text-red-500'>{permitted}</p>}
+
                     <div className='flex gap-2'>
                         <Link
                             href='/company-admin/template-master/maintenance-check-template'
@@ -415,12 +435,12 @@ const MaintenanceTemplateEdit = ({ initialData }: Props) => {
                                     })}
                                 </div>
 
-                                {newMaintenanceQuestions.length !== 0 && (
+                                {newMaintenanceQuestions?.length !== 0 && (
                                     <div className='selected-pre-use-quetions  border-3 border-solid border-[#f5f6fa] p-5.5 flex flex-wrap'>
                                         <div className='title w-full'>
                                             <h5>New Asset-Specific Maintenace Template Questions</h5>
                                         </div>
-                                        {newMaintenanceQuestions.map((question, index) => {
+                                        {newMaintenanceQuestions?.map((question, index) => {
                                             const question_type = questionTypes[question.type];
 
                                             return (

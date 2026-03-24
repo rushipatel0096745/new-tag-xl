@@ -1,12 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import React, { startTransition, useActionState, useState } from "react";
+import React, { startTransition, useActionState, useEffect, useState } from "react";
 import { Tag } from "./TagList";
-import { Asset } from "../(admin)/tag/edit/[id]/page";
-import Modal from "../components/Modal";
+import { Asset } from "../../(admin)/tag/edit/[id]/page";
+import Modal from "../Modal";
 import UnassignTagModal from "./UnassignTagModal";
 import AssignTagModal from "./AssignTagModal";
+import { DeleteTag } from "@/app/services/company-admin/tags";
+import { useRouter } from "next/navigation";
 
 const EditTag = ({
     id,
@@ -17,7 +19,7 @@ const EditTag = ({
 }: {
     id: number;
     initialData: Tag;
-    action: (id: number, prevState: any, formData: any) => Promise<void>;
+    action: (id: number, prevState: any, formData: any) => Promise<any>;
     asset: Asset;
     assetList: Asset[];
 }) => {
@@ -30,11 +32,15 @@ const EditTag = ({
         data: "",
     });
 
+    const router = useRouter();
+
     const [tagType, setTagType] = useState<string>(initialData.tag_type);
 
     const [showMsg, setShowMsg] = useState<string>("");
 
     const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const [error, setError] = useState<{ [key: string]: string }>({});
 
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
@@ -50,9 +56,26 @@ const EditTag = ({
         };
         console.log(data);
         startTransition(() => formAction(data));
+    }
 
-        if (state?.success) {
+    useEffect(() => {
+        if (state?.success === true) {
             setShowMsg("Tag updated successfully");
+        } else if (state?.success === false) {
+            setShowMsg("");
+        }
+    }, [state]);
+
+    async function handleDelete(id: number) {
+        const result = await DeleteTag(id);
+        if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+            setError((prev) => ({
+                ...prev,
+                permission: "Permission Denied To Delete Tag",
+            }));
+        }
+        if (!result.has_error) {
+           router.push("/company-admin/tag/manage-tags?delete=true")
         }
     }
 
@@ -65,6 +88,15 @@ const EditTag = ({
                             <p>{showMsg}</p>
                         </div>
                     )}
+
+                    {state?.error && (
+                        <div className='text-red-500'>
+                            <p>{state?.error}</p>
+                        </div>
+                    )}
+
+                    {error.permission && <p className='text-red-500'>{error.permission}</p>}
+
                     <h3 className='h3 text-[18px] font-semibold leading-6'>Edit Tag</h3>
                     <div className='actions-btn flex gap-2 items-center'>
                         <Link
@@ -87,7 +119,9 @@ const EditTag = ({
                             </span>
                             <span className='button-label text-[#1a1a1a] capitalize ml-2'>Back</span>
                         </Link>
-                        <button className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'>
+                        <button
+                            onClick={() => handleDelete(id)}
+                            className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'>
                             <span className='icon-circle'>
                                 <svg
                                     xmlns='http://www.w3.org/2000/svg'
@@ -220,8 +254,7 @@ const EditTag = ({
                                             decoding='async'
                                             data-nimg={1}
                                             className='product-img'
-                                            srcSet='/_next/image?url=https%3A%2F%2Fapi.tagxl.com%2Fnull&w=256&q=75 1x, /_next/image?url=https%3A%2F%2Fapi.tagxl.com%2Fnull&w=384&q=75 2x'
-                                            src='/_next/image?url=https%3A%2F%2Fapi.tagxl.com%2Fnull&w=384&q=75'
+                                            src={`https://api.tagxl.com/${asset.image}`}
                                             style={{}}
                                         />
                                     </div>

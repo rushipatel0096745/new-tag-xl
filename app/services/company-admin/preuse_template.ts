@@ -28,3 +28,19 @@ export const GetPreUseTemplateList = async function (page: number = 1, pageSize:
     return result;
 };
 
+export const GetPreUseTemplate = async function (id: number) {
+    const companyId = getCompanyId("company-user-session");
+    const sessionId = getSessionId("company-user-session");
+
+    // console.log("company id: ", companyId);
+
+    const result = await clientFetch("/company/pre-use-template/get/" + id, {
+        method: "GET",
+        headers: {
+            "X-Session-ID": sessionId,
+            "X-Company-ID": companyId,
+            "Content-Type": "application/json",
+        },
+    });
+    return result;
+};

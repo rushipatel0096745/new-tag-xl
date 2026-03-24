@@ -21,7 +21,7 @@ const RoleList = ({ tempList }: Props) => {
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
 
-    const [permitted, setPermitted] = useState<boolean>();
+    const [permitted, setPermitted] = useState<string>();
     const [permError, setPermError] = useState("");
     const [sessionId, setSessionId] = useState("");
     const [companyId, setCompanyId] = useState("");
@@ -98,7 +98,7 @@ const RoleList = ({ tempList }: Props) => {
         return flag;
     }
 
-    async function deleteTemplate(id: number | string) {
+    async function deleteRole(id: number | string) {
         if (checkPermission("role", "delete")) {
             setPermError("Not allowed to delete!!");
             return;
@@ -113,6 +113,11 @@ const RoleList = ({ tempList }: Props) => {
                     "Content-Type": "application/json",
                 },
             });
+
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to delete");
+                return;
+            }
 
             if (result?.has_error) {
                 console.error("Template deletion failed:", result.message);
@@ -149,7 +154,6 @@ const RoleList = ({ tempList }: Props) => {
                     </div>
                 )}
                 <div className='actions-btn flex gap-2 items-center'>
-                    {!createUserPermission && (
                         <Link
                             className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
                             href='/company-admin/users-and-roles/users/add'>
@@ -170,8 +174,6 @@ const RoleList = ({ tempList }: Props) => {
                             </span>
                             <span className='button-label text-[#1a1a1a] capitalize ml-2'>Add User</span>
                         </Link>
-                    )}
-                    {!createRolePermission && (
                         <Link
                             className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
                             href='/company-admin/users-and-roles/roles/add'>
@@ -192,7 +194,6 @@ const RoleList = ({ tempList }: Props) => {
                             </span>
                             <span className='button-label text-[#1a1a1a] capitalize ml-2'>Add Role</span>
                         </Link>
-                    )}
 
                     <Link
                         className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
@@ -294,7 +295,7 @@ const RoleList = ({ tempList }: Props) => {
                                                                         </span>
                                                                     </button>
                                                                     <button
-                                                                        onClick={() => deleteTemplate(Number(temp.id))}
+                                                                        onClick={() => deleteRole(Number(temp.id))}
                                                                         className='icon-button delete inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
                                                                         type='button'>
                                                                         <span className='icon-circle'>
@@ -329,7 +330,7 @@ const RoleList = ({ tempList }: Props) => {
                             )}
                         </div>
                     ) : (
-                        !error.permission && <p>Permission Denied</p>   
+                        !error.permission && <p>Permission Denied</p>
                     )}
                 </div>
             </div>

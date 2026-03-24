@@ -41,6 +41,8 @@ const AddRole = () => {
 
     const [showMsg, setShowMsg] = useState("");
 
+    const [permitted, setPermitted] = useState("");
+
     function validation() {
         const newErrors = {} as Error;
         if (!roleName) newErrors.role_name = "Role name is required";
@@ -63,6 +65,11 @@ const AddRole = () => {
             });
 
             console.log("API response:", result);
+
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied");
+                return;
+            }
 
             if (result?.has_error) {
                 console.error("roles fetching failed:", result.message);
@@ -89,6 +96,11 @@ const AddRole = () => {
             });
 
             console.log("API response:", result);
+
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to create Role");
+                return;
+            }
 
             if (result?.has_error) {
                 console.error("user updation failed:", result.message);
@@ -181,6 +193,8 @@ const AddRole = () => {
         <div className='main flex flex-col p-6 bg-white rounded-lg shadow-sm'>
             {/* Header */}
             {showMsg && <div className='text-green-600'>{showMsg}</div>}
+            {permitted && <p className='text-red-500'>{permitted}</p>}
+
             <div className='header flex items-center justify-between mb-6'>
                 <h4 className='text-xl font-semibold text-gray-800'>Add Role</h4>
 

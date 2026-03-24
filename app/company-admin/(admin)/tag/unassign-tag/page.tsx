@@ -1,6 +1,6 @@
 import Filter from "@/app/company-admin/components/Filter";
-import TagFilter from "@/app/company-admin/components/TagFilter";
-import UnassignTagList from "@/app/company-admin/components/UnassignTagList";
+import TagFilter from "@/app/company-admin/components/Tag/TagFilter";
+import UnassignTagList from "@/app/company-admin/components/Tag/UnassignTagList";
 import { getUnassignedTagList } from "@/app/services/company-admin/tags-actions";
 import React, { Suspense } from "react";
 

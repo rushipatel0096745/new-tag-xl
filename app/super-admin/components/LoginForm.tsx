@@ -1,11 +1,10 @@
 "use client";
 import React, { startTransition, useActionState, useEffect, useState } from "react";
-import { useFormStatus } from "react-dom";
-import { Form, useForm } from "react-hook-form";
-import { login } from "../actions/login";
+import { useForm } from "react-hook-form";
+import { login } from "../../services/super-admin/auth";
 import { useRouter } from "next/navigation";
 
-const LoginForm = ({ loginAction }: any) => {
+const LoginForm = ({ loginAction }: { loginAction: (prevState: any, formData: FormData) => Promise<any> }) => {
     const router = useRouter();
     const [state, formAction, isPending] = useActionState(loginAction, { success: null, error: "" });
     const {
@@ -32,7 +31,7 @@ const LoginForm = ({ loginAction }: any) => {
         <div>
             <div className='bg-gray-50'>
                 <div className='min-h-screen flex flex-col items-center justify-center py-6 px-4'>
-                    <div className='max-w-[480px] w-full'>
+                    <div className='max-w-120 w-full'>
                         <div className='p-6 sm:p-8 rounded-2xl bg-white border border-gray-200 shadow-sm'>
                             <h1 className='text-slate-900 text-center text-3xl font-semibold'>Log in</h1>
                             <form className='mt-12 space-y-6' onSubmit={handleSubmit(onSubmit)}>
@@ -93,7 +92,7 @@ const LoginForm = ({ loginAction }: any) => {
                                         </a>
                                     </div>
                                 </div>
-                                <div className='!mt-2'>
+                                <div className='mt-2!'>
                                     <button
                                         type='submit'
                                         disabled={isPending}

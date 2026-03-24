@@ -4,7 +4,7 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { Asset } from "../../(admin)/asset/page";
 import { deleteAsset } from "@/app/services/company-admin/asset-actions";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getCompanyUserPermissions } from "@/app/utils/user-helper";
 import Cookies from "js-cookie";
 import { GetAssetList } from "@/app/services/company-admin/assets";
@@ -19,9 +19,20 @@ const AssetList = ({ assets }: AssetProps) => {
     const [pageSize, setPageSize] = useState(10);
     // const [showMsg, setShowMsg] = useState("");
     const [error, setError] = useState<{ [key: string]: string }>({});
+    // const [deleteMsg, setDeleteMsg] = useState("")
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
     const [userRole, setUserRole] = useState<string[]>();
+
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        if (searchParams.get("delete") === "true") {
+            setShowMsg("Asset Deleted Successfully");
+            router.refresh();
+        }
+        router.replace("/company-admin/asset");
+    }, []);
 
     useEffect(() => {
         const role = getCompanyUserPermissions();
@@ -101,8 +112,11 @@ const AssetList = ({ assets }: AssetProps) => {
             <div className='card-box_head border-b border-b-[#ededed] px-4 py-5.5 flex justify-between items-center'>
                 <h3 className='h3 text-[18px] font-semibold leading-6'>Asset List</h3>
                 {showMsg && (
-                    <div className='text-yellow-600'>
+                    <div className='text-yellow-200 bg-yellow-400 p-2 flex gap-4 justify-end border-0 rounded-xl'>
                         <p>{showMsg}</p>
+                        <button type='button' aria-label='Close' onClick={() => setShowMsg("")}>
+                            <span aria-hidden='true'>&times;</span>
+                        </button>
                     </div>
                 )}
                 <div className='actions-btn flex gap-2 items-center'>

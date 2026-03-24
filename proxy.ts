@@ -92,7 +92,7 @@ export async function proxy(request: NextRequest) {
     if (isPublicPath(pathname)) {
         // If already authenticated, redirect away from login pages
         if (pathname.startsWith(SUPER_ADMIN_PREFIX) && hasSuperAdminSession) {
-            return redirectTo("/super-admin/dashboard", request);
+            return redirectTo("/super-admin/", request);
         }
         if (pathname.startsWith(COMPANY_ADMIN_PREFIX) && hasCompanySession) {
             return redirectTo("/company-admin/", request);

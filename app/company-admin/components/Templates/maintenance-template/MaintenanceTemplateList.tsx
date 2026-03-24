@@ -148,6 +148,12 @@ const MaintenanceTemplateList = ({ tmpList }: Props) => {
                 return;
             }
 
+            if (result?.has_error && result.error_code == "PERMISSION_DENIED") {
+                console.error("Template deletion failed:", result.message);
+                setPermError(result.message)
+                return;
+            }
+
             setList((prev) => prev.filter((item) => item.id !== id));
             setShowMsg("Template deleted successfully");
         } catch (error) {
@@ -181,7 +187,7 @@ const MaintenanceTemplateList = ({ tmpList }: Props) => {
                     {userRole?.includes("create") && (
                         <Link
                             className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
-                            href='/company-admin/template-master/manual-template/add'>
+                            href='/company-admin/template-master/maintenance-check-template/add'>
                             <span className='icon-circle'>
                                 <svg
                                     xmlns='http://www.w3.org/2000/svg'

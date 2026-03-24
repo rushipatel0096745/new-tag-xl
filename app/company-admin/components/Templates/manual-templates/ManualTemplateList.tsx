@@ -144,6 +144,11 @@ const ManualTemplateList = ({ tempList }: Props) => {
                 },
             });
 
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to update");
+                return;
+            }
+
             if (result?.has_error) {
                 console.error("Template deletion failed:", result.message);
                 return;

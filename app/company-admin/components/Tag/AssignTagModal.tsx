@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useState } from "react";
-import Modal from "./Modal";
+import Modal from "../Modal";
 import Select from "react-select";
-import { Asset } from "../(admin)/tag/edit/[id]/page";
+import { Asset } from "../../(admin)/tag/edit/[id]/page";
 
 const AssignTagModal = ({
     isOpen,

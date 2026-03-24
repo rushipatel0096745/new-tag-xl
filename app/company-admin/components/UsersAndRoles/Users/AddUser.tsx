@@ -36,7 +36,7 @@ type Errors = {
 
 const AddUser = () => {
     const sessionId = getSessionId("company-user-session");
-    const companyId = getCompanyId("company-user-session"); 
+    const companyId = getCompanyId("company-user-session");
 
     const initialFormData: FormData = {
         firstname: "",
@@ -49,6 +49,8 @@ const AddUser = () => {
 
     const [formData, setFormData] = useState(initialFormData);
     const [roleList, setRoleList] = useState<Role[]>([]);
+
+    const [permitted, setPermitted] = useState<string>();
 
     const [errors, setErrors] = useState<Errors>();
 
@@ -97,14 +99,18 @@ const AddUser = () => {
 
             console.log("API response:", result);
 
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to Update User");
+                return;
+            }
+
             if (result?.has_error) {
                 console.error("user creation failed:", result.message);
                 return;
             }
 
-            setShowMsg("User created succesfully")
-            setFormData(initialFormData)
-
+            setShowMsg("User created succesfully");
+            setFormData(initialFormData);
         } catch (error) {
             console.error("user creation error:", error);
         }
@@ -154,6 +160,8 @@ const AddUser = () => {
         <div className='main flex flex-col p-6 bg-white rounded-lg shadow-sm'>
             {/* Header */}
             {showMsg && <div className='text-green-600'>{showMsg}</div>}
+            {permitted && <p className='text-red-500'>{permitted}</p>}
+
             <div className='header flex items-center justify-between mb-6'>
                 <h4 className='text-xl font-semibold text-gray-800'>Add User</h4>
 
@@ -239,7 +247,8 @@ const AddUser = () => {
                         <label className='form-label'>Role</label>
                         <select
                             className='form-input'
-                            value={Number(formData.role_id)}
+                            // value={Number(formData.role_id)}
+                            value={formData.role_id ?? ""}
                             name='role_id'
                             onChange={(e) => setFormData((prev) => ({ ...prev, role_id: e.target.value }))}>
                             <option value=''>Select role</option>

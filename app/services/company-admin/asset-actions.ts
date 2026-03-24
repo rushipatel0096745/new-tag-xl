@@ -52,7 +52,7 @@ export const getAssetById = async function (id: number) {
 
             const result = await response.json();
             // console.log(result.asset);
-            return result
+            return result;
         } catch (error) {
             console.log("error: ", error);
             return [];
@@ -79,21 +79,23 @@ export const createAsset = async function (formData: FormData) {
             });
 
             const result = await response.json();
-            console.log(result)
+            console.log(result);
 
-            // if (result.has_error) {
-            //     console.log(result);
-            //     return {
-            //         success: false,
-            //         error: "Unable to create asset",
-            //         data: "",
-            //     };
-            // }
+         
             if (result.has_error && result.error_code === "PERMISSION_DENIED") {
                 // console.log(result);
                 return {
                     success: false,
                     error: "PERMISSION DENIED",
+                    data: "",
+                };
+            }
+
+            if (result.has_error && result.error_code === "VALIDATION_ERROR") {
+                // console.log(result);
+                return {
+                    success: false,
+                    error: result.message,
                     data: "",
                 };
             }

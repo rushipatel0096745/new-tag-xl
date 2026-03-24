@@ -24,7 +24,7 @@ const MaintenanceTemplateEditPage = async ({ params }: { params: Promise<{ id: s
     // console.log(initialData)
     return (
         <div>
-            <MaintenanceTemplateEdit initialData={initialData} />
+            <MaintenanceTemplateEdit initialData={initialData} id={id}/>
         </div>
     );
 };

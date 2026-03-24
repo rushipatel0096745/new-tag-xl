@@ -57,14 +57,14 @@ const EditUser = ({ id }: { id: string }) => {
 
     const [formData, setFormData] = useState(initialFormData);
     const [roleList, setRoleList] = useState<Role[]>([]);
-
+    const [permitted, setPermitted] = useState<string>();
     const [errors, setErrors] = useState<Errors>();
 
     const [showMsg, setShowMsg] = useState("");
 
     async function getUser(id: number | string) {
         try {
-            const result: User = await clientFetch("/company/user/get/" + Number(id), {
+            const result = await clientFetch("/company/user/get/" + Number(id), {
                 method: "GET",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -74,6 +74,11 @@ const EditUser = ({ id }: { id: string }) => {
             });
 
             console.log("API response:", result);
+
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to delete");
+                return;
+            }
 
             if (result?.has_error) {
                 console.error("user fetching failed:", result.message);
@@ -109,6 +114,11 @@ const EditUser = ({ id }: { id: string }) => {
 
             console.log("API response:", result);
 
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to update User");
+                return;
+            }
+
             if (result?.has_error) {
                 console.error("roles fetching failed:", result.message);
                 return;
@@ -133,6 +143,11 @@ const EditUser = ({ id }: { id: string }) => {
             });
 
             console.log("API response:", result);
+
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to Update User");
+                return;
+            }
 
             if (result?.has_error) {
                 console.error("user updation failed:", result.message);
@@ -185,6 +200,8 @@ const EditUser = ({ id }: { id: string }) => {
         <div className='main flex flex-col p-6 bg-white rounded-lg shadow-sm'>
             {/* Header */}
             {showMsg && <div className='text-green-600'>{showMsg}</div>}
+            {permitted && <p className='text-red-500'>{permitted}</p>}
+
             <div className='header flex items-center justify-between mb-6'>
                 <h4 className='text-xl font-semibold text-gray-800'>Edit User</h4>
 

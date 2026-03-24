@@ -1,4 +1,4 @@
-import AddTag from "@/app/company-admin/components/AddTag";
+import AddTag from "@/app/company-admin/components/Tag/AddTag";
 import { createTags } from "@/app/services/company-admin/tags-actions";
 import Link from "next/link";
 import React, { Suspense } from "react";

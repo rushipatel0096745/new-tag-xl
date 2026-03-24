@@ -1,6 +1,6 @@
 import React from "react";
-import { createCompany } from "@/app/(auth)/actions/createCompany";
-import CompanyAddForm from "@/app/(auth)/components/CompanyAddForm";
+import { createCompany } from "@/app/services/super-admin/createCompany";
+import CompanyAddForm from "@/app/super-admin/components/company/CompanyAddForm";
 
 const AddCompany = () => {
     return (

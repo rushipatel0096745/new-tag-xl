@@ -23,7 +23,7 @@ const PreuseTemplateEditPage = async ({ params }: { params: Promise<{ id: string
     // console.log(initialData);
     return (
         <div>
-            <PreuseTemplateEdit initialData={initialData} />
+            <PreuseTemplateEdit initialTemplateData={initialData} id={id}/>
         </div>
     );
 };

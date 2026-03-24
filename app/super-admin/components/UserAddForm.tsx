@@ -3,7 +3,7 @@
 import Link from "next/link";
 import React, { startTransition, useActionState, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Role } from "../users-and-roles/roles/page";
+import { Role } from "../(super-admin)/users-and-roles/roles/page";
 import { getRoleList } from "@/app/services/super-admin/roleList";
 import { createUser } from "@/app/services/super-admin/usersList";
 
@@ -69,7 +69,7 @@ const UserAddForm = () => {
         <div className='mx-auto p-4 mt-10'>
             {" "}
             <form onSubmit={handleSubmit(onSubmit)} className='border-2 border-black p-4 rounded-2xl'>
-                {showMsg && <p className="text-xl text-green-800">{showMsg}</p>}
+                {showMsg && <p className='text-xl text-green-800'>{showMsg}</p>}
                 <div className='form-header flex justify-between p-4 border-b'>
                     <div className='title'>
                         <h1 className='text-3xl'>Add User</h1>

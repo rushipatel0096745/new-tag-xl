@@ -90,13 +90,12 @@ const ManualFilter = () => {
 
     // load values from cookie
     useEffect(() => {
-        setToggle(true);
         const savedFilters = Cookies.get("company_manual_filter");
         if (!savedFilters) return;
-
+        
         try {
             const parsed: DraftFilter[] = JSON.parse(savedFilters);
-
+            
             const restored = parsed.map((filter) => {
                 if (filter.condition === "gte" && typeof filter.text === "string") {
                     return { ...filter, text: [filter.text, ""] };
@@ -106,8 +105,9 @@ const ManualFilter = () => {
                 }
                 return filter;
             });
-
+            
             setDraftFilters(restored);
+            setToggle(true);
         } catch (e) {
             console.error("Failed to restore filters from cookie", e);
         }

@@ -6,7 +6,11 @@ type Filter = {
     text: string;
 };
 
-export const GetMaintenanceTemplateList = async function (page: number = 1, pageSize: number = 10, filters: Filter[] = []) {
+export const GetMaintenanceTemplateList = async function (
+    page: number = 1,
+    pageSize: number = 10,
+    filters: Filter[] = []
+) {
     const companyId = getCompanyId("company-user-session");
     const sessionId = getSessionId("company-user-session");
 
@@ -28,3 +32,19 @@ export const GetMaintenanceTemplateList = async function (page: number = 1, page
     return result;
 };
 
+export const GetMaintenanceTemplate = async function (id: number) {
+    const companyId = getCompanyId("company-user-session");
+    const sessionId = getSessionId("company-user-session");
+
+    // console.log("company id: ", companyId);
+
+    const result = await clientFetch("/company/maintenance-template/get/" + id, {
+        method: "GET",
+        headers: {
+            "X-Session-ID": sessionId,
+            "X-Company-ID": companyId,
+            "Content-Type": "application/json",
+        },
+    });
+    return result;
+};

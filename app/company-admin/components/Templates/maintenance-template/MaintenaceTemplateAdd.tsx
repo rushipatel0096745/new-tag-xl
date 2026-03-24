@@ -33,18 +33,7 @@ const MaintenaceTemplateAdd = () => {
     const sessionId = getSessionId("company-user-session");
     const companyId = getCompanyId("company-user-session");
 
-    function checkPermission() {
-        const permission = getCompanyUserPermissions();
-        const flag = permission.maintenance_template.includes("create");
-        console.log(flag);
-        return flag;
-    }
-
-    useEffect(() => {
-        setPermitted(checkPermission());
-    }, []);
-
-    const questionTypes = {
+    const questionTypes: Record<string, string> = {
         boolean: "Yes/No",
         text: "Textfield",
         checkbox: "Checkbox",
@@ -81,7 +70,7 @@ const MaintenaceTemplateAdd = () => {
     }
 
     const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
-    const [error, setError] = useState({});
+    const [error, setError] = useState<Record<string, string>>({});
 
     // Save updated question from modal
     function handleSaveUpdatedQuestion(updated: Question) {
@@ -202,6 +191,11 @@ const MaintenaceTemplateAdd = () => {
 
             console.log("API response:", result);
 
+             if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to update");
+                return;
+            }
+
             if (result?.has_error) {
                 console.error("Template creation failed:", result.message);
                 return;
@@ -227,6 +221,7 @@ const MaintenaceTemplateAdd = () => {
                 <div className='header flex items-center justify-between mb-6'>
                     <h4 className='text-xl font-semibold text-gray-800'>Add Maintenance Template</h4>
                     {showMsg && <p className='text-green-600'>{showMsg}</p>}
+                    {permitted && <p className='text-red-500'>{permitted}</p>}
                     <div className='flex gap-2'>
                         <Link
                             href='/company-admin/template-master/maintenance-check-template'

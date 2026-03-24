@@ -52,3 +52,10 @@ export function getCompanyUserPermissions() {
     console.log(data.user.role.permission)
     return data.user.role.permission;
 }
+
+export function getSuperUserPermissions() {
+    if (!isBrowser()) return null;
+    const data = getDataFromCookie('super-user-session');
+    console.log(data.user.role.permission)
+    return data.user.role.permission;
+}

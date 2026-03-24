@@ -59,7 +59,7 @@ const RoleListPage = async () => {
 
                     {/* asset list */}
                     <Suspense fallback={<p>Loading....</p>}>
-                        <RoleList tempList={data.roles} />
+                        <RoleList tempList={data.roles || []} />
                     </Suspense>
                 </div>
             </div>

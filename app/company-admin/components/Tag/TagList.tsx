@@ -4,7 +4,8 @@ import { getCompanyUserPermissions } from "@/app/utils/user-helper";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
-import { GetTagList, GetUnassignedTagList } from "@/app/services/company-admin/tags";
+import { DeleteTag, GetTagList, GetUnassignedTagList } from "@/app/services/company-admin/tags";
+import { useRouter, useSearchParams } from "next/navigation";
 
 export interface Tag {
     id: number;
@@ -24,6 +25,18 @@ const TagList = ({ tagList }: { tagList: Tag[] }) => {
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
     const [userRole, setUserRole] = useState<string[]>();
+
+    const router = useRouter();
+
+    const searchParams = useSearchParams();
+
+    useEffect(() => {
+        if (searchParams.get("delete") === "true") {
+            setShowMsg("Tag Deleted Successfully");
+            router.refresh();
+        }
+        router.replace("/company-admin/tag/manage-tags");
+    }, []);
 
     useEffect(() => {
         const role = getCompanyUserPermissions();
@@ -88,10 +101,34 @@ const TagList = ({ tagList }: { tagList: Tag[] }) => {
         console.log("tag permissions: ", userRole);
     }, [userRole]);
 
+    async function handleDelete(id: number) {
+        const result = await DeleteTag(id);
+        if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+            setError((prev) => ({
+                ...prev,
+                permission: result.message || "Permission Denied",
+            }));
+        }
+        if (!result.has_error) {
+            setShowMsg("Tag Dleted Successfully");
+            router.refresh();
+        }
+    }
+
+    // this is taglist component in this it works but not in the userlist component
     return (
         <div className='card-box bg-[#fff] border-gray-700 rounded-[18px] shadow-3xl shadow-white px-3 py-5.5'>
             <div className='card-box_head border-b border-b-[#ededed] px-4 py-5.5 flex justify-between items-center'>
                 <h3 className='h3 text-[18px] font-semibold leading-6'>Tag List</h3>
+
+                {showMsg && (
+                    <div className='text-yellow-200 bg-yellow-400 p-2 flex gap-4 justify-end border-0 rounded-xl'>
+                        <p>{showMsg}</p>
+                        <button type='button' aria-label='Close' onClick={() => setShowMsg("")}>
+                            <span aria-hidden='true'>&times;</span>
+                        </button>
+                    </div>
+                )}
                 <div className='actions-btn flex gap-2 items-center'>
                     {userRole?.includes("create") && (
                         <Link
@@ -161,9 +198,8 @@ const TagList = ({ tagList }: { tagList: Tag[] }) => {
 
             <div>
                 <div className='card-box_body'>
-                    {error.permission && <p className="text-red-500">{error.permission}</p>}
-                    {          
-                    userRole?.includes("list") ? (
+                    {error.permission && <p className='text-red-500'>{error.permission}</p>}
+                    {userRole?.includes("list") ? (
                         <div className='table-wrapper'>
                             {list.length !== 0 ? (
                                 <table className='table text-left border-collapse w-full text-[#111c43] border rounded-md text-[14px] leading-5 overflow-hidden'>
@@ -194,14 +230,16 @@ const TagList = ({ tagList }: { tagList: Tag[] }) => {
                                                 <tr
                                                     className='table-row border-1 border-solid border-[#f5f6f1] align-middle'
                                                     key={tag.id}>
-                                                    <td className='text-[13px] font-medium text-[#474a54]'>{tag.id}</td>
-                                                    <td className='text-[13px] font-medium text-[#474a54]'>
+                                                    <td className='text-[13px] p-2 font-medium text-[#474a54]'>
+                                                        {tag.id}
+                                                    </td>
+                                                    <td className='text-[13px] p-2 font-medium text-[#474a54]'>
                                                         {tag.uid}
                                                     </td>
-                                                    <td className='text-[13px] font-medium text-[#474a54]'>
+                                                    <td className='text-[13px] p-2 font-medium text-[#474a54]'>
                                                         {tag.tag_type}
                                                     </td>
-                                                    <td className='text-[13px] font-medium text-[#474a54]'>
+                                                    <td className='text-[13px] p-2 font-medium text-[#474a54]'>
                                                         {tag.is_assigned ? (
                                                             <span className='status processing text-[#2aa466] bg-[#e0f2e9] border-[#2aa466] border border-solid rounded-[40px] uppercase px-[2px] py-2.5 text-[10px] inline font-extrabold tracking-[0.5px] '>
                                                                 ASSIGNED
@@ -212,7 +250,7 @@ const TagList = ({ tagList }: { tagList: Tag[] }) => {
                                                             </span>
                                                         )}
                                                     </td>
-                                                    <td>
+                                                    <td className='p-2'>
                                                         <div className='actions-btn flex gap-2 items-center'>
                                                             <div className='actions-btn flex gap-2 items-center'>
                                                                 {userRole.includes("update") && (
@@ -237,6 +275,7 @@ const TagList = ({ tagList }: { tagList: Tag[] }) => {
 
                                                                 {userRole.includes("delete") && (
                                                                     <button
+                                                                        onClick={() => handleDelete(tag.id)}
                                                                         className='icon-button delete inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
                                                                         type='button'>
                                                                         <span className='icon-circle'>

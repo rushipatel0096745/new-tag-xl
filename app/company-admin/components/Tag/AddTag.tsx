@@ -1,6 +1,6 @@
 "use client";
 
-import React, { startTransition, useActionState, useState } from "react";
+import React, { startTransition, useActionState, useEffect, useState } from "react";
 
 type TagType = "RFID" | "QR" | "Manual" | "";
 
@@ -8,12 +8,12 @@ interface TagItem {
     tag_type: TagType;
     uid: string;
 }
-
-const AddTag = ({ action }) => {
+const AddTag = ({ action }: { action: (prevState: any, formData: any) => Promise<any> }) => {
+// const AddTag = ({ action }: { action: any }) => {
     const initialList: TagItem[] = [
         {
             tag_type: "",
-            uid: "",
+            uid: "",    
         },
     ];
 
@@ -48,16 +48,30 @@ const AddTag = ({ action }) => {
     };
 
     const handleSave = () => {
-        // Filtering empty rows
         const data = tagList.filter((item) => item.tag_type && item.uid);
-        console.log("form data", data);
 
-        startTransition(() => formAction(data));
+        if (data.length === 0) return;
 
-        setTagList(initialList);
+        
+        const formData = {
+            tags: data.map((tag) => {
+                return { ...tag, is_assigned: 0 };
+            }),
+        };
 
-        setShowMsg("Tag created successfully");
+        console.log("form data....", formData);
+
+        startTransition(() => formAction(formData));
     };
+
+    useEffect(() => {
+        if (state?.success === true) {
+            setTagList(initialList);
+            setShowMsg("Tag created successfully");
+        } else if (state?.success === false) {
+            setShowMsg(""); // let state.error display it
+        }
+    }, [state]);
 
     const tagTypeOptions: { label: string; value: TagType }[] = [
         { label: "RFID", value: "RFID" },
@@ -70,6 +84,12 @@ const AddTag = ({ action }) => {
             {showMsg && (
                 <div className='text-green-700'>
                     <p>{showMsg}</p>
+                </div>
+            )}
+
+            {state?.error && (
+                <div className='text-red-500'>
+                    <p>{state?.error}</p>
                 </div>
             )}
             <div className='block'>

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import React, { use, useDebugValue, useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { AssetData } from "../../(admin)/asset/edit/[id]/page";
 import { getAssetLocations } from "@/app/services/company-admin/location";
 import {
@@ -13,7 +13,7 @@ import { Location } from "../../(admin)/location-master/page";
 import { editAsset } from "@/app/services/company-admin/asset-actions";
 import { useRouter } from "next/navigation";
 import UpdateQuestionModal from "../Templates/UpdateQuestionModal";
-import { GetAsset } from "@/app/services/company-admin/assets";
+import { DeleteAsset, GetAsset } from "@/app/services/company-admin/assets";
 
 interface Props {
     initialAssetData: AssetData;
@@ -38,14 +38,14 @@ type QuestionTypes = {
 
 const EditAsset = ({ initialAssetData, id }: Props) => {
     // console.log(initialData)
-    const [initialData, setInitialData] = useState<AssetData | undefined>(initialAssetData)
+    const [initialData, setInitialData] = useState<AssetData | undefined>(initialAssetData);
     const [loactionList, setLocationList] = useState<Location[]>([]);
     const [manualTemplateList, setManualTemplateList] = useState([]);
     const [preuseTemplateList, setPreUseTemplateList] = useState([]);
     const [maintenanceTemplateList, setMaintenanceTemplateList] = useState([]);
 
-    const [preuseTemplateQuestions, setPreuseTemplateQuestions] = useState<Question[]>([]);
-    const [maintenanceTemplateQuestions, setMaintenanceTemplateQuestions] = useState<Question[]>([]);
+    const [preuseTemplateQuestions, setPreuseTemplateQuestions] = useState<Question[] | undefined>([]);
+    const [maintenanceTemplateQuestions, setMaintenanceTemplateQuestions] = useState<Question[] | undefined>([]);
 
     const [tagUid, setTagUid] = useState(initialData?.tag.uid);
     const [name, setName] = useState(initialData?.name);
@@ -64,18 +64,30 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
 
     useEffect(() => {
         async function fetchAsset() {
-            const response = await GetAsset(Number(id))
-            if(!response.success) {
-                setFormError(response.error)
+            const response = await GetAsset(Number(id));
+            if (!response.success) {
+                setFormError(response.error);
                 return;
             }
-            if(response.success) {
-                setInitialData(response.data)
+            if (response.success) {
+                setInitialData(response.data);
             }
         }
 
-        fetchAsset()
-    }, [])
+        fetchAsset();
+    }, []);
+
+    async function handleDelete() {
+        const result = await DeleteAsset(Number(id));
+
+        if (!result.success) {
+            setFormError(result.error);
+        }
+
+        if (result.success) {
+            router.push("/company-admin/asset?delete=true");
+        }
+    }
 
     const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
     const [editingSource, setEditingSource] = useState<"preuse" | "maintenance" | null>(null);
@@ -102,7 +114,7 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
     }
 
     function validate() {
-        const newErrors = {};
+        const newErrors = {} as Record<string, string>;
 
         if (!name) newErrors.name = "Name is required";
         if (!location) newErrors.location = "Location is required";
@@ -372,7 +384,11 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
             {/* rest of your JSX */}
             <div className='main flex flex-col p-6 bg-white rounded-lg shadow-sm'>
                 {/* Header */}
-                {showMsg && <div className='text-green-600'>{showMsg}</div>}
+                {showMsg && (
+                    <div className='text-green-600'>
+                        <p>{showMsg}</p>
+                    </div>
+                )}
                 {/* {formError && <div className='text-red-500'>{formError}</div>} */}
                 <div className='header flex items-center justify-between mb-6'>
                     <h4 className='text-xl font-semibold text-gray-800'>Edit Asset</h4>
@@ -384,7 +400,9 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                             Back
                         </Link>
 
-                        <button className='px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded text-sm'>
+                        <button
+                            onClick={handleDelete}
+                            className='px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded text-sm'>
                             Delete
                         </button>
 

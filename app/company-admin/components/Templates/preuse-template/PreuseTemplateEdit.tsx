@@ -5,6 +5,7 @@ import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import UpdateQuestionModal from "../UpdateQuestionModal";
 import { PreuseEditTemplate } from "@/app/company-admin/(admin)/template-master/pre-use-check-template/edit/[id]/page";
+import { GetPreUseTemplate } from "@/app/services/company-admin/preuse_template";
 
 type Question = {
     id?: number;
@@ -25,29 +26,45 @@ type FormattedQuestion = {
 };
 
 interface Props {
-    initialData: PreuseEditTemplate;
+    initialTemplateData: PreuseEditTemplate;
+    id: string;
 }
 
-const PreuseTemplateEdit = ({ initialData }: Props) => {
-    const [title, setTitle] = useState(initialData.title);
+const PreuseTemplateEdit = ({ id }: Props) => {
+    const [initialData, setInitialData] = useState<PreuseEditTemplate>();
+    const [title, setTitle] = useState("");
     const [showMsg, setShowMsg] = useState("");
     const [permitted, setPermitted] = useState<boolean>();
 
     const sessionId = getSessionId("company-user-session");
     const companyId = getCompanyId("company-user-session");
 
-    function checkPermission() {
-        const permission = getCompanyUserPermissions();
-        const flag = permission.pre_use_template.includes("create");
-        console.log(flag);
-        return flag;
+    async function fetchTemplate() {
+        const result = await GetPreUseTemplate(Number(id));
+        console.log("response for maintenance template: ", result);
+        if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+            setPermitted(result.message || "Permission denied to update");
+        }
+        if (!result.has_error) {
+            setInitialData(result?.pre_use_template);
+        }
     }
 
     useEffect(() => {
-        setPermitted(checkPermission());
+        fetchTemplate();
     }, []);
 
-    const questionTypes = {
+    useEffect(() => {
+        initialData?.title && setTitle(initialData?.title);
+
+        let initialQuestions = initialData?.questions && reverseFormatQuestionBody(initialData.questions);
+        const fixedSet = new Set(fixedQuestions.map((q) => q.question));
+        initialQuestions = initialQuestions?.filter((q) => !fixedSet.has(q.question));
+
+        initialQuestions && setNewMaintenanceQuestions(initialQuestions);
+    }, [initialData]);
+
+    const questionTypes: Record<string, string> = {
         boolean: "Yes/No",
         text: "Textfield",
         checkbox: "Checkbox",
@@ -63,12 +80,7 @@ const PreuseTemplateEdit = ({ initialData }: Props) => {
         { id: 901, question: "Remarks?", type: "text" },
     ];
 
-    let initialQuestions = reverseFormatQuestionBody(initialData.questions);
-
-    const fixedSet = new Set(fixedQuestions.map((q) => q.question));
-    initialQuestions = initialQuestions.filter((q) => !fixedSet.has(q.question));
-
-    const [newMaintenanceQuestions, setNewMaintenanceQuestions] = useState<Question[]>(initialQuestions || []);
+    const [newMaintenanceQuestions, setNewMaintenanceQuestions] = useState<Question[]>([]);
     const [maintenanceQuestionText, setMaintenanceQuestionText] = useState("");
     const [maintenanceQuestionType, setMaintenanceQuestionType] = useState("");
     const [maintenanceQuestionOptions, setMaintenanceQuestionOptions] = useState<string[]>([]);
@@ -87,7 +99,7 @@ const PreuseTemplateEdit = ({ initialData }: Props) => {
     }
 
     const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
-    const [error, setError] = useState({});
+    const [error, setError] = useState<Record<string, string>>({});
 
     // Save updated question from modal
     function handleSaveUpdatedQuestion(updated: Question) {
@@ -212,7 +224,7 @@ const PreuseTemplateEdit = ({ initialData }: Props) => {
 
     async function updateTemplate(data: any) {
         try {
-            const result = await clientFetch("/company/pre-use-template/update/" + initialData.id, {
+            const result = await clientFetch("/company/pre-use-template/update/" + initialData?.id, {
                 method: "PUT",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -223,6 +235,11 @@ const PreuseTemplateEdit = ({ initialData }: Props) => {
             });
 
             console.log("API response:", result);
+
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to update");
+                return;
+            }
 
             if (result?.has_error) {
                 console.error("Template creation failed:", result.message);
@@ -248,7 +265,10 @@ const PreuseTemplateEdit = ({ initialData }: Props) => {
             <div className='main flex flex-col p-6 bg-white rounded-lg shadow-sm'>
                 <div className='header flex items-center justify-between mb-6'>
                     <h4 className='text-xl font-semibold text-gray-800'>Edit Pre Use Template</h4>
+
                     {showMsg && <p className='text-green-600'>{showMsg}</p>}
+                    {permitted && <p className='text-red-500'>{permitted}</p>}
+
                     <div className='flex gap-2'>
                         <Link
                             href='/company-admin/template-master/pre-use-check-template'

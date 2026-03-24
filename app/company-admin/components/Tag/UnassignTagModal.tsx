@@ -1,6 +1,6 @@
 "use client";
 import React, { useState } from "react";
-import Modal from "./Modal";
+import Modal from "../Modal";
 
 const UnassignTagModal = ({ isOpen, isClose, uid }: { isOpen: boolean; isClose: () => void; uid: string }) => {
     const [reason, setReason] = useState<string>();

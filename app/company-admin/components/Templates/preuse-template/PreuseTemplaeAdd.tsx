@@ -4,14 +4,13 @@ import { clientFetch, getCompanyId, getCompanyUserPermissions, getSessionId } fr
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import UpdateQuestionModal from "../UpdateQuestionModal";
-import { title } from "process";
 
-type QuestionType = "boolean" | "text" | "checkbox" | "select";
+type QuestionType = "boolean" | "text" | "checkbox" | "select" ;
 
 type Question = {
     id?: number;
     question: string;
-    type: QuestionType;
+    type: string;
     options?: string[] | null;
 };
 
@@ -29,21 +28,10 @@ type FormattedQuestion = {
 const PreuseTemplateAdd = () => {
     const [title, setTitle] = useState("");
     const [showMsg, setShowMsg] = useState("");
-    const [permitted, setPermitted] = useState<boolean>();
+    const [permitted, setPermitted] = useState<string>();
 
     const sessionId = getSessionId("company-user-session");
     const companyId = getCompanyId("company-user-session");
-
-    function checkPermission() {
-        const permission = getCompanyUserPermissions();
-        const flag = permission.pre_use_template.includes("create");
-        console.log(flag);
-        return flag;
-    }
-
-    useEffect(() => {
-        setPermitted(checkPermission());
-    }, []);
 
     const questionTypes: Record<QuestionType, string> = {
         boolean: "Yes/No",
@@ -63,7 +51,7 @@ const PreuseTemplateAdd = () => {
 
     const [newMaintenanceQuestions, setNewMaintenanceQuestions] = useState<Question[]>([]);
     const [maintenanceQuestionText, setMaintenanceQuestionText] = useState("");
-    const [maintenanceQuestionType, setMaintenanceQuestionType] = useState<QuestionType>();
+    const [maintenanceQuestionType, setMaintenanceQuestionType] = useState<QuestionType | undefined>(undefined);
     const [maintenanceQuestionOptions, setMaintenanceQuestionOptions] = useState<string[]>([]);
     const [maintenanceQuestionOption, setMaintenanceQuestionOption] = useState("");
 
@@ -78,10 +66,6 @@ const PreuseTemplateAdd = () => {
         dragOverItem.current = null;
         setNewMaintenanceQuestions(items);
     }
-
-    // className={`selected-questions w-full transition-opacity ${
-    //     dragItem.current === index ? "opacity-40" : "opacity-100"
-    // }`}
 
     const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
     const [error, setError] = useState<any>({});
@@ -111,7 +95,7 @@ const PreuseTemplateAdd = () => {
 
         // reset form
         setMaintenanceQuestionText("");
-        setMaintenanceQuestionType("");
+        setMaintenanceQuestionType(undefined);
         setMaintenanceQuestionOptions([]);
         setMaintenanceQuestionOption("");
     }
@@ -203,6 +187,11 @@ const PreuseTemplateAdd = () => {
 
             console.log("API response:", result);
 
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to update");
+                return;
+            }
+
             if (result?.has_error) {
                 console.error("Template creation failed:", result.message);
                 return;
@@ -227,7 +216,10 @@ const PreuseTemplateAdd = () => {
             <div className='main flex flex-col p-6 bg-white rounded-lg shadow-sm'>
                 <div className='header flex items-center justify-between mb-6'>
                     <h4 className='text-xl font-semibold text-gray-800'>Add Pre Use Template</h4>
+
                     {showMsg && <p className='text-green-600'>{showMsg}</p>}
+                    {permitted && <p className='text-red-500'>{permitted}</p>}
+
                     <div className='flex gap-2'>
                         <Link
                             href='/company-admin/template-master/pre-use-check-template'
@@ -279,7 +271,7 @@ const PreuseTemplateAdd = () => {
                                 <select
                                     className='form-input'
                                     value={maintenanceQuestionType}
-                                    onChange={(e) => setMaintenanceQuestionType(e.target.value)}>
+                                    onChange={(e) => setMaintenanceQuestionType(e.target.value as QuestionType)}>
                                     <option value={""}>Selct the question type</option>
                                     <option value='boolean'>Yes/No</option>
                                     <option value='text'>Textfield</option>
@@ -347,7 +339,7 @@ const PreuseTemplateAdd = () => {
                                 <div className='selected-questions w-full'>
                                     <h5 className='font-semibold'>Fixed Questions</h5>
                                     {fixedQuestions.map((question) => {
-                                        const question_type = questionTypes[question.type];
+                                        const question_type = questionTypes[question.type as QuestionType];
                                         return (
                                             <div
                                                 className='question-content flex justify-between p-2.5 border rounded-xl border-solid border-gray-400'
@@ -408,7 +400,7 @@ const PreuseTemplateAdd = () => {
                                         })} */}
 
                                         {newMaintenanceQuestions.map((question, index) => {
-                                            const question_type = questionTypes[question.type];
+                                            const question_type = questionTypes[question.type as QuestionType];
 
                                             return (
                                                 <div

@@ -16,7 +16,8 @@ const ManualTemplateEdit = ({ initialData }: Props) => {
     const [description, setDescription] = useState(initialData.description || "");
     const [files, setFiles] = useState<any[]>([]);
     const [initialFiles, setInitialFiles] = useState<any[]>(initialData.files || []);
-    const [error, setError] = useState({});
+    const [error, setError] = useState<Record<string, string>>({});
+    const [permitted, setPermitted] = useState("");
 
     const router = useRouter();
 
@@ -24,9 +25,9 @@ const ManualTemplateEdit = ({ initialData }: Props) => {
     const companyId = getCompanyId("company-user-session");
 
     function validate() {
-        const newError = {};
+        const newError = {} as Record<string, string>;
         if (!title) newError.title = "Title is required";
-        if (files.length === 0) newError.files = "Document is required";
+        if (files.length === 0 && initialFiles.length === 0) newError.files = "Document is required";
 
         setError(newError);
 
@@ -40,7 +41,9 @@ const ManualTemplateEdit = ({ initialData }: Props) => {
         const formData = new FormData();
         formData.append("name", title);
         description && formData.append("description", description);
-        formData.append("files", files);
+        files.forEach((file: File) => {
+            formData.append("files", file);
+        });
 
         for (const [name, value] of formData) {
             console.log(`${name}: ${value}`);
@@ -61,8 +64,13 @@ const ManualTemplateEdit = ({ initialData }: Props) => {
 
             console.log("API response:", result);
 
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to update");
+                return;
+            }
+
             if (result?.has_error) {
-                console.error("Template creation failed:", result.message);
+                console.error("Template updation failed:", result.message);
                 return;
             }
 
@@ -88,6 +96,11 @@ const ManualTemplateEdit = ({ initialData }: Props) => {
 
             console.log("API response:", result);
 
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to update");
+                return;
+            }
+
             if (result?.has_error) {
                 console.error("Template creation failed:", result.message);
                 return;
@@ -112,6 +125,11 @@ const ManualTemplateEdit = ({ initialData }: Props) => {
 
             console.log("API response:", result);
 
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to delete");
+                return;
+            }
+
             if (result?.has_error) {
                 console.error("File deletion failed:", result.message);
                 return;
@@ -119,7 +137,7 @@ const ManualTemplateEdit = ({ initialData }: Props) => {
 
             setInitialFiles(initialFiles.filter((file) => file.id !== Number(id)));
             // router.refresh();
-            await getTemplate(initialData.id)
+            await getTemplate(initialData.id);
         } catch (error) {
             console.error("File delete error:", error);
         }
@@ -129,7 +147,10 @@ const ManualTemplateEdit = ({ initialData }: Props) => {
         <div className='main flex flex-col p-6 bg-white rounded-lg shadow-sm'>
             <div className='header flex items-center justify-between mb-6'>
                 <h4 className='text-xl font-semibold text-gray-800'>Edit Maintenance Template</h4>
+
                 {showMsg && <p className='text-green-600'>{showMsg}</p>}
+                {permitted && <p className='text-red-500'>{permitted}</p>}
+
                 <div className='flex gap-2'>
                     <Link
                         href='/company-admin/template-master/maintenance-check-template'
@@ -194,7 +215,10 @@ const ManualTemplateEdit = ({ initialData }: Props) => {
                                 type='file'
                                 className='hidden'
                                 name='files'
-                                onChange={(e) => setFiles((prev) => [...prev, e.target.value])}
+                                onChange={(e) => {
+                                    const selected = Array.from(e.target.files || []);
+                                    setFiles((prev) => [...prev, ...selected]);
+                                }}
                             />
 
                             <span className='text-sm font-medium'>Upload Document</span>
@@ -207,8 +231,8 @@ const ManualTemplateEdit = ({ initialData }: Props) => {
                         <div className='show-image'>
                             <p>Uploaded Document: </p>
                             <ul>
-                                {files.map((file) => (
-                                    <li>{files.name}</li>
+                                {files.map((file, index) => (
+                                    <li key={index}>{file.name}</li>
                                 ))}
                             </ul>
                         </div>

@@ -71,54 +71,53 @@ export const createTags = async function (prevState: any, formData: any) {
 
     console.log("data to be posted: ", formData);
 
-    // const sessionId = await getCompanySessionId();
-    // const companyData = await getComapnyData();
-    // const companyId = companyData?.company_id;
+    const sessionId = await getCompanySessionId();
+    const companyData = await getComapnyData();
+    const companyId = companyData?.company_id;
 
-    // if (companyId && sessionId) {
-    //     try {
-    //         const response = await fetch("https://tagxl.com/api/company/tag/create", {
-    //             method: "POST",
-    //             headers: {
-    //                 "X-Session-ID": sessionId,
-    //                 "X-Company-ID": companyId,
-    //                 "Content-Type": "application/json",
-    //             },
-    //             body: JSON.stringify(formData),
-    //         });
+    if (companyId && sessionId) {
+        try {
+            const response = await fetch("https://tagxl.com/api/company/tag/create", {
+                method: "POST",
+                headers: {
+                    "X-Session-ID": sessionId,
+                    "X-Company-ID": companyId,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
 
-    //         const result = await response.json();
+            const result = await response.json();
+            console.log("response data for tag create: ", result);
 
-    //         if(result.has_error) {
-    //             console.log(result);
-    //             return {
-    //                 success: false,
-    //                 error: "Unable to Update User",
-    //                 data: "",
-    //             };
-    //         }
-    //         console.log(result);
-    //         return {
-    //             success: true,
-    //             error: "",
-    //             data: "",
-    //         };
-
-    //     } catch (error) {
-    //         console.log("error: ", error);
-    //         return {
-    //             success: false,
-    //             error: "Failed to connect to the server",
-    //             data: "",
-    //         };
-    //     }
-    // } else {
-    //      return {
-    //             success: false,
-    //             error: "companyId or sessionId not found",
-    //             data: "",
-    //         };
-    // }
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                return {
+                    success: false,
+                    error: result.message || "Something went wrong",
+                    data: null,
+                };
+            }
+            // console.log(result);
+            return {
+                success: true,
+                error: "",
+                data: "",
+            };
+        } catch (error) {
+            console.log("error: ", error);
+            return {
+                success: false,
+                error: "Failed to connect to the server",
+                data: "",
+            };
+        }
+    } else {
+        return {
+            success: false,
+            error: "companyId or sessionId not found",
+            data: "",
+        };
+    }
 };
 
 export const getTag = async function (id: number) {
@@ -138,6 +137,16 @@ export const getTag = async function (id: number) {
             });
 
             const result = await response.json();
+
+            // console.log("response for fetch tag....", result)
+
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                return {
+                    success: false,
+                    error: result.message || "Something went wrong",
+                    data: null,
+                };
+            }
 
             if (result.has_error) {
                 console.log(result);
@@ -179,53 +188,62 @@ export const updateTag = async function (id: number, prevState: any, formData: a
     const companyData = await getComapnyData();
     const companyId = companyData?.company_id;
 
-    // if (companyId && sessionId) {
-    //     try {
-    //         const response = await fetch("https://tagxl.com/api/company/tag/update/"+id, {
-    //             method: "POST",
-    //             headers: {
-    //                 "X-Session-ID": sessionId,
-    //                 "X-Company-ID": companyId,
-    //                 "Content-Type": "application/json",
-    //             },
-    //             body: JSON.stringify(formData),
-    //         });
+    if (companyId && sessionId) {
+        try {
+            const response = await fetch("https://tagxl.com/api/company/tag/update/" + id, {
+                method: "POST",
+                headers: {
+                    "X-Session-ID": sessionId,
+                    "X-Company-ID": companyId,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
 
-    //         const result = await response.json();
+            const result = await response.json();
 
-    //         if(result.has_error) {
-    //             console.log(result);
-    //             return {
-    //                 success: false,
-    //                 error: "Unable to Update User",
-    //                 data: "",
-    //             };
-    //         }
-    //         console.log(result);
-    //         return {
-    //             success: true,
-    //             error: "",
-    //             data: "",
-    //         };
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                return {
+                    success: false,
+                    error: result.message || "Something went wrong",
+                    data: null,
+                };
+            }
 
-    //     } catch (error) {
-    //         console.log("error: ", error);
-    //         return {
-    //             success: false,
-    //             error: "Failed to connect to the server",
-    //             data: "",
-    //         };
-    //     }
-    // } else {
-    //      return {
-    //             success: false,
-    //             error: "companyId or sessionId not found",
-    //             data: "",
-    //         };
-    // }
+            if (result.has_error) {
+                console.log(result);
+                return {
+                    success: false,
+                    error: "Unable to Update User",
+                    data: "",
+                };
+            }
+            console.log(result);
+            return {
+                success: true,
+                error: "",
+                data: "",
+            };
+        } catch (error) {
+            console.log("error: ", error);
+            return {
+                success: false,
+                error: "Failed to connect to the server",
+                data: "",
+            };
+        }
+    } else {
+        return {
+            success: false,
+            error: "companyId or sessionId not found",
+            data: "",
+        };
+    }
 };
 
-export const checkTagAssigned = async function (uid: string): Promise<{ success: boolean; message?: string; data?: any }> {
+export const checkTagAssigned = async function (
+    uid: string
+): Promise<{ success: boolean; message?: string; data?: any } | undefined> {
     "use server";
 
     // console.log()
@@ -268,12 +286,12 @@ export const checkTagAssigned = async function (uid: string): Promise<{ success:
         }
 
         // tag is created but not assigned to the any asset
-        if(!result.has_error) {
+        if (!result.has_error) {
             return {
                 success: true,
                 message: result.message,
-                data: result.tag.id
-            }
+                data: result.tag.id,
+            };
         }
     } else {
         return {

@@ -155,12 +155,12 @@ const RoleFilter = () => {
 
     useEffect(() => {
         const cookieFilters = Cookies.get("company_role_filter");
-        setToggle(true);
-
+        
         if (cookieFilters) {
             try {
                 const parsed = JSON.parse(cookieFilters);
                 setFilters(parsed);
+                setToggle(true);
             } catch (err) {
                 console.warn("Invalid filter cookie:", err);
             }

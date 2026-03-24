@@ -60,7 +60,7 @@ const AddAsset = () => {
         assetFormData.append("manual_template_id", formData.manual_template_id);
         assetFormData.append("status", formData.status || 0);
         assetFormData.append("oem_certificate", formData.oem_certificate);
-        assetFormData.append("third_party_certificate", formData.third_party_certificate);
+        formData.third_party_certificate && assetFormData.append("third_party_certificate", formData.third_party_certificate);
         assetFormData.append("third_party_start_date", formData.third_party_start_date);
         assetFormData.append("third_party_expiry_date", formData.third_party_expiry_date);
         assetFormData.append("pre_use_template_id", formData.pre_use_template_id);

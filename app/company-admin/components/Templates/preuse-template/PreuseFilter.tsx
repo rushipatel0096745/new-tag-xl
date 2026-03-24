@@ -90,7 +90,6 @@ const PreuseFilter = () => {
 
     // load values from cookie
     useEffect(() => {
-        setToggle(true);
         const savedFilters = Cookies.get("company_preuse_filter");
         if (!savedFilters) return;
 
@@ -108,6 +107,7 @@ const PreuseFilter = () => {
             });
 
             setDraftFilters(restored);
+            setToggle(true);
         } catch (e) {
             console.error("Failed to restore filters from cookie", e);
         }

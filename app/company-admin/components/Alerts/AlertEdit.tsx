@@ -64,12 +64,20 @@ export const AlertEdit = ({ id }: { id: string }) => {
     const [alert, setAlert] = useState<Alert>();
     const [status, setStatus] = useState<number | undefined>();
     const [showMsg, setShowMsg] = useState("");
+    const [error, setError] = useState<{ [key: string]: string }>({});
 
     useEffect(() => {
         async function fetchAlert() {
             const result = await GetAlert(Number(id));
-            setAlert(result.alert);
-            setStatus(result.alert.status);
+
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setError((prev) => ({ ...prev, permission: result.message }));
+            }
+
+            if (!result.has_error) {
+                setAlert(result.alert);
+                setStatus(result.alert.status);
+            }
         }
         fetchAlert();
     }, []);
@@ -93,11 +101,17 @@ export const AlertEdit = ({ id }: { id: string }) => {
         if (!result.has_error) {
             setShowMsg("alert updated successfully");
         }
+
+        if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+            setError((prev) => ({ ...prev, permission: result.message }));
+        }
     }
 
     return (
         <div className='main flex flex-col p-6 bg-white rounded-lg shadow-sm'>
             {showMsg && <p className='text-green-600'>{showMsg}</p>}
+            {error.permission && <p className='text-red-500'>{error.permission}</p>}
+
             <div className='header flex items-center justify-between mb-6'>
                 <h4 className='text-xl font-semibold text-gray-800'>View Alert</h4>
 

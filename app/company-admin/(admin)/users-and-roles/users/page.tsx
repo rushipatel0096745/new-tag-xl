@@ -82,7 +82,7 @@ const UserListPage = async () => {
 
                     {/* asset list */}
                     {/* <UserList tempList={data.users} /> */}
-                    <Suspense fallback={<p>Loading....</p>}><UserList tempList={data.users}/></Suspense>
+                    <Suspense fallback={<p>Loading....</p>}><UserList tempList={data.users || []}/></Suspense>
                 </div>
             </div>
         </div>

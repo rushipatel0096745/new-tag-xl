@@ -4,7 +4,7 @@ import AssetFailureList from "@/app/company-admin/components/Alerts/AssetFailure
 import MaintenanceAssetList from "@/app/company-admin/components/Alerts/MaintenanceAssetList";
 import MaintenanceDueAssetList from "@/app/company-admin/components/Alerts/MaintenanceDueAssetList";
 import RecertificationAlertsList from "@/app/company-admin/components/Alerts/RecertificationAlertsList";
-import TagFilter from "@/app/company-admin/components/TagFilter";
+import TagFilter from "@/app/company-admin/components/Tag/TagFilter";
 import { notFound } from "next/navigation";
 import { Suspense } from "react";
 

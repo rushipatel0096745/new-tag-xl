@@ -59,7 +59,7 @@ const PreuseTemplate = ({ updateForm, errors }: Props) => {
 
     return (
         <div className='card-box-inner border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
-            <pre>{JSON.stringify(questions, null, 2)}</pre>
+            {/* <pre>{JSON.stringify(questions, null, 2)}</pre> */}
 
             <div className='card-box-block pre-use-template is-active block'>
                 <div className='card-box-block_head mb-4'>

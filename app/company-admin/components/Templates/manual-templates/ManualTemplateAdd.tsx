@@ -8,14 +8,15 @@ const ManualTemplateAdd = () => {
     const [showMsg, setShowMsg] = useState("");
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
-    const [files, setFiles] = useState<any>();
-    const [error, setError] = useState({});
+    const [files, setFiles] = useState<any[]>([]);
+    const [error, setError] = useState<Record<string, string>>({});
+    const [permitted, setPermitted] = useState("");
 
     const sessionId = getSessionId("company-user-session");
     const companyId = getCompanyId("company-user-session");
 
     function validate() {
-        const newError = {};
+        const newError = {} as Record<string, string>;
         if (!title) newError.title = "Title is required";
         if (files.length === 0) newError.files = "Document is required";
 
@@ -35,7 +36,9 @@ const ManualTemplateAdd = () => {
         const formData = new FormData();
         formData.append("name", title);
         description && formData.append("description", description);
-        formData.append("files", files);
+        files.forEach((file: File) => {
+            formData.append("files", file);
+        });
 
         for (const [name, value] of formData) {
             console.log(`${name}: ${value}`);
@@ -57,6 +60,11 @@ const ManualTemplateAdd = () => {
 
             console.log("API response:", result);
 
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to update");
+                return;
+            }
+
             if (result?.has_error) {
                 console.error("Template creation failed:", result.message);
                 return;
@@ -73,7 +81,10 @@ const ManualTemplateAdd = () => {
         <div className='main flex flex-col p-6 bg-white rounded-lg shadow-sm'>
             <div className='header flex items-center justify-between mb-6'>
                 <h4 className='text-xl font-semibold text-gray-800'>Add Maintenance Template</h4>
+
                 {showMsg && <p className='text-green-600'>{showMsg}</p>}
+                {permitted && <p className='text-red-500'>{permitted}</p>}
+
                 <div className='flex gap-2'>
                     <Link
                         href='/company-admin/template-master/maintenance-check-template'
@@ -120,10 +131,14 @@ const ManualTemplateAdd = () => {
                                 type='file'
                                 className='hidden'
                                 name='files'
+                                // onChange={(e) => {
+                                //     if (!e.target.files) return;
+                                //     // setFiles((prev) => [...prev, e.target.files[0]]);
+                                //     setFiles(e.target.files[0]);
+                                // }}
                                 onChange={(e) => {
-                                    if (!e.target.files) return;
-                                    // setFiles((prev) => [...prev, e.target.files[0]]);
-                                    setFiles(e.target.files[0]);
+                                    const selected = Array.from(e.target.files || []);
+                                    setFiles((prev) => [...prev, ...selected]);
                                 }}
                             />
 
@@ -133,11 +148,13 @@ const ManualTemplateAdd = () => {
                     </div>
                     {error.files && <p className='text-red-600'>{error.files}</p>}
 
-                    {files && (
+                    {files.length !== 0 && (
                         <div className='show-image'>
                             <p>Uploaded Document: </p>
                             <ul>
-                                <li>{files.name}</li>
+                                {files.map((file, index) => (
+                                    <li key={index}>{file.name}</li>
+                                ))}
                             </ul>
                         </div>
                     )}

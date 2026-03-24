@@ -35,9 +35,11 @@ const EditRole = ({ id }: { id: string }) => {
 
     const [showMsg, setShowMsg] = useState("");
 
+    const [permitted, setPermitted] = useState("");
+
     async function getRole(id: string) {
-           try {
-            const result = await clientFetch("/company/role/get/"+Number(id), {
+        try {
+            const result = await clientFetch("/company/role/get/" + Number(id), {
                 method: "GET",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -55,11 +57,10 @@ const EditRole = ({ id }: { id: string }) => {
 
             const data = result.role;
             setRoleName(data?.role_name);
-            setSelectedPermissions(data?.permission)
-
+            setSelectedPermissions(data?.permission);
         } catch (error) {
             console.error("roles fetching error:", error);
-        }   
+        }
     }
 
     function validation() {
@@ -85,6 +86,10 @@ const EditRole = ({ id }: { id: string }) => {
 
             console.log("API response:", result);
 
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied");
+                return;
+            }
             if (result?.has_error) {
                 console.error("roles fetching failed:", result.message);
                 return;
@@ -99,7 +104,7 @@ const EditRole = ({ id }: { id: string }) => {
 
     async function updateRole(data: any): Promise<void> {
         try {
-            const result = await clientFetch("/company/role/update/"+Number(id), {
+            const result = await clientFetch("/company/role/update/" + Number(id), {
                 method: "PUT",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -110,6 +115,11 @@ const EditRole = ({ id }: { id: string }) => {
             });
 
             console.log("API response:", result);
+
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to update");
+                return;
+            }
 
             if (result?.has_error) {
                 console.error("role updation failed:", result.message);
@@ -135,7 +145,7 @@ const EditRole = ({ id }: { id: string }) => {
 
     useEffect(() => {
         getPermissionList();
-        getRole(id)
+        getRole(id);
     }, []);
 
     useEffect(() => {
@@ -191,6 +201,8 @@ const EditRole = ({ id }: { id: string }) => {
         <div className='main flex flex-col p-6 bg-white rounded-lg shadow-sm'>
             {/* Header */}
             {showMsg && <div className='text-green-600'>{showMsg}</div>}
+            {permitted && <p className='text-red-500'>{permitted}</p>}
+
             <div className='header flex items-center justify-between mb-6'>
                 <h4 className='text-xl font-semibold text-gray-800'>Edit Role</h4>
 
@@ -214,7 +226,12 @@ const EditRole = ({ id }: { id: string }) => {
                     {/* role name */}
                     <div className=''>
                         <label className='form-label'>Role Name</label>
-                        <input type='text' className='form-input' value={roleName} onChange={(e) => setRoleName(e.target.value)} />
+                        <input
+                            type='text'
+                            className='form-input'
+                            value={roleName}
+                            onChange={(e) => setRoleName(e.target.value)}
+                        />
                     </div>
                 </div>
                 {errors?.role_name && <p className='text-red-500'>{errors.role_name}</p>}

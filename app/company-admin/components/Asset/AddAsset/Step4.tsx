@@ -16,12 +16,13 @@ interface Props {
 }
 
 const Step4 = ({ prev, next, updateForm, formData, validate, errors, handleSubmit, formError }: Props) => {
-    const handleTemplateSubmit = function (e: React.SubmitEvent<HTMLFormElement>): void {
+    const handleTemplateSubmit = async function (e: React.SubmitEvent<HTMLFormElement>): void {
         e.preventDefault();
-        handleSubmit();
+        console.log("formdata: ", formData)
+        await handleSubmit();
     };
 
-    // useEffect(() => console.log(formData), []);
+    useEffect(() => console.log("formData: ", formData), []);
     return (
         <form action='' method='POST' className='block'>
             {formError && <p className='text-red-500'>{formError}</p>}
