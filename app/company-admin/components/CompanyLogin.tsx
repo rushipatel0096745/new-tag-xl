@@ -9,7 +9,7 @@ type LoginResponse = {
     error: string | null;
 };
 
-const CompanyLogin = ({ loginAction }: Promise<LoginResponse>) => {
+const CompanyLogin = ({ loginAction }: { loginAction: (prevState: any, formData: FormData) => Promise<any> }) => {
     const router = useRouter();
     const [state, formAction, isPending] = useActionState(loginAction, { success: null, error: "" });
     const {

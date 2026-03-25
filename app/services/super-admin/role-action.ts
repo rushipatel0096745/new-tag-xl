@@ -1,112 +1,37 @@
 "use server";
 
-import { getSessionId } from "./companyList";
-interface Filter {
-    field?: string;
-    condition: string;
-    text?: string;
-}
+import { getSessionId } from "../super-admin/company-action";
 
-export const getUsersList = async (page: number, filters: Filter[]) => {
-    // const sessionId = await getBySessionName("user-session");
+export const getRoleList = async () => {
     const sessionId = await getSessionId();
 
     if (sessionId) {
         try {
-            const response = await fetch("https://tagxl.com/api/super-user/users/list", {
+            const response = await fetch("https://tagxl.com/api/super-user/role/list", {
                 method: "POST",
                 headers: {
                     "X-Session-ID": sessionId,
                     "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
-                    page: page,
-                    pageSize: 10,
-                    filters: filters,
+                    filters: [],
                 }),
             });
 
             const result = await response.json();
-            return result?.users;
+            return result?.roles;
         } catch (error) {
             console.log("error: ", error);
         }
     }
 };
 
-export const getUsersColumns = async () => {
-    // const sessionId = await getBySessionName("user-session");
+export const getRole = async (id: number) => {
     const sessionId = await getSessionId();
 
     if (sessionId) {
         try {
-            const response = await fetch("https://tagxl.com/api/super-user/table-columns/users", {
-                method: "GET",
-                headers: {
-                    "X-Session-ID": sessionId,
-                    "Content-Type": "application/json",
-                },
-            });
-
-            const result = await response.json();
-
-            const columns = result?.columns;
-            const conditions = result?.conditions;
-            // console.log(columns, conditions)
-            return [columns, conditions];
-        } catch (error) {
-            console.log("error: ", error);
-        }
-    }
-};
-
-export const createUser = async (prevState: any, formData: any) => {
-    const sessionId = await getSessionId();
-
-    if (sessionId) {
-        try {
-            const response = await fetch("https://tagxl.com/api/super-user/create-user", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    formData,
-                }),
-            });
-
-            const result = await response.json();
-
-            if (result.has_error) {
-                return {
-                    success: false,
-                    error: "Unable to create User",
-                    data: "",
-                };
-            }
-            console.log(result);
-            return {
-                success: true,
-                error: "",
-                data: result.user_id,
-            };
-        } catch (error) {
-            console.log("error: ", error);
-            return {
-                success: false,
-                error: "Failed to connect to the server",
-                data: "",
-            };
-        }
-    }
-};
-
-export const getUser = async (id: number) => {
-    const sessionId = await getSessionId();
-
-    if (sessionId) {
-        try {
-            const response = await fetch("https://tagxl.com/api/super-user/user/get/" + id, {
+            const response = await fetch("https://tagxl.com/api/super-user/role/get/" + id, {
                 method: "GET",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -122,39 +47,47 @@ export const getUser = async (id: number) => {
     }
 };
 
-export const updateUser = async (id: number, prevState: any, formData: any) => {
+export const createRole = async function (
+    prevState: any,
+    formData: any
+): Promise<{ success: boolean | null; error: string; data: any }> {
     const sessionId = await getSessionId();
 
     if (sessionId) {
+        console.log("data to be posted: ", formData);
+
         try {
-            const response = await fetch("https://tagxl.com/api/super-user/update-user/" + id, {
-                method: "PUT",
+            const response = await fetch("https://tagxl.com/api/super-user/role/create", {
+                method: "POST",
                 headers: {
                     "X-Session-ID": sessionId,
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({
-                    ...formData,
-                    role_id: Number(formData.role_id),
-                }),
+                body: JSON.stringify(formData),
             });
-            console.log("update action called");
 
             const result = await response.json();
+            // console.log(result);
 
-            if (result.has_error) {
-                console.log(result);
+            if (result.has_error && result.error_code === "PERMISSION_DENIED") {
                 return {
                     success: false,
-                    error: "Unable to Update User",
+                    error: result.message,
+                    data: null,
+                };
+            }
+
+            if (result.has_error) {
+                return {
+                    success: false,
+                    error: result.message,
                     data: "",
                 };
             }
-            console.log(result);
             return {
                 success: true,
                 error: "",
-                data: result.user_id,
+                data: result.role_id,
             };
         } catch (error) {
             console.log("error: ", error);
@@ -164,5 +97,71 @@ export const updateUser = async (id: number, prevState: any, formData: any) => {
                 data: "",
             };
         }
+    } else {
+        return {
+            success: false,
+            error: "Session ID is Missing",
+            data: null,
+        };
+    }
+};
+
+export const updateRole = async (
+    id: number,
+    prevState: any,
+    formData: any
+): Promise<{ success: boolean | null; error: string; data: any }> => {
+    const sessionId = await getSessionId();
+
+    if (sessionId) {
+        console.log("data to be posted: ", formData);
+
+        try {
+            const response = await fetch("https://tagxl.com/api/super-user/role/update/" + Number(id), {
+                method: "PUT",
+                headers: {
+                    "X-Session-ID": sessionId,
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+            console.log("update action called");
+
+            const result = await response.json();
+
+            if (result.has_error && result.error_code === "PERMISSION_DENIED") {
+                return {
+                    success: false,
+                    error: result.message,
+                    data: null,
+                };
+            }
+
+            if (result.has_error) {
+                return {
+                    success: false,
+                    error: result.message,
+                    data: "",
+                };
+            }
+            return {
+                success: true,
+                error: "",
+                data: result.role_id,
+            };
+        } catch (error) {
+            console.log("error: ", error);
+            return {
+                success: false,
+                error: "Failed to connect to the server",
+                data: "",
+            };
+        }
+    } else {
+        return {
+            success: false,
+            error: "Session ID is Missing",
+            data: null,
+        };
     }
 };

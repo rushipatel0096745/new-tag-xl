@@ -1,6 +1,6 @@
 "use client";
 
-import { getCompanyUserPermissions } from "@/app/utils/user-helper";
+import { getCompanyUserPermissions, getSuperAdminFlag } from "@/app/utils/user-helper";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
@@ -23,11 +23,13 @@ const UnassignTagList = ({ tagList }: { tagList: Tag[] }) => {
     const [error, setError] = useState<{ [key: string]: string }>({});
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
-    const [userRole, setUserRole] = useState<string[]>();
+    const [userRole, setUserRole] = useState<string[]>([]);
+    const [is_super_admin, setIsSuperAdmin] = useState(false);
 
     useEffect(() => {
         const role = getCompanyUserPermissions();
-        setUserRole(role.tags);
+        setUserRole(role?.tags || []);
+        if (getSuperAdminFlag()) setIsSuperAdmin(true);
 
         async function fetchRoles() {
             const cookieFilters = Cookies.get("company_tag_filter");
@@ -82,7 +84,7 @@ const UnassignTagList = ({ tagList }: { tagList: Tag[] }) => {
         return () => {
             window.removeEventListener("TagFiltersChanged", handleFiltersChanged);
         };
-    }, [page, pageSize]);
+    }, [page, pageSize, is_super_admin]);
 
     useEffect(() => {
         console.log("tag permissions: ", userRole);
@@ -93,7 +95,7 @@ const UnassignTagList = ({ tagList }: { tagList: Tag[] }) => {
             <div className='card-box_head border-b border-b-[#ededed] px-4 py-5.5 flex justify-between items-center'>
                 <h3 className='h3 text-[18px] font-semibold leading-6'>Tag List</h3>
                 <div className='actions-btn flex gap-2 items-center'>
-                    {userRole?.includes("create") && (
+                    {(is_super_admin || userRole?.includes("create")) && (
                         <Link
                             className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
                             href='/company-admin/tag/add-tag'>
@@ -162,7 +164,7 @@ const UnassignTagList = ({ tagList }: { tagList: Tag[] }) => {
             <div>
                 <div className='card-box_body'>
                     {error.permission && <p className='text-red-500'>{error.permission}</p>}
-                    {userRole?.includes("list") ? (
+                    {is_super_admin || userRole?.includes("list") ? (
                         <div className='table-wrapper'>
                             {list.length !== 0 ? (
                                 <table className='table text-left border-collapse w-full text-[#111c43] border rounded-md text-[14px] leading-5 overflow-hidden'>
@@ -214,7 +216,7 @@ const UnassignTagList = ({ tagList }: { tagList: Tag[] }) => {
                                                     <td>
                                                         <div className='actions-btn flex gap-2 items-center'>
                                                             <div className='actions-btn flex gap-2 items-center'>
-                                                                {userRole.includes("update") && (
+                                                                {is_super_admin || userRole.includes("update") && (
                                                                     <Link
                                                                         className='icon-button edit inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
                                                                         href={`/company-admin/tag/edit/${tag.id}`}>
@@ -234,7 +236,7 @@ const UnassignTagList = ({ tagList }: { tagList: Tag[] }) => {
                                                                     </Link>
                                                                 )}
 
-                                                                {userRole.includes("delete") && (
+                                                                {is_super_admin || userRole.includes("delete") && (
                                                                     <button
                                                                         className='icon-button delete inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
                                                                         type='button'>
@@ -275,7 +277,7 @@ const UnassignTagList = ({ tagList }: { tagList: Tag[] }) => {
                 </div>
             </div>
         </div>
-    );  
+    );
 };
 
 export default UnassignTagList;

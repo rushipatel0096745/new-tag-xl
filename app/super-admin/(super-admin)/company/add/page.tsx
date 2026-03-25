@@ -1,5 +1,5 @@
 import React from "react";
-import { createCompany } from "@/app/services/super-admin/createCompany";
+import { createCompany } from "@/app/services/super-admin/company-action";
 import CompanyAddForm from "@/app/super-admin/components/company/CompanyAddForm";
 
 const AddCompany = () => {

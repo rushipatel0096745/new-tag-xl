@@ -49,13 +49,20 @@ export async function clientFetch(endpoint: string, options = {}) {
 export function getCompanyUserPermissions() {
     if (!isBrowser()) return null;
     const data = getDataFromCookie('company-user-session');
-    console.log(data.user.role.permission)
-    return data.user.role.permission;
+    // console.log(data.user.role.permission)
+    return data.user.role?.permission;
 }
 
 export function getSuperUserPermissions() {
     if (!isBrowser()) return null;
     const data = getDataFromCookie('super-user-session');
-    console.log(data.user.role.permission)
-    return data.user.role.permission;
+    // console.log(data.user.role.permission)
+    return data.user.role?.permission;
+}
+
+export function getSuperAdminFlag() {
+    if (!isBrowser()) return null;
+    const data = getDataFromCookie('company-user-session');
+    // console.log(data)
+    return data?.is_super_user === 1;
 }

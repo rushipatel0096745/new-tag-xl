@@ -63,10 +63,10 @@ const LocationFilter = () => {
     const applyFilter = function () {
         let filtersArr = draftFilters.map((filter) => {
             if (Array.isArray(filter.text)) {
-                const text = filter.text.filter(Boolean); 
+                const text = filter.text.filter(Boolean);
                 return {
                     ...filter,
-                    text: text.length === 1 ? text[0] : text, 
+                    text: text.length === 1 ? text[0] : text,
                 };
             }
             return filter;
@@ -90,7 +90,6 @@ const LocationFilter = () => {
 
     // load values from cookie
     useEffect(() => {
-        setToggle(true);
         const savedFilters = Cookies.get("company_location_filter");
         if (!savedFilters) return;
 
@@ -108,6 +107,7 @@ const LocationFilter = () => {
             });
 
             setDraftFilters(restored);
+            setToggle(true);
         } catch (e) {
             console.error("Failed to restore filters from cookie", e);
         }

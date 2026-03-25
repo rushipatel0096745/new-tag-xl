@@ -1,36 +1,45 @@
 "use client";
 
+import { getSuperUserPermissions } from "@/app/utils/user-helper";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
-import { Location } from "../../(admin)/location-master/page";
-import { getCompanyUserPermissions, getSuperAdminFlag } from "@/app/utils/user-helper";
 import Cookies from "js-cookie";
-import { GetLocationList } from "@/app/services/company-admin/location";
+import { useRouter, useSearchParams } from "next/navigation";
+import { GetRolesList } from "@/app/services/super-admin/role";
 
-const LocationList = ({ locationList }: { locationList: Location[] }) => {
-    const [list, setList] = useState<Location[]>(locationList);
+interface Role {
+    id: number;
+    role_name: string;
+    description: any;
+    permission: Permission;
+}
+
+interface Permission {
+    role: string[];
+    user: string[];
+    company: string[];
+}
+
+const RoleList = ({ roleList }: { roleList: Role[] }) => {
+    const [list, setList] = useState<Role[]>(roleList);
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(10);
     const [showMsg, setShowMsg] = useState("");
     const [error, setError] = useState<{ [key: string]: string }>({});
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
-    const [userRole, setUserRole] = useState<string[]>([]);
-    const [is_super_admin, setIsSuperAdmin] = useState(false);
+    const [userRole, setUserRole] = useState<string[]>();
+
+    const router = useRouter();
+
+    const searchParams = useSearchParams();
 
     useEffect(() => {
-        const role = getCompanyUserPermissions();
-        setUserRole(role?.role || []);
-        if (getSuperAdminFlag()) setIsSuperAdmin(true);
+        const role = getSuperUserPermissions();
+        setUserRole(role.role);
 
         async function fetchRoles() {
-            const cookieFilters = Cookies.get("company_location_filter");
-            let parsedFilters = null;
-            if (cookieFilters) {
-                parsedFilters = JSON.parse(cookieFilters);
-            }
-            console.log("parsed filters: ", parsedFilters);
-            const response = await GetLocationList(page, pageSize, parsedFilters);
+            const response = await GetRolesList(page, pageSize);
             console.log("list response....", response);
 
             if (response.has_error && response.message === "Permission denied") {
@@ -39,14 +48,14 @@ const LocationList = ({ locationList }: { locationList: Location[] }) => {
                 return;
             }
 
-            if (response.has_error && response.message === "Asset not found") {
+            if (response.has_error && response.message === "Role not found") {
                 setLoading(false);
                 setList([]);
                 setTotal(0);
                 return;
             }
-            if (!response.has_error && response.message === "Locations fetched successfully") {
-                setList(response.locations);
+            if (!response.has_error && response.message === "Roles fetched successfully") {
+                setList(response.roles);
                 setError({});
                 setTotal(response.total);
                 setLoading(false);
@@ -55,7 +64,7 @@ const LocationList = ({ locationList }: { locationList: Location[] }) => {
             if (response.has_error && response.message === "Invalid or expired session") {
                 setLoading(false);
                 alert("Session is over, Please Login Again.");
-                Cookies.remove("company_user_session");
+                Cookies.remove("super-user-session");
                 window.location.reload();
                 return;
             }
@@ -69,24 +78,44 @@ const LocationList = ({ locationList }: { locationList: Location[] }) => {
         }
 
         fetchRoles();
+    }, [page, pageSize]);
 
-        const handleFiltersChanged = () => fetchRoles();
-        window.addEventListener("LocationFiltersChanged", handleFiltersChanged);
+    useEffect(() => {
+        console.log("company permissions: ", userRole);
+    }, [userRole]);
 
-        return () => {
-            window.removeEventListener("LocationFiltersChanged", handleFiltersChanged);
-        };
-    }, [page, pageSize, is_super_admin]);
+    // async function handleDelete(id: number) {
+    //     const result = await DeleteTag(id);
+    //     if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+    //         setError((prev) => ({
+    //             ...prev,
+    //             permission: result.message || "Permission Denied",
+    //         }));
+    //     }
+    //     if (!result.has_error) {
+    //         setShowMsg("Tag Dleted Successfully");
+    //         router.refresh();
+    //     }
+    // }
 
     return (
         <div className='card-box bg-[#fff] border-gray-700 rounded-[18px] shadow-3xl shadow-white px-3 py-5.5'>
             <div className='card-box_head border-b border-b-[#ededed] px-4 py-5.5 flex justify-between items-center'>
-                <h3 className='h3 text-[18px] font-semibold leading-6'>Location List</h3>
+                <h3 className='h3 text-[18px] font-semibold leading-6'>Role List</h3>
+
+                {showMsg && (
+                    <div className='text-yellow-200 bg-yellow-400 p-2 flex gap-4 justify-end border-0 rounded-xl'>
+                        <p>{showMsg}</p>
+                        <button type='button' aria-label='Close' onClick={() => setShowMsg("")}>
+                            <span aria-hidden='true'>&times;</span>
+                        </button>
+                    </div>
+                )}
                 <div className='actions-btn flex gap-2 items-center'>
-                    {(is_super_admin || userRole.includes("create")) && (
+                    {userRole?.includes("create") && (
                         <Link
                             className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
-                            href='/company-admin/location-master/add'>
+                            href='/super-admin/users-and-roles/roles/add'>
                             <span className='icon-circle'>
                                 <svg
                                     xmlns='http://www.w3.org/2000/svg'
@@ -102,7 +131,7 @@ const LocationList = ({ locationList }: { locationList: Location[] }) => {
                                     />
                                 </svg>
                             </span>
-                            <span className='button-label text-[#1a1a1a] capitalize ml-2'>Add Location</span>
+                            <span className='button-label text-[#1a1a1a] capitalize ml-2'>Add Role</span>
                         </Link>
                     )}
                 </div>
@@ -111,38 +140,38 @@ const LocationList = ({ locationList }: { locationList: Location[] }) => {
             <div>
                 <div className='card-box_body'>
                     {error.permission && <p className='text-red-500'>{error.permission}</p>}
-
-                    {is_super_admin || userRole.includes("list") ? (
+                    {userRole?.includes("list") ? (
                         <div className='table-wrapper'>
                             {list.length !== 0 ? (
                                 <table className='table text-left border-collapse w-full text-[#111c43] border rounded-md text-[14px] leading-5 overflow-hidden'>
                                     <thead className='bg-[#f5f6fa] table-header-group align-middle'>
                                         <tr className='table-row border-1 border-solid border-[#f5f6f1]'>
-                                            <th className='p-2 font-medium'>Id</th>
-                                            <th className='p-2 font-medium'>Location Name</th>
+                                            <th className='p-2 font-medium'>ID</th>
+                                            <th className='p-2 font-medium'>Role Name</th>
                                             <th className='p-2 font-medium'>Action</th>
                                         </tr>
                                     </thead>
                                     <tbody className='table-row-group align-middle '>
-                                        {list?.map((location) => {
+                                        {list?.map((role) => {
                                             return (
                                                 <tr
                                                     className='table-row border-1 border-solid border-[#f5f6f1] align-middle'
-                                                    key={location.id}>
-                                                    <td className='text-[13px] font-medium text-[#474a54]'>
-                                                        {location.id}
-                                                    </td>
-                                                    <td className='text-[13px] font-medium text-[#474a54]'>
-                                                        {location.name}
+                                                    key={role.id}>
+                                                    <td className='text-[13px] p-2 font-medium text-[#474a54]'>
+                                                        {role.id}
                                                     </td>
 
-                                                    <td>
+                                                    <td className='text-[13px] p-2 font-medium text-[#474a54]'>
+                                                        {role.role_name}
+                                                    </td>
+
+                                                    <td className='p-2'>
                                                         <div className='actions-btn flex gap-2 items-center'>
                                                             <div className='actions-btn flex gap-2 items-center'>
-                                                                {(is_super_admin || userRole.includes("update")) && (
+                                                                {userRole.includes("update") && (
                                                                     <Link
                                                                         className='icon-button edit inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
-                                                                        href={`/company-admin/location-master/edit/${location.id}`}>
+                                                                        href={`/super-admin/users-and-roles/roles/edit/${role.id}`}>
                                                                         <span className='icon-circle'>
                                                                             <svg
                                                                                 xmlns='http://www.w3.org/2000/svg'
@@ -158,8 +187,10 @@ const LocationList = ({ locationList }: { locationList: Location[] }) => {
                                                                         </span>
                                                                     </Link>
                                                                 )}
-                                                                {(is_super_admin || userRole.includes("delete")) && (
+
+                                                                {userRole.includes("delete") && (
                                                                     <button
+                                                                        // onClick={() => handleDelete(role.id)}
                                                                         className='icon-button delete inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
                                                                         type='button'>
                                                                         <span className='icon-circle'>
@@ -175,7 +206,6 @@ const LocationList = ({ locationList }: { locationList: Location[] }) => {
                                                                                 />
                                                                             </svg>
                                                                         </span>
-                                                                        {/* <span className='tooltip'>Delete</span> */}
                                                                     </button>
                                                                 )}
                                                             </div>
@@ -195,7 +225,7 @@ const LocationList = ({ locationList }: { locationList: Location[] }) => {
                             )}
                         </div>
                     ) : (
-                        !error.permission && <p>Permission Denied</p>
+                        <p>Permission Denied</p>
                     )}
                 </div>
             </div>
@@ -203,4 +233,4 @@ const LocationList = ({ locationList }: { locationList: Location[] }) => {
     );
 };
 
-export default LocationList;
+export default RoleList;

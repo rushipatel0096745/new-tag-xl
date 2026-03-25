@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import AlertHeader from "./AlertHeader";
-import { getCompanyUserPermissions } from "@/app/utils/user-helper";
+import { getCompanyUserPermissions, getSuperAdminFlag } from "@/app/utils/user-helper";
 import Cookies from "js-cookie";
 import { GetAlertsList } from "@/app/services/company-admin/alerts";
 import Link from "next/link";
@@ -57,11 +57,13 @@ const AlertsList = () => {
     const [error, setError] = useState<{ [key: string]: string }>({});
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
-    const [userRole, setUserRole] = useState<string[]>();
+    const [userRole, setUserRole] = useState<string[]>([]);
+    const [is_super_admin, setIsSuperAdmin] = useState(false);
 
     useEffect(() => {
         const role = getCompanyUserPermissions();
-        setUserRole(role.alerts);
+        setUserRole(role?.alerts || []);
+        if (getSuperAdminFlag()) setIsSuperAdmin(true);
 
         async function fetchRoles() {
             const cookieFilters = Cookies.get("company_alert_filter");
@@ -116,7 +118,7 @@ const AlertsList = () => {
         return () => {
             window.removeEventListener("AlertFiltersChanged", handleFiltersChanged);
         };
-    }, [page, pageSize]);
+    }, [page, pageSize, is_super_admin]);
 
     useEffect(() => {
         console.log("tag permissions: ", userRole);
@@ -129,7 +131,7 @@ const AlertsList = () => {
             <div>
                 <div className='card-box_body'>
                     {error.permission && <p className='text-red-500'>{error.permission}</p>}
-                    {userRole?.includes("list") ? (
+                    {is_super_admin || userRole?.includes("list") ? (
                         <div className='table-wrapper'>
                             {list.length !== 0 ? (
                                 <table className='table text-left border-collapse w-full text-[#111c43] border rounded-md text-[14px] leading-5 overflow-hidden'>
@@ -187,12 +189,12 @@ const AlertsList = () => {
                                                                 PENDING
                                                             </span>
                                                         )}
-                                                          {alert.status === 1 && (
+                                                        {alert.status === 1 && (
                                                             <span className='status processing text-[#f5a623] bg-[#fff7e6] border border-solid rounded-[40px] uppercase px-[2px] py-2.5 text-[10px] inline font-extrabold tracking-[0.5px] '>
                                                                 PROCESSING
                                                             </span>
                                                         )}
-                                                          {alert.status === 2 && (
+                                                        {alert.status === 2 && (
                                                             <span className='status processing text-green-500 bg-[#c9f4d2] border border-solid rounded-[40px] uppercase px-[2px] py-2.5 text-[10px] inline font-extrabold tracking-[0.5px] '>
                                                                 COMPLETED
                                                             </span>
@@ -205,7 +207,7 @@ const AlertsList = () => {
                                                         {alert.created_at}
                                                     </td>
                                                     <td className='p-3 align-middle text-[13px] font-medium text-[#474a54]'>
-                                                        <Link
+                                                        {(is_super_admin || userRole.includes("update")) && <Link
                                                             className='icon-button edit inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
                                                             href={`/company-admin/alerts/edit/${alert.id}`}>
                                                             <span className='icon-circle'>
@@ -221,7 +223,7 @@ const AlertsList = () => {
                                                                     />
                                                                 </svg>
                                                             </span>
-                                                        </Link>
+                                                        </Link>}
                                                     </td>
                                                 </tr>
                                             );

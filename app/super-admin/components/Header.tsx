@@ -1,31 +1,26 @@
-import { logout } from "@/app/services/super-admin/auth";
-import { getUserData } from "@/app/services/super-admin/companyList";
+import LogoutButton from "@/app/company-admin/components/LogoutButton";
+import { getCompanyUserData } from "@/app/services/company-admin/getComapnyData";
 import React from "react";
 
-const Header = async() => {
-
-    const user = await getUserData();
-    const fullName = user?.firstname + ' ' + user?.lastname
+const Header = async () => {
+    const user = await getCompanyUserData();
+    const fullName = user?.firstname + " " + user?.lastname;
 
     return (
         <div className='flex bg-[#fff] border-b-[#f9f9f9] shadow-2xs shadow-[#3d424508] justify-end'>
-            <div className='profile flex'>
+            <div className='profile flex items-center gap-3 p-3'>
                 <div className='avatar'>
                     <img
-                        alt='Logo'
-                        loading='lazy'
+                        src='/default-avatar.png'
+                        alt='Avatar'
                         width='34'
                         height='34'
-                        decoding='async'
-                        data-nimg='1'
-                        style={{'color':'transparent'}}>
-                        </img>
+                        className='rounded-full object-cover w-[34px] h-[34px]'
+                    />
                 </div>
-                <div className="profile-name">
+                <div className='profile-name flex items-center gap-2'>
                     {fullName}
-                    <div className="inline ml-2">
-                        <button className="border rounded-xl p-2 cursor-pointer" onClick={logout}>Logout</button>
-                    </div>
+                    <LogoutButton module='superuser' />
                 </div>
             </div>
         </div>

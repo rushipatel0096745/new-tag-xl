@@ -69,7 +69,7 @@ const AddTag = ({ action }: { action: (prevState: any, formData: any) => Promise
             setTagList(initialList);
             setShowMsg("Tag created successfully");
         } else if (state?.success === false) {
-            setShowMsg(""); // let state.error display it
+            setShowMsg(""); 
         }
     }, [state]);
 

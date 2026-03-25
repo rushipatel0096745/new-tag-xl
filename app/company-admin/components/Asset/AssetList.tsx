@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { Asset } from "../../(admin)/asset/page";
 import { deleteAsset } from "@/app/services/company-admin/asset-actions";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getCompanyUserPermissions } from "@/app/utils/user-helper";
+import { getCompanyUserPermissions, getSuperAdminFlag } from "@/app/utils/user-helper";
 import Cookies from "js-cookie";
 import { GetAssetList } from "@/app/services/company-admin/assets";
 
@@ -22,7 +22,8 @@ const AssetList = ({ assets }: AssetProps) => {
     // const [deleteMsg, setDeleteMsg] = useState("")
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
-    const [userRole, setUserRole] = useState<string[]>();
+    const [userRole, setUserRole] = useState<string[]>([]);
+    const [is_super_admin, setIsSuperAdmin] = useState(false);
 
     const searchParams = useSearchParams();
 
@@ -36,7 +37,8 @@ const AssetList = ({ assets }: AssetProps) => {
 
     useEffect(() => {
         const role = getCompanyUserPermissions();
-        setUserRole(role.asset);
+        setUserRole(role?.asset || []);
+        if (getSuperAdminFlag()) setIsSuperAdmin(true);
 
         async function fetchRoles() {
             const cookieFilters = Cookies.get("company_asset_filter");
@@ -91,7 +93,7 @@ const AssetList = ({ assets }: AssetProps) => {
         return () => {
             window.removeEventListener("AssetFiltersChanged", handleFiltersChanged);
         };
-    }, [page, pageSize]);
+    }, [page, pageSize, is_super_admin]);
 
     const router = useRouter();
 
@@ -120,7 +122,7 @@ const AssetList = ({ assets }: AssetProps) => {
                     </div>
                 )}
                 <div className='actions-btn flex gap-2 items-center'>
-                    {userRole?.includes("create") && (
+                    {(is_super_admin || userRole.includes("create")) && (
                         <Link
                             className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
                             href='/company-admin/asset/add'>
@@ -148,7 +150,7 @@ const AssetList = ({ assets }: AssetProps) => {
             <div>
                 <div className='card-box_body'>
                     {error.permission && <p className='text-red-500'>{error.permission}</p>}
-                    {userRole?.includes("list") ? (
+                    {is_super_admin || userRole?.includes("list") ? (
                         <div className='table-wrapper'>
                             {list.length !== 0 ? (
                                 <>
@@ -214,7 +216,8 @@ const AssetList = ({ assets }: AssetProps) => {
                                                         <td className='p-2'>
                                                             <div className='actions-btn flex gap-2 items-center'>
                                                                 <div className='actions-btn flex gap-2 items-center'>
-                                                                    {userRole.includes("update") && (
+                                                                    {(is_super_admin ||
+                                                                        userRole.includes("update")) && (
                                                                         <Link
                                                                             className='icon-button edit inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
                                                                             href={`/company-admin/asset/edit/${asset.id}`}>
@@ -235,7 +238,8 @@ const AssetList = ({ assets }: AssetProps) => {
                                                                         </Link>
                                                                     )}
 
-                                                                    {userRole.includes("delete") && (
+                                                                    {(is_super_admin ||
+                                                                        userRole.includes("delete")) && (
                                                                         <button
                                                                             onClick={() =>
                                                                                 handleDelete(Number(asset.id))
@@ -285,20 +289,3 @@ const AssetList = ({ assets }: AssetProps) => {
 };
 
 export default AssetList;
-
-{
-    /* <div className='pagination'>
-                <span className='pagination-text'>
-                    Total: <span className='bold'>1 Records | Page 1 of 1 </span>
-                </span>
-                <div className='pagination-buttons'>
-                    <button className='pagination-btn prev' disabled=''>
-                        «
-                    </button>
-                    <button className='pagination-btn active'>1</button>
-                    <button className='pagination-btn next' disabled=''>
-                        »
-                    </button>
-                </div>
-            </div> */
-}

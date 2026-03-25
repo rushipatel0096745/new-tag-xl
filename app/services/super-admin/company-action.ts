@@ -79,35 +79,98 @@ export const getSessionId = async () => {
 export const createCompany = async (prevState: any, formData: any) => {
     const sessionId = await getSessionId();
 
+    console.log("form data: ", formData);
+
     try {
-        const response = await fetch("url", {
+        const response = await fetch("https://tagxl.com/api/super-user/company/create", {
             method: "POST",
             headers: {
                 "X-Session-ID": sessionId,
                 "Content-Type": "application/json",
             },
-            body: JSON.stringify({
-                formData,
-            }),
+            body: JSON.stringify(formData),
         });
 
         const result = await response.json();
+        console.log(result);
+
+        if (result.has_error && result.error_code === "PERMISSION_DENIED") {
+            return {
+                success: false,
+                error: result.message,
+                data: null,
+            };
+        }
 
         if (result.has_error) {
             return {
                 success: false,
                 error: "Unable to create company",
+                data: result.message,
             };
         }
         console.log(result);
         return {
             success: true,
             error: "",
+            data: result,
         };
     } catch (error) {
         return {
             success: false,
             error: "Failed to connect to the server",
+            data: error,
         };
     }
 };
+
+export const updateCompany = async (id: number, prevState: any, formData: any) => {
+    const sessionId = await getSessionId();
+
+    // console.log("form data: ", formData);
+
+    try {
+        const response = await fetch("https://tagxl.com/api/super-user/company/update/" + id, {
+            method: "PUT",
+            headers: {
+                "X-Session-ID": sessionId,
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+        });
+
+        const result = await response.json();
+        // console.log(result);
+
+        if (result.has_error && result.error_code === "PERMISSION_DENIED") {
+            return {
+                success: false,
+                error: result.message,
+                data: null,
+            };
+        }
+
+        if (result.has_error) {
+            return {
+                success: false,
+                error: "Unable to update company",
+                data: result.message,
+            };
+        }
+        console.log(result);
+        if (!result.has_error) {
+            return {
+                success: true,
+                error: "",
+                data: result,
+            };
+        }
+    } catch (error) {
+        return {
+            success: false,
+            error: "Failed to connect to the server",
+            data: error,
+        };
+    }
+};
+

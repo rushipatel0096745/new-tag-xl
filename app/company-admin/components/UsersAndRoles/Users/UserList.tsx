@@ -1,7 +1,13 @@
 "use client";
 
-import { User } from "@/app/super-admin/(super-admin)/users-and-roles/users/page";
-import { clientFetch, getCompanyId, getCompanyUserPermissions, getSessionId } from "@/app/utils/user-helper";
+import { User } from "@/app/company-admin/(admin)/users-and-roles/users/page";
+import {
+    clientFetch,
+    getCompanyId,
+    getCompanyUserPermissions,
+    getSessionId,
+    getSuperAdminFlag,
+} from "@/app/utils/user-helper";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
@@ -26,13 +32,15 @@ const UserList = ({ tempList }: Props) => {
     const [permError, setPermError] = useState("");
     const [sessionId, setSessionId] = useState("");
     const [companyId, setCompanyId] = useState("");
-    const [userRole, setUserRole] = useState<string[]>();
+    const [userRole, setUserRole] = useState<string[]>([]);
+    const [is_super_admin, setIsSuperAdmin] = useState(false);
 
     const router = useRouter();
 
     useEffect(() => {
         const role = getCompanyUserPermissions();
-        setUserRole(role.user);
+        setUserRole(role?.user || []);
+        if (getSuperAdminFlag()) setIsSuperAdmin(true);
 
         async function fetchUsers() {
             const cookieFilters = Cookies.get("company_user_filter");
@@ -87,7 +95,7 @@ const UserList = ({ tempList }: Props) => {
         return () => {
             window.removeEventListener("filtersChanged", handleFiltersChanged);
         };
-    }, [page, pageSize]);
+    }, [page, pageSize, is_super_admin]);
 
     async function getUsers() {
         try {
@@ -247,7 +255,7 @@ const UserList = ({ tempList }: Props) => {
                     <div className='card-box_body'>
                         {error.permission && <p className='text-red-500'>{error.permission}</p>}
 
-                        {userRole?.includes("list") ? (
+                        {is_super_admin || userRole?.includes("list") ? (
                             <div className='table-wrapper'>
                                 {list.length !== 0 ? (
                                     <>
@@ -293,7 +301,8 @@ const UserList = ({ tempList }: Props) => {
                                                             <td className='p-2'>
                                                                 <div className='actions-btn flex gap-2 items-center'>
                                                                     <div className='actions-btn flex gap-2 items-center'>
-                                                                        {userRole.includes("update") && (
+                                                                        {(is_super_admin ||
+                                                                            userRole.includes("update")) && (
                                                                             <Link
                                                                                 href={`/company-admin/template-master/pre-use-check-template/edit/${temp.id}`}
                                                                                 className='icon-button edit inline-flex items-center justify-center cursor-pointer p-0 decoration-0'>
@@ -313,7 +322,8 @@ const UserList = ({ tempList }: Props) => {
                                                                             </Link>
                                                                         )}
 
-                                                                        {userRole.includes("delete") && (
+                                                                        {(is_super_admin ||
+                                                                            userRole.includes("delete")) && (
                                                                             <button
                                                                                 onClick={() =>
                                                                                     deleteTemplate(Number(temp.id))

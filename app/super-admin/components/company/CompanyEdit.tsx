@@ -4,20 +4,97 @@ import React, { startTransition, useActionState, useEffect, useState } from "rea
 import { Form, useForm } from "react-hook-form";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { GetCompany } from "@/app/services/super-admin/company";
 
-const CompanyAddForm = ({ createAction }: { createAction: (prevState: any, formData: any) => Promise<any> }) => {
+interface Company {
+    id: number;
+    company_id: number;
+    company_name: string;
+    street: string;
+    street2: string;
+    city: string;
+    state: string;
+    country: string;
+    postal_code: string;
+    email: string;
+    gst_or_tax_id: string;
+    status: boolean;
+    allowed_asset_limit: number;
+    is_delete: boolean;
+    subscription_validity: string;
+    created_at: string;
+    updated_at: string;
+}
+
+const CompanyEdit = ({
+    updateAction,
+    id,
+}: {
+    updateAction: (id: number, prevState: any, formData: any) => Promise<any>;
+    id: string;
+}) => {
     const router = useRouter();
-    const [state, formAction, isPending] = useActionState(createAction, { success: null, error: "", data: null });
+    const [state, formAction, isPending] = useActionState(updateAction.bind(null, Number(id)), {
+        success: null,
+        error: "",
+        data: null,
+    });
+    const [companyData, setCompanyData] = useState<Company>();
     const [showMsg, setShowMsg] = useState<string>("");
+    const [permitted, setPermitted] = useState("");
 
     const {
         register,
-        watch,
+        reset,
         handleSubmit,
         formState: { errors },
-    } = useForm();
+    } = useForm({
+        defaultValues: {
+            company_name: companyData?.company_name,
+            gst_or_tax_id: companyData?.gst_or_tax_id,
+            street: companyData?.street,
+            street2: companyData?.street2 ?? "",
+            city: companyData?.city,
+            state: companyData?.state,
+            country: companyData?.country.toLowerCase(),
+            postal_code: companyData?.postal_code,
+            allowed_asset_limit: companyData?.allowed_asset_limit,
+            status: companyData?.status ? "1" : "0",
+            subscription_validity: companyData?.subscription_validity.split("T")[0],
+        },
+    });
 
-    const password = watch("password");
+    async function getCompany() {
+        const result = await GetCompany(Number(id));
+        if (result.has_error && result.error_code == "PERMISSION_ERROR") {
+            setPermitted("Permission Denied to Update");
+        }
+        if (!result.has_error) {
+            setCompanyData(result.company);
+        }
+    }
+
+    useEffect(() => {
+        if (companyData) {
+            reset({
+                company_name: companyData?.company_name,
+                gst_or_tax_id: companyData?.gst_or_tax_id,
+                street: companyData?.street,
+                street2: companyData?.street2 ?? "",
+                city: companyData?.city,
+                state: companyData?.state,
+                country: companyData?.country?.toLowerCase(),
+                postal_code: companyData?.postal_code,
+                allowed_asset_limit: companyData?.allowed_asset_limit,
+                status: companyData?.status ? "1" : "0",
+                subscription_validity: companyData?.subscription_validity.split("T")[0],
+            });
+        }
+    }, [companyData]);
+
+    useEffect(() => {
+        getCompany();
+    }, []);
 
     const onSubmit = async (data: any) => {
         const { confirm_password, ...newData } = data;
@@ -29,7 +106,7 @@ const CompanyAddForm = ({ createAction }: { createAction: (prevState: any, formD
     useEffect(() => {
         if (state?.success) {
             // router.push("/super-admin/company");
-            setShowMsg("Company created successfully");
+            setShowMsg("Company updated successfully");
         } else {
             setShowMsg("");
         }
@@ -39,7 +116,7 @@ const CompanyAddForm = ({ createAction }: { createAction: (prevState: any, formD
         <form onSubmit={handleSubmit(onSubmit)} className='border-2 border-black p-4 rounded-2xl'>
             <div className='form-header flex justify-between p-4 border-b'>
                 <div className='title'>
-                    <h3>Add Company</h3>
+                    <h3>Edit Company</h3>
                 </div>
                 {showMsg && (
                     <div className='text-green-700'>
@@ -50,6 +127,12 @@ const CompanyAddForm = ({ createAction }: { createAction: (prevState: any, formD
                 {state?.error && (
                     <div className='text-red-500'>
                         <p>{state?.error}</p>
+                    </div>
+                )}
+
+                {permitted && (
+                    <div className='text-red-500'>
+                        <p>{permitted}</p>
                     </div>
                 )}
                 <div className='action'>
@@ -180,53 +263,6 @@ const CompanyAddForm = ({ createAction }: { createAction: (prevState: any, formD
                     <div className='fields grid grid-cols-2 gap-4'>
                         <div className='col-span-1'>
                             <div className='title mb-3'>
-                                <h4>Login Information</h4>
-                            </div>
-                            <div className='grid grid-cols-2 gap-4'>
-                                <div className='col-span-2'>
-                                    <label htmlFor='email' className='block text-sm font-medium text-gray-700'>
-                                        Email
-                                    </label>
-                                    <input
-                                        type='email'
-                                        id='email'
-                                        {...register("email", { required: "Email is required" })}
-                                        className='mt-1 block w-full rounded-md border-2 border-gray-500 '
-                                    />
-                                    {errors.email && <p className='text-red-500'>{errors.email.message as string}</p>}
-                                </div>
-                                <div className='col-span-1'>
-                                    <label htmlFor='password' className='block text-sm font-medium text-gray-700'>
-                                        Password
-                                    </label>
-                                    <input
-                                        type='password'
-                                        id='password'
-                                        {...register("password", { required: "Password is required" })}
-                                        className='mt-1 block w-full rounded-md border-2 border-gray-500 '
-                                    />
-                                    {errors.password && <p>{errors.password.message as string}</p>}
-                                </div>
-                                <div className='col-span-1'>
-                                    <label htmlFor='email' className='block text-sm font-medium text-gray-700'>
-                                        Confirm Password
-                                    </label>
-                                    <input
-                                        type='password'
-                                        id='confirm_password'
-                                        {...register("confirm_password", {
-                                            required: "Confirm password is required",
-                                            validate: (value) => value === password || "password do not match",
-                                        })}
-                                        className='mt-1 block w-full rounded-md border-2 border-gray-500 '
-                                    />
-                                    {errors.confirm_password && <p>{errors.confirm_password?.message as string}</p>}
-                                </div>
-                            </div>
-                        </div>
-
-                        <div className='col-span-1'>
-                            <div className='title mb-3'>
                                 <h4>Subscription Information</h4>
                             </div>
                             <div className='grid grid-cols-2 gap-4'>
@@ -248,7 +284,7 @@ const CompanyAddForm = ({ createAction }: { createAction: (prevState: any, formD
                                 </div>
                                 <div className='col-span-1'>
                                     <label htmlFor='first_name' className='block text-sm font-medium text-gray-700'>
-                                        Country
+                                        Status
                                     </label>
                                     <select
                                         {...register("status")}
@@ -287,4 +323,4 @@ const CompanyAddForm = ({ createAction }: { createAction: (prevState: any, formD
     );
 };
 
-export default CompanyAddForm;
+export default CompanyEdit;

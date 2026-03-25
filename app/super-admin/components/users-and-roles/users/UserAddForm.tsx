@@ -3,20 +3,25 @@
 import Link from "next/link";
 import React, { startTransition, useActionState, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Role } from "../(super-admin)/users-and-roles/roles/page";
-import { getRoleList } from "@/app/services/super-admin/roleList";
-import { createUser } from "@/app/services/super-admin/usersList";
+import { getRoleList } from "@/app/services/super-admin/role-action";
+import { createUser } from "@/app/services/super-admin/user-action";
 
-interface InitialSatate {
-    succees: boolean;
-    error: string;
-    data: string | number;
+interface Role {
+    id: number;
+    role_name: string;
+    permission: Permission;
 }
 
-const UserAddForm = () => {
+interface Permission {
+    role: string[];
+    user: string[];
+    company: string[];
+}
+
+export const UserAddForm = () => {
     const [roles, setRoles] = useState<Role[]>([]);
     const [showMsg, setShowMsg] = useState<string>("");
-    const [state, formAction, isPending] = useActionState<Promise<InitialSatate>>(createUser, {
+    const [state, formAction, isPending] = useActionState(createUser, {
         success: null,
         error: "",
         data: null,
@@ -54,22 +59,36 @@ const UserAddForm = () => {
     const onSubmit = async (data: any) => {
         console.log("data: ", data);
         const { confirm_password, ...newData } = data;
-        console.log(newData);
-        reset();
-        setShowMsg("user created suucessfully");
-        // startTransition(() => formAction(newData));
+        console.log("user create data: ", newData);
+        // reset();
+        startTransition(() => formAction(newData));
     };
 
-    // useEffect(() => {
-    //     if (state?.succees) {
-    //     }
-    // });
+    useEffect(() => {
+        if (state?.success) {
+            setShowMsg("User created suucessfully");
+            reset();
+        } else {
+            setShowMsg("");
+        }
+    }, [state]);
 
     return (
         <div className='mx-auto p-4 mt-10'>
             {" "}
             <form onSubmit={handleSubmit(onSubmit)} className='border-2 border-black p-4 rounded-2xl'>
-                {showMsg && <p className='text-xl text-green-800'>{showMsg}</p>}
+                {showMsg && (
+                    <div className='text-green-700'>
+                        <p>{showMsg}</p>
+                    </div>
+                )}
+
+                {state?.error && (
+                    <div className='text-red-500'>
+                        <p>{state?.error}</p>
+                    </div>
+                )}
+
                 <div className='form-header flex justify-between p-4 border-b'>
                     <div className='title'>
                         <h1 className='text-3xl'>Add User</h1>
@@ -99,6 +118,9 @@ const UserAddForm = () => {
                                     className='mt-1 block w-full rounded-md border-2 border-gray-500 '
                                     {...register("firstname", { required: "First name required" })}
                                 />
+                                {errors.firstname && (
+                                    <p className='text-red-500'>{errors.firstname.message as string}</p>
+                                )}
                             </div>
                             <div className='col-span-1'>
                                 <label htmlFor='last_name' className='block text-sm font-medium text-gray-700'>
@@ -110,6 +132,7 @@ const UserAddForm = () => {
                                     {...register("lastname", { required: "Last name required" })}
                                     className='mt-1 block w-full rounded-md border-2 border-gray-500 '
                                 />
+                                {errors.lastname && <p className='text-red-500'>{errors.lastname.message as string}</p>}
                             </div>
                             <div className='col-span-1'>
                                 <label htmlFor='email' className='block text-sm font-medium text-gray-700'>
@@ -121,6 +144,7 @@ const UserAddForm = () => {
                                     {...register("email", { required: "Email is required" })}
                                     className='mt-1 block w-full rounded-md border-2 border-gray-500 '
                                 />
+                                {errors.email && <p className='text-red-500'>{errors.email.message as string}</p>}
                             </div>
                             <div className='col-span-1'>
                                 <label htmlFor='password' className='block text-sm font-medium text-gray-700'>
@@ -132,6 +156,7 @@ const UserAddForm = () => {
                                     {...register("password", { required: "Password is required" })}
                                     className='mt-1 block w-full rounded-md border-2 border-gray-500 '
                                 />
+                                {errors.password && <p className='text-red-500'>{errors.password.message as string}</p>}
                             </div>
                             <div className='col-span-1'>
                                 <label htmlFor='confirm_password' className='block text-sm font-medium text-gray-700'>
@@ -147,7 +172,9 @@ const UserAddForm = () => {
                                     className='mt-1 block w-full rounded-md border-2 border-gray-500 '
                                 />
 
-                                {errors.confirm_password && <p>{errors.confirm_password?.message}</p>}
+                                {errors.confirm_password && (
+                                    <p className='text-red-500'>{errors.confirm_password?.message}</p>
+                                )}
                             </div>
 
                             <div className='col-span-1'>
@@ -155,7 +182,7 @@ const UserAddForm = () => {
                                     Select the Role
                                 </label>
                                 <select
-                                    {...register("role_id")}
+                                    {...register("role_id", { required: "Role is required" })}
                                     className='mt-1 block w-full rounded-md border-2 border-gray-500'>
                                     <option value='' disabled>
                                         Select the Role
@@ -166,6 +193,7 @@ const UserAddForm = () => {
                                         </option>
                                     ))}
                                 </select>
+                                {errors.role_id && <p className='text-red-500'>{errors.role_id?.message}</p>}
                             </div>
 
                             <div className='col-span-1'>
@@ -173,7 +201,7 @@ const UserAddForm = () => {
                                     Select the user status
                                 </label>
                                 <select
-                                    {...register("user_status")}
+                                    {...register("user_status", { required: "User status is required" })}
                                     className='mt-1 block w-full rounded-md border-2 border-gray-500'>
                                     <option value='' disabled>
                                         Select the user status
@@ -181,6 +209,7 @@ const UserAddForm = () => {
                                     <option value={Number(1)}>Active</option>
                                     <option value={Number(0)}>Inactive</option>
                                 </select>
+                                {errors.user_status && <p className='text-red-500'>{errors.user_status?.message}</p>}
                             </div>
                         </div>
                     </div>

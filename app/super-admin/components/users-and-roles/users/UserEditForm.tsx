@@ -3,21 +3,39 @@
 import Link from "next/link";
 import React, { startTransition, useActionState, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Role } from "../(super-admin)/users-and-roles/roles/page";
-import { getRoleList } from "@/app/services/super-admin/roleList";
-import { createUser, updateUser } from "@/app/services/super-admin/usersList";
-import { UserProfile, Permission } from "../(super-admin)/users-and-roles/users/edit/[id]/page";
+// import { Role } from "../../../(super-admin)/users-and-roles/roles/page";
+import { getRoleList } from "@/app/services/super-admin/role-action";
+import { updateUser } from "@/app/services/super-admin/user-action";
+import { GetUser } from "@/app/services/super-admin/user";
 
-interface InitialSatate {
-    success: boolean;
-    error: string;
-    data: string | number;
+interface User {
+    id: number;
+    email: string;
+    firstname: string;
+    lastname: string;
+    user_status: boolean;
+    last_logged_in: string;
+    role: Role;
 }
 
-const UserEditForm = ({ userData, id }) => {
+interface Role {
+    id: number;
+    role_name: string;
+    permission: Permission;
+}
+
+interface Permission {
+    role: string[];
+    user: string[];
+    company: string[];
+}
+
+const UserEditForm = ({ id }: { id: string }) => {
     const [roles, setRoles] = useState<Role[]>([]);
+    const [userData, setUserData] = useState<User>();
     const [showMsg, setShowMsg] = useState<string>("");
-    const [state, formAction, isPending] = useActionState<Promise<InitialSatate>>(updateUser.bind(null, id), {
+    const [permError, setPermError] = useState("");
+    const [state, formAction, isPending] = useActionState(updateUser.bind(null, Number(id)), {
         success: null,
         error: "",
         data: null,
@@ -43,12 +61,15 @@ const UserEditForm = ({ userData, id }) => {
         setRoles(roles);
     };
 
-    // useEffect(() => {
-    //   console.log("userData:", userData);
-    //   console.log("roles:", roles);
-    //   console.log("user_status value:", String(userData?.user_status));
-    //   console.log("role_id value:", String(userData?.role_id));
-    // }, [userData, roles]);
+    async function getUser() {
+        const user = await GetUser(Number(id));
+        if (user.has_error && user.error_code == "PERMISSION_DENIED") {
+            setPermError(user.message)
+        } 
+        if(!user.has_error) {
+            setUserData(user);
+        }
+    }
 
     useEffect(() => {
         if (userData && roles.length > 0) {
@@ -63,6 +84,7 @@ const UserEditForm = ({ userData, id }) => {
 
     useEffect(() => {
         getRoles();
+        getUser();
     }, []);
 
     const onSubmit = async (data: any) => {
@@ -73,7 +95,7 @@ const UserEditForm = ({ userData, id }) => {
     useEffect(() => {
         if (state?.success) {
             console.log(state);
-            setShowMsg("user updated sucessfully");
+            setShowMsg("User updated sucessfully");
         }
     }, [state]);
 
@@ -82,6 +104,7 @@ const UserEditForm = ({ userData, id }) => {
             {" "}
             <form onSubmit={handleSubmit(onSubmit)} className='border-2 border-black p-4 rounded-2xl'>
                 {showMsg && <p className='text-xl text-green-800'>{showMsg}</p>}
+                {permError && <p className='text-xl text-red-500'>{permError}</p>}
                 <div className='form-header flex justify-between p-4 border-b'>
                     <div className='title'>
                         <h1 className='text-3xl'>Edit User</h1>
