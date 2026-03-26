@@ -16,9 +16,9 @@ interface Props {
 }
 
 const Step4 = ({ prev, next, updateForm, formData, validate, errors, handleSubmit, formError }: Props) => {
-    const handleTemplateSubmit = async function (e: React.SubmitEvent<HTMLFormElement>): void {
+    const handleTemplateSubmit = async function (e: React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault();
-        console.log("formdata: ", formData)
+        console.log("formdata: ", formData);
         await handleSubmit();
     };
 
@@ -89,7 +89,7 @@ const Step4 = ({ prev, next, updateForm, formData, validate, errors, handleSubmi
                 <button
                     // onClick={handleSubmit}
                     type='submit'
-                    onClick={(e) => handleTemplateSubmit(e)}
+                    onClick={(e: any) => handleTemplateSubmit(e)}
                     className='btn continue py-2.5 pr-3 pl-3.5 ml-auto all-unset cursor-pointer text-center bg-[#263f94] border border-[#263f94] text-white box-border rounded-[40px] justify-center items-center gap-[6px] h-[38px] px-[14px] py-[10px] text-[14px] font-500 transition-all duration-200 inline-flex'>
                     Continue
                     <svg
@@ -113,148 +113,3 @@ const Step4 = ({ prev, next, updateForm, formData, validate, errors, handleSubmi
 };
 
 export default Step4;
-
-{
-    /* <div className='col'>
-                    <div className='card-box-inner border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
-                        <div className='card-box-block pre-use-template is-active block'>
-                            <div className='card-box-block_head'>
-                                <h4 className='h3 title'>Maintenance check template</h4>
-                            </div>
-                            <div className='card-box-block_body'>
-                                <div className='row'>
-                                    <div className='col'>
-                                        <div className='card-box-inner'>
-                                            <h4 className='h5 title mb-12'>Template</h4>
-                                            <div className='fancy-input select'>
-                                                <select
-                                                    id='maintenance_template_id'
-                                                    className='form-select'
-                                                    name='maintenance_template_id'>
-                                                    <option value=''>Select</option>
-                                                    <option value={2}>xzcxcz</option>
-                                                    <option value={1}>Default</option>
-                                                </select>
-                                                <label htmlFor='maintenance_template_id' className='form-label'>
-                                                    Select Template<span className='require'>*</span>
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='col'>
-                                        <div className='card-box-inner'>
-                                            <h3 className='h3 title mb-12'>All Questions</h3>
-                                            <div className='all-questions-wrapper'>
-                                                <h5 className='h5 title mb-12'>Template Questions</h5>
-                                                <ul className='template-questions'>
-                                                    <li>
-                                                        <div className='template-question-item'>
-                                                            <p className='question'>Fit for use?</p>
-                                                            <div className='template-question-item-type mt-12'>
-                                                                <div className='template-question-item-type_label mb-10'>
-                                                                    Question Type :
-                                                                </div>
-                                                                <div className='d-flex gap-16'>
-                                                                    <div className='d-flex gap-8'>
-                                                                        <input
-                                                                            id='yes'
-                                                                            className='custom-radio'
-                                                                            type='radio'
-                                                                            name='yesNo'
-                                                                        />
-                                                                        <label htmlFor='yes'>Yes</label>
-                                                                    </div>
-                                                                    <div className='d-flex gap-8'>
-                                                                        <input
-                                                                            id='no'
-                                                                            className='custom-radio'
-                                                                            type='radio'
-                                                                            name='yesNo'
-                                                                        />
-                                                                        <label htmlFor='no'>No</label>
-                                                                    </div>
-                                                                </div>
-                                                                <hr />
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                    <li>
-                                                        <div className='template-question-item'>
-                                                            <p className='question'>Remarks?</p>
-                                                            <div className='template-question-item-type mt-12'>
-                                                                <div className='template-question-item-type_label mb-10'>
-                                                                    Question Type :
-                                                                </div>
-                                                                <div className='fancy-input'>
-                                                                    <input
-                                                                        placeholder='Text field'
-                                                                        disabled=''
-                                                                        type='text'
-                                                                    />
-                                                                </div>
-                                                                <hr />
-                                                            </div>
-                                                        </div>
-                                                    </li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className='col'>
-                                        <div className='card-box-inner'>
-                                            <h4 className='h5 title mb-12'>Add Question</h4>
-                                            <div className='add-question-wrapper row gap-10'>
-                                                <div className='col'>
-                                                    <textarea
-                                                        id='question_box_maintenance'
-                                                        name='question_box_maintenance'
-                                                        className='form-textarea'
-                                                        placeholder='Type your question here'
-                                                        defaultValue={""}
-                                                    />
-                                                </div>
-                                                <div className='col'>
-                                                    <div className='fancy-input select'>
-                                                        <select
-                                                            id='question_type_maintenance'
-                                                            name='question_type_maintenance'
-                                                            className='form-select'>
-                                                            <option value='text'>Text Field</option>
-                                                            <option value='boolean'>Yes / No</option>
-                                                            <option value='select'>Select</option>
-                                                            <option value='checkbox'>Checkbox</option>
-                                                        </select>
-                                                        <label
-                                                            htmlFor='question_type_maintenance'
-                                                            className='form-label'>
-                                                            Select Question Type
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className='actions-btn mt-16'>
-                                                <button className='btn' type='button'>
-                                                    <svg
-                                                        xmlns='http://www.w3.org/2000/svg'
-                                                        width={20}
-                                                        height={20}
-                                                        viewBox='0 0 20 20'
-                                                        fill='none'>
-                                                        <path
-                                                            fillRule='evenodd'
-                                                            clipRule='evenodd'
-                                                            d='M10 4C10.355 4 10.6429 4.28782 10.6429 4.64286V9.35714H15.3571C15.7122 9.35714 16 9.64496 16 10C16 10.355 15.7122 10.6429 15.3571 10.6429H10.6429V15.3571C10.6429 15.7122 10.355 16 10 16C9.64496 16 9.35714 15.7122 9.35714 15.3571V10.6429H4.64286C4.28782 10.6429 4 10.355 4 10C4 9.64496 4.28782 9.35714 4.64286 9.35714H9.35714V4.64286C9.35714 4.28782 9.64496 4 10 4Z'
-                                                            fill='#ffffffff'
-                                                        />
-                                                    </svg>
-                                                    Add Question
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div> */
-}

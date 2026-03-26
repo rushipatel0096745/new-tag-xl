@@ -1,8 +1,28 @@
 "use server";
 
-import { encryptData } from "@/app/utils/encryption";
+import { decryptData, encryptData } from "@/app/utils/encryption";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+
+const getDataFromCookie = async () => {
+    const cookieStore = await cookies();
+    const cookie = cookieStore.get("super-user-session");
+    if (!cookie) return null;
+
+    const encryptedCompanySession = cookie.value;
+
+    try {
+        const decryptedComapnySession = decryptData(encryptedCompanySession);
+        return decryptedComapnySession;
+    } catch (err) {
+        return null;
+    }
+};
+
+export const getSuperUserData = async function () {
+    const userData = await getDataFromCookie()
+    return userData;
+};
 
 export const login = async function (prevState: any, formData: FormData) {
     const email = formData.get("email");
@@ -30,7 +50,7 @@ export const login = async function (prevState: any, formData: FormData) {
                 error: "Incorrect email or password",
             };
         }
-        console.log(result);
+        // console.log(result);
 
         const encryptedData = encryptData(result);
 
@@ -46,9 +66,8 @@ export const login = async function (prevState: any, formData: FormData) {
             success: true,
             error: "",
         };
-
     } catch (error) {
-        console.log("error message: ", error)
+        console.log("error message: ", error);
         return {
             success: false,
             error: "Failed to connect to the server",
@@ -61,4 +80,3 @@ export const logout = async () => {
     cookieStore.delete("super-user-session");
     redirect("/super-admin/login");
 };
-

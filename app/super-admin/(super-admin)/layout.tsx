@@ -2,6 +2,13 @@ import React from "react";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 
+import { Metadata } from "next";
+
+export const metadata: Metadata = {
+    title: "Super Admin",
+    description: "Super Admin",
+};
+
 const SuperAdminLayout = ({ children }: { children: React.ReactNode }) => {
     return (
         <div className='flex h-screen '>

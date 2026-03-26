@@ -28,5 +28,6 @@ export const getComapnyData = async () => {
 
 export const getCompanyUserData = async () => {
     const data = await getDataFromCookie();
+    // console.log("user data", data)
     return data?.user;
 };

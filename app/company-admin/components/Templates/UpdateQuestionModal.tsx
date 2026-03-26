@@ -3,9 +3,9 @@ import { useState } from "react";
 type QuestionType = "boolean" | "text" | "checkbox" | "select";
 
 type Question = {
-    id?: number;
+    id: number;
     question: string;
-    type: string;
+    type: QuestionType;
     options?: string[] | null;
 };
 
@@ -56,7 +56,6 @@ export const UpdateQuestionModal = ({ question, onClose, onSave }: UpdateModalPr
         });
     }
 
-    // Close on backdrop click
     function handleBackdrop(e: React.MouseEvent<HTMLDivElement>) {
         if (e.target === e.currentTarget) onClose();
     }
@@ -66,7 +65,6 @@ export const UpdateQuestionModal = ({ question, onClose, onSave }: UpdateModalPr
             className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm'
             onClick={handleBackdrop}>
             <div className='bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden animate-fade-in'>
-                {/* Modal Header */}
                 <div className='flex items-center justify-between px-6 py-4 border-b border-gray-100'>
                     <h3 className='text-lg font-semibold text-gray-800'>Update Question</h3>
                     <button
@@ -77,9 +75,7 @@ export const UpdateQuestionModal = ({ question, onClose, onSave }: UpdateModalPr
                     </button>
                 </div>
 
-                {/* Modal Body */}
                 <div className='px-6 py-5 flex flex-col gap-5'>
-                    {/* Question Text */}
                     <div className='flex flex-col gap-1.5'>
                         <label className='text-sm font-medium text-gray-700'>Question Text</label>
                         <textarea
@@ -91,14 +87,13 @@ export const UpdateQuestionModal = ({ question, onClose, onSave }: UpdateModalPr
                         />
                     </div>
 
-                    {/* Question Type */}
                     <div className='flex flex-col gap-1.5'>
                         <label className='text-sm font-medium text-gray-700'>Question Type</label>
                         <select
                             className='form-input'
                             value={type}
                             onChange={(e) => {
-                                setType(e.target.value);
+                                setType(e.target.value as QuestionType);
                                 setOptions([]);
                             }}>
                             <option value=''>Select the question type</option>
@@ -109,13 +104,12 @@ export const UpdateQuestionModal = ({ question, onClose, onSave }: UpdateModalPr
                         </select>
                     </div>
 
-                    {/* Options (only for select / checkbox) */}
                     {needsOptions && (
                         <div className='flex flex-col gap-3'>
                             <label className='text-sm font-medium text-gray-700'>Options</label>
 
                             {options.length === 0 && (
-                                <p className='text-xs text-gray-400 italic'>No options added yet.</p>
+                                <p className='text-xs text-gray-400'>Add options</p>
                             )}
 
                             {options.map((opt, index) => (
@@ -135,7 +129,6 @@ export const UpdateQuestionModal = ({ question, onClose, onSave }: UpdateModalPr
                                 </div>
                             ))}
 
-                            {/* Add new option row */}
                             <div className='flex gap-2 items-center'>
                                 <input
                                     type='text'
@@ -156,7 +149,6 @@ export const UpdateQuestionModal = ({ question, onClose, onSave }: UpdateModalPr
                     )}
                 </div>
 
-                {/* Modal Footer */}
                 <div className='flex justify-end gap-2 px-6 py-4 border-t border-gray-100 bg-gray-50'>
                     <button
                         type='button'

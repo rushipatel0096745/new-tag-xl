@@ -7,10 +7,12 @@ import UpdateQuestionModal from "../UpdateQuestionModal";
 import { MaintenaceEditTemplate } from "@/app/company-admin/(admin)/template-master/maintenance-check-template/edit/[id]/page";
 import { GetMaintenanceTemplate } from "@/app/services/company-admin/maintenance_template";
 
+type QuestionType = "boolean" | "text" | "checkbox" | "select";
+
 type Question = {
-    id?: number;
+    id: number;
     question: string;
-    type: string;
+    type: QuestionType;
     options?: string[] | null;
 };
 
@@ -120,7 +122,7 @@ const MaintenanceTemplateEdit = ({ id }: Props) => {
         const questionObj: Question = {
             id: Date.now(),
             question: maintenanceQuestionText,
-            type: maintenanceQuestionType,
+            type: maintenanceQuestionType as QuestionType,
             options:
                 maintenanceQuestionType === "boolean" || maintenanceQuestionType === "text"
                     ? null

@@ -3,9 +3,30 @@ import {
     getPreuseTemplateQuestions,
     PreUseTemplate,
 } from "@/app/services/company-admin/template-actions";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import BooleanInput from "./BooleanInput";
 import TextInput from "./TextInput";
+import UpdateQuestionModal from "../../Templates/UpdateQuestionModal";
+
+type QuestionType = "boolean" | "text" | "checkbox" | "select";
+
+type Question = {
+    id: number;
+    question: string;
+    type: QuestionType;
+    options?: string[] | null;
+};
+
+interface OptionMap {
+    [key: string]: string;
+}
+
+type FormattedQuestion = {
+    id?: number;
+    question: string;
+    type: string;
+    multiselect_value?: OptionMap;
+};
 
 interface Props {
     updateForm: (name: string, value: any) => void;
@@ -18,6 +39,112 @@ const PreuseTemplate = ({ updateForm, errors }: Props) => {
     const [selectOption, setSelectOption] = useState<string>();
 
     const [questions, setQuestions] = useState<any>([]);
+
+    const [newPreuseQuestions, setNewPreuseQuestions] = useState<Question[]>([]);
+    const [preuseQuestionText, setPreuseQuestionText] = useState("");
+    const [preuseQuestionType, setPreuseQuestionType] = useState("");
+    const [preuseQuestionOptions, setPreuseQuestionOptions] = useState<string[]>([]);
+    const [preuseQuestionOption, setPreuseQuestionOption] = useState("");
+
+    const dragItem = useRef<number | null>(null);
+    const dragOverItem = useRef<number | null>(null);
+
+    const questionTypes: Record<string, string> = {
+        boolean: "Yes/No",
+        text: "Textfield",
+        checkbox: "Checkbox",
+        select: "Select",
+    };
+
+    function handleDragSort() {
+        const items = [...newPreuseQuestions];
+        const draggedItem = items.splice(dragItem.current!, 1)[0];
+        items.splice(dragOverItem.current!, 0, draggedItem);
+        dragItem.current = null;
+        dragOverItem.current = null;
+        setNewPreuseQuestions(items);
+    }
+
+    const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
+    const [error, setError] = useState<Record<string, string>>({});
+
+    // Save updated question from modal
+    function handleSaveUpdatedQuestion(updated: Question) {
+        setNewPreuseQuestions((prev) => prev.map((q) => (q.id === updated.id ? updated : q)));
+        setEditingQuestion(null);
+    }
+
+    useEffect(() => {
+        console.log("new maintenace questions: ", newPreuseQuestions);
+        const formattedQuestions = formatQuestionBody(newPreuseQuestions)
+        updateForm("asset_pre_use_questions", JSON.stringify(formattedQuestions));
+    }, [newPreuseQuestions]);
+
+    function handlePreuseNewAddQuestion() {
+        if (!preuseQuestionText.trim()) return;
+        if (!preuseQuestionType) return;
+
+        const questionObj: Question = {
+            id: Date.now(),
+            question: preuseQuestionText,
+            type: preuseQuestionType as QuestionType,
+            options: preuseQuestionType === "boolean" || preuseQuestionType === "text" ? null : preuseQuestionOptions,
+        };
+
+        setNewPreuseQuestions((prev) => [...prev, questionObj]);
+
+        // reset question
+        setPreuseQuestionText("");
+        setPreuseQuestionType("text");
+        setPreuseQuestionOptions([]);
+        setPreuseQuestionOption("");
+    }
+
+    function handlePreuseQuestionOptions() {
+        if (!preuseQuestionOption.trim()) return;
+
+        setPreuseQuestionOptions((prev) => [...prev, preuseQuestionOption]);
+        setPreuseQuestionOption("");
+    }
+
+    function deleteNewPreuseQuestion(id: number) {
+        setNewPreuseQuestions(newPreuseQuestions.filter((q) => q.id !== id));
+    }
+
+    function handleDeletePreuseOption(index: number) {
+        setPreuseQuestionOptions((prev) => prev.filter((_, i) => i !== index));
+    }
+
+    function handleUpdatePreuseOption(value: string, index: number) {
+        const updated = [...preuseQuestionOptions];
+        updated[index] = value;
+        setPreuseQuestionOptions(updated);
+    }
+
+    function formatQuestionBody(questions: Question[]): FormattedQuestion[] {
+        const newQuestions = questions.map((q) => {
+            const newQuestion: FormattedQuestion = {
+                question: q.question,
+                type: q.type,
+            };
+
+            if (q.type === "select" || q.type === "checkbox") {
+                const multiselect_value: Record<string, string> = {};
+
+                if (q.options) {
+                    q.options.forEach((option: string) => {
+                        multiselect_value[option] = option;
+                    });
+                }
+
+                newQuestion.multiselect_value = multiselect_value;
+            }
+
+            return newQuestion;
+        });
+
+        return newQuestions;
+    }
 
     const questionRenderer = function (questionType: string): React.ReactNode {
         // console.log("question renderer called");
@@ -58,139 +185,249 @@ const PreuseTemplate = ({ updateForm, errors }: Props) => {
     }, []);
 
     return (
-        <div className='card-box-inner border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
-            {/* <pre>{JSON.stringify(questions, null, 2)}</pre> */}
-
-            <div className='card-box-block pre-use-template is-active block'>
-                <div className='card-box-block_head mb-4'>
-                    <h4 className='h3 title text-[18px] font-semibold leading-6'>Pre use check template</h4>
-                </div>
-                <div className='card-box-block_body'>
-                    <div className='row flex gap-4 w-full flex-wrap'>
-                        <div className='col w-full'>
-                            <div className='card-box-inner  border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
-                                <h4 className='h5 title mb-3 text-[14px] font-semibold leading-6'>Template</h4>
-                                <div className='fancy-input select relative'>
-                                    <select
-                                        id='pre_use_template_id'
-                                        name='pre_use_template_id'
-                                        onChange={(e) => {
-                                            updateForm("pre_use_template_id", e.target.value);
-                                            handleSelection(e);
-                                        }}
-                                        // onChange={handleSelection}
-                                        className='form-select text-[#17181a] box-border bg-[#f5f6fa] border border-[#efefef] rounded-[10px] w-full h-[44px] pt-[18px] px-[14px] pb-[8px] font-sans text-[14px] font-medium'>
-                                        <option value=''>Select</option>
-                                        {list.map((item) => (
-                                            <option value={item.id} key={item.id}>
-                                                {item.title}
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <label
-                                        htmlFor='pre_use_template_id'
-                                        className='form-label text-[#676767] pointer-events-none bg-transparent px-[2px] text-[14px] transition-all duration-200 absolute top-1/2 left-[12px] -translate-y-1/2'>
-                                        Select Template<span className='require'>*</span>
-                                    </label>
-                                    {errors.pre_use_template_id && (
-                                        <div className='text-red-500'>
-                                            <p>{errors.pre_use_template_id}</p>
-                                        </div>
-                                    )}
+        <>
+            {/* Update Modal */}
+            {editingQuestion && (
+                <UpdateQuestionModal
+                    question={editingQuestion}
+                    onClose={() => setEditingQuestion(null)}
+                    onSave={handleSaveUpdatedQuestion}
+                />
+            )}
+            <div className='card-box-inner border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
+                <div className='card-box-block pre-use-template is-active block'>
+                    <div className='card-box-block_head mb-4'>
+                        <h4 className='h3 title text-[18px] font-semibold leading-6'>Pre use check template</h4>
+                    </div>
+                    <div className='card-box-block_body'>
+                        <div className='row flex gap-4 w-full flex-wrap'>
+                            <div className='col w-full'>
+                                <div className='card-box-inner  border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
+                                    <h4 className='h5 title mb-3 text-[14px] font-semibold leading-6'>Template</h4>
+                                    <div className='fancy-input select relative'>
+                                        <select
+                                            id='pre_use_template_id'
+                                            name='pre_use_template_id'
+                                            onChange={(e) => {
+                                                updateForm("pre_use_template_id", e.target.value);
+                                                handleSelection(e);
+                                            }}
+                                            // onChange={handleSelection}
+                                            className='form-select text-[#17181a] box-border bg-[#f5f6fa] border border-[#efefef] rounded-[10px] w-full h-[44px] pt-[18px] px-[14px] pb-[8px] font-sans text-[14px] font-medium'>
+                                            <option value=''>Select</option>
+                                            {list.map((item) => (
+                                                <option value={item.id} key={item.id}>
+                                                    {item.title}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <label
+                                            htmlFor='pre_use_template_id'
+                                            className='form-label text-[#676767] pointer-events-none bg-transparent px-[2px] text-[14px] transition-all duration-200 absolute top-1/2 left-[12px] -translate-y-1/2'>
+                                            Select Template<span className='require'>*</span>
+                                        </label>
+                                        {errors.pre_use_template_id && (
+                                            <div className='text-red-500'>
+                                                <p>{errors.pre_use_template_id}</p>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                        <div className='col w-full'>
-                            {questions.length !== 0 && (
-                                <div className='card-box-inner border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
-                                    <h3 className='h3 title mb-4 text-[18px] font-semibold leading-6'>All Questions</h3>
+                            <div className='col w-full'>
+                                {questions.length !== 0 && (
+                                    <div className='card-box-inner border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
+                                        <h3 className='h3 title mb-4 text-[18px] font-semibold leading-6'>
+                                            All Questions
+                                        </h3>
 
-                                    <div className='all-questions-wrapper'>
-                                        <h5 className='h5 title mb-3 text-[14px] font-semibold leading-6'>
-                                            Template Questions
-                                        </h5>
+                                        <div className='all-questions-wrapper'>
+                                            <h5 className='h5 title mb-3 text-[14px] font-semibold leading-6'>
+                                                Template Questions
+                                            </h5>
 
-                                        <ul className='template-questions bg-[#f5f6fa] border border-solid border-[#efefef] px-4 pt-4 pl-8 flex flex-col gap-[6px] list-none'>
-                                            {questions.map((q: any) => (
-                                                <li key={q.id} className='list-item'>
-                                                    <div className='template-question-item w-full'>
-                                                        <p className='question font-semibold'>{q.question}</p>
+                                            <ul className='template-questions bg-[#f5f6fa] border border-solid border-[#efefef] px-4 pt-4 pl-8 flex flex-col gap-[6px] list-none'>
+                                                {questions.map((q: any) => (
+                                                    <li key={q.id} className='list-item'>
+                                                        <div className='template-question-item w-full'>
+                                                            <p className='question font-semibold'>{q.question}</p>
 
-                                                        <div className='template-question-item-type mt-4'>
-                                                            <div className='template-question-item-type_label mb-2.5 text-[#797979]'>
-                                                                Question Type :
+                                                            <div className='template-question-item-type mt-4'>
+                                                                <div className='template-question-item-type_label mb-2.5 text-[#797979]'>
+                                                                    Question Type :
+                                                                </div>
+
+                                                                {questionRenderer(q.type)}
+
+                                                                <hr className='border-0 m-4 border-t border-solid border-[#ebebeb]' />
                                                             </div>
-
-                                                            {questionRenderer(q.type)}
-
-                                                            <hr className='border-0 m-4 border-t border-solid border-[#ebebeb]' />
                                                         </div>
-                                                    </div>
-                                                </li>
-                                            ))}
-                                        </ul>
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                        <div className='col w-full'>
-                            <div className='card-box-inner  border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
-                                <h4 className='h5 title mb-3 text-[14px] font-semibold leading-6'>Add Question</h4>
-                                <div className='add-question-wrapper row flex gap-2.5 w-full flex-wrap '>
-                                    <div className='col w-full'>
-                                        <textarea
-                                            id='question_box_pre'
-                                            name='question_box'
-                                            className='form-textarea min-h-25 align-bottom bg-[#f5f6fa] border border-solid border-[#efefef] rounded-[10px] w-full text-[14px] py-2.5 px-3'
-                                            placeholder='Type your question here'
-                                            defaultValue={""}
-                                        />
-                                    </div>
-                                    <div className='col w-full'>
-                                        <div className='fancy-input select relative'>
-                                            <select
-                                                id='question_type_pre'
-                                                className='form-select text-[#17181a] box-border bg-[#f5f6fa] border border-[#efefef] rounded-[10px] w-full h-[44px] pt-[18px] px-[14px] pb-[8px] font-sans text-[14px] font-medium'>
-                                                <option value='text'>Text Field</option>
-                                                <option value='boolean'>Yes / No</option>
-                                                <option value='select'>Select</option>
-                                                <option value='checkbox'>Checkbox</option>
-                                            </select>
-                                            <label
-                                                htmlFor='question_type_pre'
-                                                className='form-label text-[#676767] pointer-events-none bg-transparent px-[2px] text-[14px] transition-all duration-200 absolute top-1/2 left-[12px] -translate-y-1/2'>
-                                                Select Question Type
-                                            </label>
+                                                    </li>
+                                                ))}
+                                            </ul>
                                         </div>
                                     </div>
+                                )}
+                            </div>
+
+                            {newPreuseQuestions.length !== 0 && (
+                                <div className='selected-pre-use-quetions  border-3 border-solid border-[#f5f6fa] p-5.5 flex flex-wrap w-full'>
+                                    <div className='title w-full'>
+                                        <h5>New Asset-Specific Maintenace Template Questions</h5>
+                                    </div>
+
+                                    {newPreuseQuestions.map((question, index) => {
+                                        const question_type = questionTypes[question.type];
+
+                                        return (
+                                            <div
+                                                className='selected-questions w-full'
+                                                key={question.id}
+                                                draggable
+                                                onDragStart={() => (dragItem.current = index)}
+                                                onDragEnter={() => (dragOverItem.current = index)}
+                                                onDragEnd={handleDragSort}
+                                                onDragOver={(e) => e.preventDefault()}
+                                                style={{ cursor: "grab" }}>
+                                                <div className='question-content flex justify-between p-2.5 border rounded-xl border-solid border-gray-400'>
+                                                    <div className='question-text'>
+                                                        <p>{question.question}</p>
+                                                    </div>
+                                                    <div className='question-type gap-2 flex justify-between'>
+                                                        <p className='text-black'>
+                                                            <span className='text-gray-500'>Type: </span>
+                                                            {question_type}
+                                                        </p>
+                                                        <div className='action-btn flex justify-between gap-1'>
+                                                            <button
+                                                                type='button'
+                                                                onClick={() => setEditingQuestion(question)}
+                                                                className='bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 text-sm rounded'>
+                                                                Update
+                                                            </button>
+                                                            <button
+                                                                type='button'
+                                                                onClick={() => deleteNewPreuseQuestion(question.id!)}
+                                                                className='bg-red-500 hover:bg-red-600 text-white py-1 px-2 text-sm rounded'>
+                                                                Delete
+                                                            </button>
+                                                            <span className='text-gray-400 mr-2 select-none'>⠿</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
-                                <div className='actions-btn mt-4 flex items-center gap-2'>
-                                    <button
-                                        className='inline-flex items-center justify-center gap-[6px] h-[38px] px-[14px] py-[10px] cursor-pointer text-center bg-[#263f94] border border-[#263f94] text-[white] box-border rounded-[40px] text-[14px] font-medium transition-all duration-200 focus:outline-none'
-                                        type='button'>
-                                        <svg
-                                            xmlns='http://www.w3.org/2000/svg'
-                                            className='align-bottom'
-                                            width={20}
-                                            height={20}
-                                            viewBox='0 0 20 20'
-                                            fill='none'>
-                                            <path
-                                                fillRule='evenodd'
-                                                clipRule='evenodd'
-                                                d='M10 4C10.355 4 10.6429 4.28782 10.6429 4.64286V9.35714H15.3571C15.7122 9.35714 16 9.64496 16 10C16 10.355 15.7122 10.6429 15.3571 10.6429H10.6429V15.3571C10.6429 15.7122 10.355 16 10 16C9.64496 16 9.35714 15.7122 9.35714 15.3571V10.6429H4.64286C4.28782 10.6429 4 10.355 4 10C4 9.64496 4.28782 9.35714 4.64286 9.35714H9.35714V4.64286C9.35714 4.28782 9.64496 4 10 4Z'
-                                                fill='#ffffffff'
+                            )}
+
+                            <div className='col w-full'>
+                                <div className='card-box-inner  border-3 solid border-[#f5f6fa] rounded-[18px] p-5.5'>
+                                    <h4 className='h5 title mb-3 text-[14px] font-semibold leading-6'>Add Question</h4>
+                                    <div className='add-question-wrapper row flex gap-2.5 w-full flex-wrap '>
+                                        <div className='col w-full'>
+                                            <textarea
+                                                value={preuseQuestionText}
+                                                id='question_box_pre'
+                                                name='question_box'
+                                                className='form-textarea min-h-25 align-bottom bg-[#f5f6fa] border border-solid border-[#efefef] rounded-[10px] w-full text-[14px] py-2.5 px-3'
+                                                placeholder='Type your question here'
+                                                onChange={(e) => setPreuseQuestionText(e.target.value)}
                                             />
-                                        </svg>
-                                        Add Question
-                                    </button>
+                                        </div>
+                                        <div className='col w-full'>
+                                            <div className='fancy-input select relative'>
+                                                <select
+                                                    id='question_type_pre'
+                                                    value={preuseQuestionType}
+                                                    onChange={(e) => setPreuseQuestionType(e.target.value)}
+                                                    className='form-select text-[#17181a] box-border bg-[#f5f6fa] border border-[#efefef] rounded-[10px] w-full h-[44px] pt-[18px] px-[14px] pb-[8px] font-sans text-[14px] font-medium'>
+                                                    <option value=''>Select the type</option>
+                                                    <option value='text'>Text Field</option>
+                                                    <option value='boolean'>Yes / No</option>
+                                                    <option value='select'>Select</option>
+                                                    <option value='checkbox'>Checkbox</option>
+                                                </select>
+                                                <label
+                                                    htmlFor='question_type_pre'
+                                                    className='form-label text-[#676767] pointer-events-none bg-transparent px-[2px] text-[14px] transition-all duration-200 absolute top-1/2 left-[12px] -translate-y-1/2'>
+                                                    Select Question Type
+                                                </label>
+                                            </div>
+                                            {(preuseQuestionType === "select" || preuseQuestionType === "checkbox") && (
+                                                <>
+                                                    {preuseQuestionOptions.map((option, index) => (
+                                                        <div className='select-options flex gap-2 mt-4' key={index}>
+                                                            <input
+                                                                type='text'
+                                                                className='form-input'
+                                                                value={option}
+                                                                onChange={(e) =>
+                                                                    handleUpdatePreuseOption(e.target.value, index)
+                                                                }
+                                                            />
+
+                                                            <button
+                                                                type='button'
+                                                                onClick={() => handleDeletePreuseOption(index)}
+                                                                className='bg-red-500 text-white py-1 px-2 text-sm rounded'>
+                                                                Delete
+                                                            </button>
+                                                        </div>
+                                                    ))}
+
+                                                    <div className='flex gap-2 mt-4'>
+                                                        <input
+                                                            type='text'
+                                                            className='form-input'
+                                                            value={preuseQuestionOption}
+                                                            onChange={(e) => setPreuseQuestionOption(e.target.value)}
+                                                            placeholder='Add option'
+                                                        />
+
+                                                        <button
+                                                            type='button'
+                                                            onClick={handlePreuseQuestionOptions}
+                                                            className='bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 text-sm rounded'>
+                                                            Add Option
+                                                        </button>
+                                                    </div>
+                                                </>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className='actions-btn mt-4 flex items-center gap-2'>
+                                        <button
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                handlePreuseNewAddQuestion();
+                                            }}
+                                            className='inline-flex items-center justify-center gap-[6px] h-[38px] px-[14px] py-[10px] cursor-pointer text-center bg-[#263f94] border border-[#263f94] text-[white] box-border rounded-[40px] text-[14px] font-medium transition-all duration-200 focus:outline-none'
+                                            type='button'>
+                                            <svg
+                                                xmlns='http://www.w3.org/2000/svg'
+                                                className='align-bottom'
+                                                width={20}
+                                                height={20}
+                                                viewBox='0 0 20 20'
+                                                fill='none'>
+                                                <path
+                                                    fillRule='evenodd'
+                                                    clipRule='evenodd'
+                                                    d='M10 4C10.355 4 10.6429 4.28782 10.6429 4.64286V9.35714H15.3571C15.7122 9.35714 16 9.64496 16 10C16 10.355 15.7122 10.6429 15.3571 10.6429H10.6429V15.3571C10.6429 15.7122 10.355 16 10 16C9.64496 16 9.35714 15.7122 9.35714 15.3571V10.6429H4.64286C4.28782 10.6429 4 10.355 4 10C4 9.64496 4.28782 9.35714 4.64286 9.35714H9.35714V4.64286C9.35714 4.28782 9.64496 4 10 4Z'
+                                                    fill='#ffffffff'
+                                                />
+                                            </svg>
+                                            Add Question
+                                        </button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 

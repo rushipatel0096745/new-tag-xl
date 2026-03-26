@@ -24,7 +24,7 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
 
     const [selectOption, setSelectOption] = useState<string>();
 
-    function handleSelectChange(e) {
+    function handleSelectChange(e: any) {
         if (!formData.third_party_start_date) return;
         const value = e.target.value;
 
@@ -39,6 +39,7 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
             const newDate = new Date(startDate);
 
             newDate.setMonth(startDate.getMonth() + Number(value));
+            newDate.setDate(newDate.getDate() - 1); 
 
             const newFormattedDate = newDate.toISOString().split("T")[0];
 
@@ -95,7 +96,7 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
                                             id='oem_certificate'
                                             type='file'
                                             name='oem_certificate'
-                                            onChange={(e) => updateForm("oem_certificate", e.target.files[0])}
+                                            onChange={(e) => updateForm("oem_certificate", e.target.files && e.target.files[0])}
                                         />
                                         <div className='upload-icon bg-[#d7e0f9] rounded-[6px] justify-center items-center w-[40px] h-[40px] transition-colors duration-200 flex'>
                                             <svg
@@ -164,7 +165,7 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
                                         id='third_party_certificate'
                                         type='file'
                                         name='third_party_certificate'
-                                        onChange={(e) => updateForm("third_party_certificate", e.target.files[0])}
+                                        onChange={(e) => updateForm("third_party_certificate", e.target.files && e.target.files[0])}
                                     />
                                     <div className='upload-icon bg-[#d7e0f9] rounded-[6px] justify-center items-center w-[40px] h-[40px] transition-colors duration-200 flex'>
                                         <svg

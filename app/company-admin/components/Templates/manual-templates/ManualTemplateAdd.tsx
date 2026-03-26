@@ -80,7 +80,7 @@ const ManualTemplateAdd = () => {
     return (
         <div className='main flex flex-col p-6 bg-white rounded-lg shadow-sm'>
             <div className='header flex items-center justify-between mb-6'>
-                <h4 className='text-xl font-semibold text-gray-800'>Add Maintenance Template</h4>
+                <h4 className='text-xl font-semibold text-gray-800'>Add Manual Template</h4>
 
                 {showMsg && <p className='text-green-600'>{showMsg}</p>}
                 {permitted && <p className='text-red-500'>{permitted}</p>}

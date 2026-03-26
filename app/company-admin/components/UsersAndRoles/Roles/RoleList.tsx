@@ -12,7 +12,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
-import { GetRoleList } from "@/app/services/company-admin/roles";
+import { DeleteRole, GetRoleList } from "@/app/services/company-admin/roles";
 
 interface Props {
     tempList: Role[];
@@ -27,12 +27,10 @@ const RoleList = ({ tempList }: Props) => {
     const [loading, setLoading] = useState(true);
     const [total, setTotal] = useState(0);
 
-    const [permitted, setPermitted] = useState<string>();
     const [permError, setPermError] = useState("");
     const [sessionId, setSessionId] = useState("");
     const [companyId, setCompanyId] = useState("");
     const [userRole, setUserRole] = useState<string[]>([]);
-    const [isMounted, setIsMounted] = useState(false);
     const [is_super_admin, setIsSuperAdmin] = useState(false);
 
     const router = useRouter();
@@ -105,35 +103,23 @@ const RoleList = ({ tempList }: Props) => {
     }
 
     async function deleteRole(id: number | string) {
-        if (checkPermission("role", "delete")) {
-            setPermError("Not allowed to delete!!");
-            return;
-        }
-
         try {
-            const result = await clientFetch("/company/role/delete/" + Number(id), {
-                method: "DELETE",
-                headers: {
-                    "X-Session-ID": sessionId,
-                    "X-Company-ID": companyId,
-                    "Content-Type": "application/json",
-                },
-            });
+            const result = await DeleteRole(Number(id));
 
             if (result.has_error && result.error_code == "PERMISSION_DENIED") {
-                setPermitted(result.message || "Permission denied to delete");
+                setPermError(result.message || "Permission denied to delete");
                 return;
             }
 
             if (result?.has_error) {
-                console.error("Template deletion failed:", result.message);
+                console.error("Role deletion failed:", result.message);
                 return;
             }
 
             setList((prev) => prev.filter((item) => item.id !== id));
-            setShowMsg("Template deleted successfully");
+            setShowMsg("Role deleted successfully");
         } catch (error) {
-            console.error("Delete template error:", error);
+            console.error("Delete role error:", error);
         }
     }
 

@@ -85,8 +85,8 @@ const ManualTemplateEdit = ({ initialData }: Props) => {
 
     async function updateTemplate(data: any) {
         try {
-            const result = await clientFetch("/company/manual-template/create", {
-                method: "POST",
+            const result = await clientFetch("/company/manual-template/update/"+initialData.id, {
+                method: "PUT",
                 headers: {
                     "X-Session-ID": sessionId,
                     "X-Company-ID": companyId,
@@ -146,7 +146,7 @@ const ManualTemplateEdit = ({ initialData }: Props) => {
     return (
         <div className='main flex flex-col p-6 bg-white rounded-lg shadow-sm'>
             <div className='header flex items-center justify-between mb-6'>
-                <h4 className='text-xl font-semibold text-gray-800'>Edit Maintenance Template</h4>
+                <h4 className='text-xl font-semibold text-gray-800'>Edit Manual Template</h4>
 
                 {showMsg && <p className='text-green-600'>{showMsg}</p>}
                 {permitted && <p className='text-red-500'>{permitted}</p>}

@@ -88,7 +88,7 @@ const EditTagPage = async ({ params }: { params: Promise<{ id: string }> }) => {
                         <Suspense fallback={<p>Loading....</p>}>
                             <EditTag
                                 id={Number(id)}
-                                initialData={tag}
+                                initialTagData={tag}
                                 action={updateTag}
                                 asset={asset}
                                 assetList={assetList}

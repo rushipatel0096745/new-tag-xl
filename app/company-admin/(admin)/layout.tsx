@@ -2,6 +2,12 @@ import React from "react";
 import Sidebar from "../components/Sidebar";
 import Header from "../components/Header";
 
+import { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: 'Company Admin',
+  description: 'Company Admin',
+};
 
 const CompanyAdminLayout = ({ children }: { children: React.ReactNode }) => {
     return (

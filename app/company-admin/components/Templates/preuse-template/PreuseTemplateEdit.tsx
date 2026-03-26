@@ -7,10 +7,12 @@ import UpdateQuestionModal from "../UpdateQuestionModal";
 import { PreuseEditTemplate } from "@/app/company-admin/(admin)/template-master/pre-use-check-template/edit/[id]/page";
 import { GetPreUseTemplate } from "@/app/services/company-admin/preuse_template";
 
+type QuestionType = "boolean" | "text" | "checkbox" | "select" ;
+
 type Question = {
-    id?: number;
+    id: number;
     question: string;
-    type: string;
+    type: QuestionType;
     options?: string[] | null;
 };
 
@@ -115,7 +117,7 @@ const PreuseTemplateEdit = ({ id }: Props) => {
         const questionObj: Question = {
             id: Date.now(),
             question: maintenanceQuestionText,
-            type: maintenanceQuestionType,
+            type: maintenanceQuestionType as QuestionType,
             options:
                 maintenanceQuestionType === "boolean" || maintenanceQuestionType === "text"
                     ? null

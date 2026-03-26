@@ -8,9 +8,9 @@ import UpdateQuestionModal from "../UpdateQuestionModal";
 type QuestionType = "boolean" | "text" | "checkbox" | "select" ;
 
 type Question = {
-    id?: number;
+    id: number;
     question: string;
-    type: string;
+    type: QuestionType;
     options?: string[] | null;
 };
 

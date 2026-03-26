@@ -22,12 +22,18 @@ interface Props {
 
 type QuestionType = "boolean" | "text" | "checkbox" | "select";
 
-type Question = {
+interface Template {
+    id: number;
+    title: string;
+    questions: Question[];
+}
+
+interface Question {
     id: number;
     question: string;
     type: QuestionType;
     options?: string[] | null;
-};
+}
 
 type QuestionTypes = {
     boolean: string;
@@ -36,13 +42,20 @@ type QuestionTypes = {
     checkbox: string;
 };
 
+interface FormattedQuestion {
+    id: number;
+    question: string;
+    type: QuestionType;
+    multiselect_value?: Record<string, string>;
+}
+
 const EditAsset = ({ initialAssetData, id }: Props) => {
     // console.log(initialData)
     const [initialData, setInitialData] = useState<AssetData | undefined>(initialAssetData);
     const [loactionList, setLocationList] = useState<Location[]>([]);
-    const [manualTemplateList, setManualTemplateList] = useState([]);
-    const [preuseTemplateList, setPreUseTemplateList] = useState([]);
-    const [maintenanceTemplateList, setMaintenanceTemplateList] = useState([]);
+    const [manualTemplateList, setManualTemplateList] = useState<Template[]>([]);
+    const [preuseTemplateList, setPreUseTemplateList] = useState<Template[]>([]);
+    const [maintenanceTemplateList, setMaintenanceTemplateList] = useState<Template[]>([]);
 
     const [preuseTemplateQuestions, setPreuseTemplateQuestions] = useState<Question[] | undefined>([]);
     const [maintenanceTemplateQuestions, setMaintenanceTemplateQuestions] = useState<Question[] | undefined>([]);
@@ -129,7 +142,7 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
         // console.log("pre use id: ", preuseTemplateId)
         const preUseTemplateObject = preuseTemplateList.find((tmp: any) => tmp.id === Number(id));
         if (preUseTemplateObject) {
-            setPreuseTemplateQuestions(preUseTemplateObject.questions);
+            setPreuseTemplateQuestions(preUseTemplateObject.questions as Question[]);
         } else {
             setPreuseTemplateQuestions([]);
         }
@@ -148,8 +161,8 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
         // console.log(typeof initialData.manual_template.id);
         console.log(typeof manualTemplateId);
         getData();
-        setPreuseTemplateQuestions(initialData?.pre_use_template?.questions);
-        setMaintenanceTemplateQuestions(initialData?.maintenance_template?.questions);
+        setPreuseTemplateQuestions(initialData?.pre_use_template?.questions as Question[]);
+        setMaintenanceTemplateQuestions(initialData?.maintenance_template?.questions as Question[]);
         console.log("preuse id: ", preuseTemplateId);
     }, []);
 
@@ -257,7 +270,7 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
         const questionObj: Question = {
             id: Date.now(),
             question: preuseQuestionText,
-            type: preuseQuestionType,
+            type: preuseQuestionType as QuestionType,
             options: preuseQuestionType === "boolean" || preuseQuestionType === "text" ? null : preuseQuestionOptions,
         };
 
@@ -295,6 +308,12 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
 
     async function handleSubmit() {
         setShowMsg("");
+
+        if (!initialData?.id) {
+            setFormError("Asset ID is missing");
+            return;
+        }
+
         if (!validate()) {
             return;
         } else {
@@ -334,11 +353,11 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
 
     function formatQuestionBody(questions: Question[]) {
         const newQuestions = questions.map((q) => {
-            const newQuestion = {};
+            const newQuestion = {} as FormattedQuestion;
             newQuestion.question = q.question;
             newQuestion.type = q.type;
             if (q.type === "select" || q.type === "checkbox") {
-                let multiselect_value = {};
+                let multiselect_value = {} as Record<string, string>;
                 if (q.options) {
                     q.options.map((option) => {
                         multiselect_value[option] = option;
@@ -443,7 +462,7 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                 className='form-input'
                                 value={location}
                                 name='location_id'
-                                onChange={(e) => setLocation(e.target.value)}>
+                                onChange={(e) => setLocation(Number(e.target.value))}>
                                 {loactionList.map((location) => (
                                     <option value={location.id} key={location.id}>
                                         {location.name}
@@ -472,7 +491,7 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                 className='form-input'
                                 value={status}
                                 name='status'
-                                onChange={(e) => setStatus(e.target.value)}>
+                                onChange={(e) => setStatus(Number(e.target.value))}>
                                 <option value='1'>Active</option>
                                 <option value='0'>Inactive</option>
                             </select>
@@ -490,7 +509,7 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                         type='file'
                                         className='hidden'
                                         name='image'
-                                        onChange={(e) => setImage(e.target.files[0])}
+                                        onChange={(e) => setImage(e.target.files && e.target.files[0])}
                                     />
 
                                     <span className='text-sm font-medium'>Upload Image</span>
@@ -514,7 +533,7 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                         type='file'
                                         className='hidden'
                                         name='third_party_certificate'
-                                        onChange={(e) => set_third_party_certificate(e.target.files[0])}
+                                        onChange={(e) => set_third_party_certificate(e.target.files && e.target.files[0])}
                                     />
 
                                     <div className='flex flex-col items-center gap-2 text-gray-500'>
@@ -770,7 +789,7 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                     className='form-input'
                                     value={maintenanceTemplateId}
                                     onChange={(e) => {
-                                        setMaintenanceTemplateId(e.target.value);
+                                        setMaintenanceTemplateId(Number(e.target.value));
                                         handleMaintenanceQuestions(e.target.value);
                                     }}>
                                     <option value=''>Select</option>
@@ -786,13 +805,13 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                             </div>
 
                             {/* selected maintenace questions */}
-                            {maintenanceTemplateQuestions.length !== 0 && (
+                            {maintenanceTemplateQuestions?.length !== 0 && (
                                 <div className='selected-pre-use-quetions  border-3 border-solid border-[#f5f6fa] p-5.5 flex flex-wrap'>
                                     <div className='title w-full'>
                                         <h5>Selected Maintenance Template Questions</h5>
                                     </div>
                                     <div className='selected-questions w-full'>
-                                        {maintenanceTemplateQuestions.map((question) => {
+                                        {maintenanceTemplateQuestions?.map((question) => {
                                             const question_type = questionTypes[question.type];
                                             return (
                                                 <div

@@ -1,4 +1,5 @@
 import { clientFetch, getCompanyId, getSessionId } from "@/app/utils/user-helper";
+import { Shadows_Into_Light } from "next/font/google";
 
 type Filter = {
     field: string;
@@ -6,7 +7,12 @@ type Filter = {
     text: string;
 };
 
-export const GetAssetList = async function (page: number = 1, pageSize: number = 10, filters: Filter[] = []) {
+export const GetAssetList = async function (
+    page: number = 1,
+    pageSize: number = 10,
+    filters: Filter[] = [],
+    show_all_records: number = 0
+) {
     const companyId = getCompanyId("company-user-session");
     const sessionId = getSessionId("company-user-session");
 
@@ -23,6 +29,7 @@ export const GetAssetList = async function (page: number = 1, pageSize: number =
             page,
             pageSize,
             filters,
+            show_all_records: show_all_records,
         }),
     });
     return result;
@@ -98,4 +105,22 @@ export const DeleteAsset = async function (id: number): Promise<{ success: boole
     // }
 
     // return result;
+};
+
+export const CheckTagAssigned = async function (tagId: string) {
+    const companyId = getCompanyId("company-user-session");
+    const sessionId = getSessionId("company-user-session");
+
+    // console.log("company id: ", companyId);
+
+    const result = await clientFetch("/company/tag/check-assigned", {
+        method: "POST",
+        headers: {
+            "X-Session-ID": sessionId,
+            "X-Company-ID": companyId,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ uid: tagId }),
+    });
+    return result;
 };

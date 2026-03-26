@@ -9,9 +9,9 @@ const Header = async () => {
     return (
         <div className='flex bg-[#fff] border-b-[#f9f9f9] shadow-2xs shadow-[#3d424508] justify-end'>
             <div className='profile flex items-center gap-3 p-3'>
-                <div className='avatar'>
+                <div className='avatar border border-solid border-[#263f94] rounded-[50px]'>
                     <img
-                        src="/default-avatar.png"
+                        src="https://tagxl.com/_next/image?url=%2Fimages%2Fuser-profile.png&w=48&q=75"
                         alt='Avatar'
                         width='34'
                         height='34'

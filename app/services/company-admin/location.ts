@@ -10,12 +10,6 @@ type Filter = {
 };
 
 export const getAllLocations = async function (page: number = 1, filters: any[] = [], show_all_records: number = 0) {
-    // "use server";
-
-    // const sessionId = await getCompanySessionId();
-    // const companyData = await getComapnyData();
-    // const companyId = companyData?.company_id;
-
     const companyId = getCompanyId("company-user-session");
     const sessionId = getSessionId("company-user-session");
 
@@ -48,12 +42,6 @@ export const getAllLocations = async function (page: number = 1, filters: any[] 
 };
 
 export const getLocation = async function (id: number) {
-    // "use server";
-
-    // const sessionId = await getCompanySessionId();
-    // const companyData = await getComapnyData();
-    // const companyId = companyData?.company_id;
-
     const companyId = getCompanyId("company-user-session");
     const sessionId = getSessionId("company-user-session");
 
@@ -69,7 +57,7 @@ export const getLocation = async function (id: number) {
             });
 
             const result = await response.json();
-            // console.log(result);
+            console.log(result);
             return result?.location || {};
         } catch (error) {
             console.log("error: ", error);
@@ -79,14 +67,7 @@ export const getLocation = async function (id: number) {
     return [];
 };
 
-
 export const getAssetLocations = async function (show_all_records: number = 1) {
-    // "use server";
-
-    // const sessionId = await getCompanySessionId();
-    // const companyData = await getComapnyData();
-    // const companyId = companyData?.company_id;
-
     const companyId = getCompanyId("company-user-session");
     const sessionId = getSessionId("company-user-session");
 
@@ -136,3 +117,22 @@ export const GetLocationList = async function (page: number = 1, pageSize: numbe
     });
     return result;
 };
+
+export const CreateLocations = async function (locationName: string) {
+    const companyId = getCompanyId("company-user-session");
+    const sessionId = getSessionId("company-user-session");
+
+    const result = await clientFetch("/company/location/create", {
+        method: "POST",
+        headers: {
+            "X-Session-ID": sessionId,
+            "X-Company-ID": companyId,
+            "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+            name: locationName,
+        }),
+    });
+    return result;
+};
+

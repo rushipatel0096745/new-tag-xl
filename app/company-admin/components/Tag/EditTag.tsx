@@ -7,18 +7,18 @@ import { Asset } from "../../(admin)/tag/edit/[id]/page";
 import Modal from "../Modal";
 import UnassignTagModal from "./UnassignTagModal";
 import AssignTagModal from "./AssignTagModal";
-import { DeleteTag } from "@/app/services/company-admin/tags";
+import { DeleteTag, GetTag } from "@/app/services/company-admin/tags";
 import { useRouter } from "next/navigation";
 
 const EditTag = ({
     id,
-    initialData,
+    initialTagData,
     action,
     asset,
     assetList,
 }: {
     id: number;
-    initialData: Tag;
+    initialTagData: Tag;
     action: (id: number, prevState: any, formData: any) => Promise<any>;
     asset: Asset;
     assetList: Asset[];
@@ -34,13 +34,33 @@ const EditTag = ({
 
     const router = useRouter();
 
-    const [tagType, setTagType] = useState<string>(initialData.tag_type);
+    const [initialData, setInitialData] = useState<Tag | undefined>();
+    const [tagType, setTagType] = useState<string | undefined>(initialData?.tag_type);
 
     const [showMsg, setShowMsg] = useState<string>("");
 
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     const [error, setError] = useState<{ [key: string]: string }>({});
+
+    const [permError, setPermError] = useState("");
+
+    async function fetchTag() {
+        const tag = await GetTag(id);
+        if (tag.has_error && tag.error_code == "PERMISSION_DENIED") {
+            setPermError(tag.message);
+        }
+        if (tag.has_error) {
+            setPermError(tag.message);
+        }
+        if (!tag.has_error) {
+            setInitialData(tag?.tag);
+        }
+    }
+
+    useEffect(() => {
+        fetchTag();
+    }, []);
 
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
@@ -51,7 +71,7 @@ const EditTag = ({
 
     function saveData() {
         const data = {
-            uid: initialData.uid,
+            uid: initialData?.uid,
             tag_type: tagType,
         };
         console.log(data);
@@ -75,7 +95,7 @@ const EditTag = ({
             }));
         }
         if (!result.has_error) {
-           router.push("/company-admin/tag/manage-tags?delete=true")
+            router.push("/company-admin/tag/manage-tags?delete=true");
         }
     }
 
@@ -92,6 +112,12 @@ const EditTag = ({
                     {state?.error && (
                         <div className='text-red-500'>
                             <p>{state?.error}</p>
+                        </div>
+                    )}
+
+                    {permError && (
+                        <div className='text-red-500'>
+                            <p>{permError}</p>
                         </div>
                     )}
 
@@ -153,7 +179,7 @@ const EditTag = ({
                                 </svg>
                             </span>
                             <span className='button-label text-[#1a1a1a] capitalize ml-2'>
-                                {initialData.is_assigned ? "Unassign Tag" : "Assign Tag"}
+                                {initialData?.is_assigned ? "Unassign Tag" : "Assign Tag"}
                             </span>
                         </button>
                         <button
@@ -176,14 +202,24 @@ const EditTag = ({
                     </div>
                 </div>
 
-                {initialData.is_assigned ? (
-                    <UnassignTagModal isOpen={isModalOpen} isClose={closeModal} uid={initialData.uid} />
+                {initialData?.is_assigned ? (
+                    <UnassignTagModal
+                        isOpen={isModalOpen}
+                        isClose={closeModal}
+                        uid={initialData.uid}
+                        permError={setPermError}
+                        showMsg={setShowMsg}
+                        fetchTag={fetchTag}
+                    />
                 ) : (
                     <AssignTagModal
                         isOpen={isModalOpen}
                         isClose={closeModal}
                         assetList={assetList}
-                        uid={initialData.uid}
+                        uid={initialData?.uid ?? ""}
+                        permError={setPermError}
+                        showMsg={setShowMsg}
+                        fetchTag={fetchTag}
                     />
                 )}
 
@@ -201,7 +237,7 @@ const EditTag = ({
                                                     placeholder=''
                                                     id='uid'
                                                     type='uid'
-                                                    defaultValue={initialData.uid}
+                                                    defaultValue={initialData?.uid}
                                                     name='uid'
                                                     className='box-border text-[#17181a] bg-[#f5f6fa] border border-solid border-[#efefef] rounded-[10px] w-full h-11 pt-[18px] px-[14px] pb-2 text-[14px] font-medium'
                                                 />
@@ -219,7 +255,7 @@ const EditTag = ({
                                                 <select
                                                     id='role_id'
                                                     name='role_id'
-                                                    defaultValue={initialData.tag_type}
+                                                    defaultValue={initialData?.tag_type}
                                                     onChange={handleTypeChange}
                                                     className='form-select text-[#17181a] bg-[#f5f6fa] border border-solid border-[#efefef] rounded-[10px] w-full h-11 pt-[18px] px-[14px] pb-2 text-[14px] font-medium'>
                                                     <option value='RFID'>RFID</option>
@@ -239,7 +275,7 @@ const EditTag = ({
                             </form>
                         </div>
 
-                        {initialData.is_assigned && (
+                        {initialData?.is_assigned && (
                             <div className='col-6 pl-10 w-[calc(50%-8px)]'>
                                 <h3 className='title h4 mb-16 mt-4 text-[16px] font-semibold leading-5.5'>
                                     Asset details
@@ -254,22 +290,22 @@ const EditTag = ({
                                             decoding='async'
                                             data-nimg={1}
                                             className='product-img'
-                                            src={`https://api.tagxl.com/${asset.image}`}
+                                            src={`https://api.tagxl.com/${asset?.image}`}
                                             style={{}}
                                         />
                                     </div>
                                     <div className='info-block-wrapper flex flex-col gap-2.5 w-[calc(100%-160px)]'>
                                         <div className='info-block flex flex-col'>
                                             <div className='title text-[#808080] text-[12px]'>Product Name</div>
-                                            <div className='value'>{asset.name}</div>
+                                            <div className='value'>{asset?.name}</div>
                                         </div>
                                         <div className='info-block flex flex-col'>
                                             <div className='title text-[#808080] text-[12px]'>Location</div>
-                                            <div className='value'>{asset.location.location_name}</div>
+                                            <div className='value'>{asset?.location?.location_name}</div>
                                         </div>
                                         <div className='info-block flex flex-col'>
                                             <div className='title text-[#808080] text-[12px]'>Batch Code</div>
-                                            <div className='value'>{asset.batch_code}</div>
+                                            <div className='value'>{asset?.batch_code}</div>
                                         </div>
                                     </div>
                                 </div>

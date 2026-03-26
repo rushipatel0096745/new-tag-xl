@@ -8,14 +8,14 @@ const LocationEditPage = async ({ params }: { params: Promise<{ id: string }> })
 
     const initialData = await getLocation(Number(id));
     return (
-        <div className='main w-[calc(100%] min-h-[calc(100vh_-_60px)] text-[#111c43] mt-[60px] p-5.5 '>
+        <div className='main w-[calc(100%)] min-h-[calc(100vh_-_60px)] text-[#111c43] mt-[60px] p-5.5 '>
             <div className='page-content'>
                 <div className='page-head mb-6'>
                     <h2 className='text-[20px] leading-6.5 font-semibold'>Location Master</h2>
                 </div>
                 <div className='page-body'>
                     <Suspense fallback={<p>Loading....</p>}>
-                        <LocationForm action={updateLocation} initialData={initialData} locationId={Number(id)}/>
+                        <LocationForm action={updateLocation} locationId={Number(id)}/>
                     </Suspense>
                 </div>
             </div>

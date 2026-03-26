@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import React, { startTransition, useActionState, useState } from "react";
+import React, { startTransition, useActionState, useEffect, useState } from "react";
 import { Location } from "../../(admin)/location-master/page";
+import { getLocation } from "@/app/services/company-admin/location";
 
 type ActionState = {
     success: boolean | null;
@@ -14,23 +15,41 @@ type LocationFormAction = (id: number, prevState: any, formData: any) => Promise
 
 type BoundAction = (prevState: ActionState, payload: { name: string }) => Promise<ActionState>;
 
-const LocationForm = ({
-    action,
-    initialData,
-    locationId,
-}: {
-    action: LocationFormAction;
-    initialData: Location;
-    locationId: number;
-}) => {
+const LocationForm = ({ action, locationId }: { action?: LocationFormAction; locationId?: number }) => {
     // console.log(initialData)
     const boundAction = locationId
-        ? (action.bind(null, locationId) as unknown as BoundAction)
+        ? (action?.bind(null, locationId) as unknown as BoundAction)
         : (action as unknown as BoundAction);
 
-    const [location, setLocation] = useState(locationId ? initialData.name : "");
+    useEffect(() => {
+        async function fetchLocation() {
+            if (locationId) {
+                const location = await getLocation(locationId);
+                console.log("location: ", location);
+                if (location.has_error && location.error_code == "PERMISSION_DENIED") {
+                    setPermError(location.message || "Permission denied");
+                    return;
+                }
+
+                if (location?.has_error) {
+                    console.error("location fetch failed", location.message);
+                    return;
+                }
+
+                if (!location.has_error) {
+                    setLocation(location.name ?? "");
+                }
+            }
+        }
+        fetchLocation();
+    }, []);
+
+
+    const [location, setLocation] = useState("");
 
     const [showMsg, setShowMsg] = useState("");
+
+    const [permError, setPermError] = useState("");
 
     const [error, setError] = useState("");
 

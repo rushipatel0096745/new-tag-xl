@@ -7,7 +7,7 @@ import Cookies from "js-cookie";
 import { DeleteTag, GetTagList, GetUnassignedTagList } from "@/app/services/company-admin/tags";
 import { useRouter, useSearchParams } from "next/navigation";
 
-export interface Tag {
+export type Tag = {
     id: number;
     uid: string;
     tag_type: string;

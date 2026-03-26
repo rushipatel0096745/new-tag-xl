@@ -28,3 +28,19 @@ export const GetRoleList = async function (page: number = 1, pageSize: number = 
     return result;
 };
 
+export const DeleteRole = async function (id: number) {
+    const companyId = getCompanyId("company-user-session");
+    const sessionId = getSessionId("company-user-session");
+
+    // console.log("company id: ", companyId);
+
+    const result = await clientFetch("/company/role/delete/" + id, {
+        method: "DELETE",
+        headers: {
+            "X-Session-ID": sessionId,
+            "X-Company-ID": companyId,
+            "Content-Type": "application/json",
+        },
+    });
+    return result;
+};

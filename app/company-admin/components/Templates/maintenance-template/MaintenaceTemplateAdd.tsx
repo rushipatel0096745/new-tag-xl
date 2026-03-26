@@ -5,10 +5,12 @@ import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import UpdateQuestionModal from "../UpdateQuestionModal";
 
+type QuestionType = "boolean" | "text" | "checkbox" | "select";
+
 type Question = {
-    id?: number;
+    id: number;
     question: string;
-    type: string;
+    type: QuestionType;
     options?: string[] | null;
 };
 
@@ -86,7 +88,7 @@ const MaintenaceTemplateAdd = () => {
         const questionObj: Question = {
             id: Date.now(),
             question: maintenanceQuestionText,
-            type: maintenanceQuestionType,
+            type: maintenanceQuestionType as QuestionType,
             options:
                 maintenanceQuestionType === "boolean" || maintenanceQuestionType === "text"
                     ? null
@@ -191,7 +193,7 @@ const MaintenaceTemplateAdd = () => {
 
             console.log("API response:", result);
 
-             if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
                 setPermitted(result.message || "Permission denied to update");
                 return;
             }

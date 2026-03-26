@@ -23,7 +23,7 @@ const AddAsset = () => {
         // image: null as File | null,
         image: "",
         manual_template_id: "",
-        status: "",
+        status: null,
         // oem_certificate: null as File | null,
         oem_certificate: "",
         // third_party_certificate: null as File | null,
@@ -32,6 +32,8 @@ const AddAsset = () => {
         third_party_expiry_date: "",
         pre_use_template_id: "",
         maintenance_template_id: "",
+        asset_pre_use_questions: "",
+        asset_maintenance_questions: ""
     });
 
     const [errors, setErrors] = useState<any>({});
@@ -58,13 +60,15 @@ const AddAsset = () => {
         assetFormData.append("batch_code", formData.batch_code);
         assetFormData.append("image", formData.image);
         assetFormData.append("manual_template_id", formData.manual_template_id);
-        assetFormData.append("status", formData.status || 0);
+        assetFormData.append("status", String(Number(formData.status) || 0));
         assetFormData.append("oem_certificate", formData.oem_certificate);
         formData.third_party_certificate && assetFormData.append("third_party_certificate", formData.third_party_certificate);
         assetFormData.append("third_party_start_date", formData.third_party_start_date);
         assetFormData.append("third_party_expiry_date", formData.third_party_expiry_date);
         assetFormData.append("pre_use_template_id", formData.pre_use_template_id);
         assetFormData.append("maintenance_template_id", formData.maintenance_template_id);
+        formData.asset_pre_use_questions && assetFormData.append("asset_pre_use_questions", formData.asset_pre_use_questions)
+        formData.asset_maintenance_questions && assetFormData.append("asset_maintenance_questions", formData.asset_maintenance_questions)
 
         console.log([...assetFormData.entries()]);
 

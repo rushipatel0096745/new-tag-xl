@@ -37,7 +37,7 @@ export async function login(prevState: any, formData: FormData): Promise<any> {
                 error: "Incorrect email or password",
             };
         }
-        console.log(result);
+        // console.log(result);
 
         const encryptedData = encryptData(result);
 

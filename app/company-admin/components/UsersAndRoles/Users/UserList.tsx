@@ -304,7 +304,7 @@ const UserList = ({ tempList }: Props) => {
                                                                         {(is_super_admin ||
                                                                             userRole.includes("update")) && (
                                                                             <Link
-                                                                                href={`/company-admin/template-master/pre-use-check-template/edit/${temp.id}`}
+                                                                                href={`/company-admin/users-and-roles/users/edit/${temp.id}`}
                                                                                 className='icon-button edit inline-flex items-center justify-center cursor-pointer p-0 decoration-0'>
                                                                                 <span className='icon-circle'>
                                                                                     <svg

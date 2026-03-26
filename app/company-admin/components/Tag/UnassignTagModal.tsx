@@ -1,24 +1,48 @@
 "use client";
-import React, { useState } from "react";
+import React, { Dispatch, SetStateAction, useState } from "react";
 import Modal from "../Modal";
+import { UnassignTag } from "@/app/services/company-admin/tags";
 
-const UnassignTagModal = ({ isOpen, isClose, uid }: { isOpen: boolean; isClose: () => void; uid: string }) => {
-    const [reason, setReason] = useState<string>();
+interface Props {
+    isOpen: boolean;
+    isClose: () => void;
+    uid: string;
+    permError: Dispatch<SetStateAction<string>>;
+    showMsg: Dispatch<SetStateAction<string>>;
+    fetchTag: () => void;
+}
+
+const UnassignTagModal = ({ isOpen, isClose, uid, permError, showMsg, fetchTag }: Props) => {
+    // const [reason, setReason] = useState<string>();
+    const [reason, setReason] = useState<string>("Physically broken");
     const [otherReason, setOtherReason] = useState<string>();
-    
+
     const TRIGGER_VALUE = "Other reason";
 
     const handleChange = (e: React.ChangeEvent<HTMLSelectElement | HTMLTextAreaElement>) => {
-        if(otherReason) setOtherReason('');
+        if (otherReason) setOtherReason("");
         setReason(e.target.value);
     };
 
-    function handleSave() {
+    async function handleSave() {
         const data = {
             uid,
-            reason: otherReason || reason
+            reason: reason,
+            remarks: otherReason ?? "",
+        };
+        console.log(data);
+
+        const unassignedTag = await UnassignTag(data);
+
+        if (unassignedTag.has_error && unassignedTag.error_code == "PERMISSION_DENIED") {
+            permError(unassignedTag.message);
         }
-        console.log(data)
+
+        if (!unassignedTag.has_error) {
+            showMsg("Tag Unassigned Succesfully");
+            fetchTag();
+            isClose();
+        }
     }
 
     return (
@@ -28,7 +52,7 @@ const UnassignTagModal = ({ isOpen, isClose, uid }: { isOpen: boolean; isClose: 
                     <h3 className='h3 text-xl leading-6 font-semibold'>Unassign Tag</h3>
                     <button
                         onClick={isClose}
-                        className='close-btn cursor-pointer bg-[family-name:--bg-primary] border-0 rounded-[10px] justify-center items-center w-[38px] h-[38px] ml-auto p-0 transition-all duration-300 flex'>
+                        className='close-btn cursor-pointer border-0 rounded-[10px] justify-center items-center w-[38px] h-[38px] ml-auto p-0 transition-all duration-300 flex'>
                         <svg
                             xmlns='http://www.w3.org/2000/svg'
                             width={24}
@@ -52,6 +76,7 @@ const UnassignTagModal = ({ isOpen, isClose, uid }: { isOpen: boolean; isClose: 
                                 <select
                                     name='reason'
                                     id='reason'
+                                    value={reason}
                                     onChange={handleChange}
                                     className='form-select cursor-pointer text-[#17181a] box-border bg-[#f5f6fa] border border-[#efefef] rounded-[10px] w-full h-[44px] pt-[18px] px-[14px] pb-[8px] font-sans text-[14px] font-medium'>
                                     <option value='Physically broken'>Physically broken</option>
@@ -73,7 +98,7 @@ const UnassignTagModal = ({ isOpen, isClose, uid }: { isOpen: boolean; isClose: 
                                         Other Reason
                                     </h5>
                                     <textarea
-                                        onChange={(e)=>setOtherReason(e.target.value)}
+                                        onChange={(e) => setOtherReason(e.target.value)}
                                         className='form-textarea min-h-[100px] align-bottom bg-[#f5f6fa] border border-solid border-[#efefef] rounded-[10px] w-full px-2.5 py-3 text-[14px]'
                                         placeholder='Type your question here'
                                         defaultValue={""}
@@ -84,7 +109,7 @@ const UnassignTagModal = ({ isOpen, isClose, uid }: { isOpen: boolean; isClose: 
                         <div className='actions-btn flex justify-end gap-2.5 mt-5.5 items-center'>
                             <button
                                 onClick={handleSave}
-                                type="button"
+                                type='button'
                                 className='btn success all-unset cursor-pointer text-center bg-[#2aa466] border border-[#2aa466] text-[#fff] box-border rounded-[40px] justify-center items-center gap-[6px] h-[38px] px-[14px] py-[10px] text-[14px] font-medium transition-all duration-200 inline-flex'>
                                 Save
                             </button>
