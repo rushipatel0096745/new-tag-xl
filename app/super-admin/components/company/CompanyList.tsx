@@ -6,7 +6,7 @@ import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { DeleteTag } from "@/app/services/company-admin/tags";
 import { redirect, useRouter, useSearchParams } from "next/navigation";
-import { GetCompanyList, LoginToCompany } from "@/app/services/super-admin/company";
+import { DeleteCompany, GetCompanyList, LoginToCompany } from "@/app/services/super-admin/company";
 
 interface Company {
     id: number;
@@ -118,7 +118,7 @@ const CompanyList = ({ companyList }: { companyList: Company[] }) => {
     }
 
     async function handleDelete(id: number) {
-        const result = await DeleteTag(id);
+        const result = await DeleteCompany(id);
         if (result.has_error && result.error_code == "PERMISSION_DENIED") {
             setError((prev) => ({
                 ...prev,
@@ -126,8 +126,9 @@ const CompanyList = ({ companyList }: { companyList: Company[] }) => {
             }));
         }
         if (!result.has_error) {
-            setShowMsg("Tag Dleted Successfully");
-            router.refresh();
+            // router.refresh();
+            setList((prev) => prev.filter((comp) => comp.id !== id));
+            setShowMsg("Company Dleted Successfully");
         }
     }
 

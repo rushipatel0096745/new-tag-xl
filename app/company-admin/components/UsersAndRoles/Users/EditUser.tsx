@@ -46,9 +46,6 @@ export interface UserRole {
 }
 
 const EditUser = ({ id }: { id: string }) => {
-    const sessionId = getSessionId("company-user-session");
-    const companyId = getCompanyId("company-user-session");
-
     const initialFormData: FormData = {
         firstname: "",
         lastname: "",
@@ -63,6 +60,9 @@ const EditUser = ({ id }: { id: string }) => {
     const [showMsg, setShowMsg] = useState("");
 
     async function getUser(id: number | string) {
+        const sessionId = getSessionId("company-user-session");
+        const companyId = getCompanyId("company-user-session");
+
         try {
             const result = await clientFetch("/company/user/get/" + Number(id), {
                 method: "GET",
@@ -97,6 +97,9 @@ const EditUser = ({ id }: { id: string }) => {
     }
 
     async function getRoleList() {
+        const sessionId = getSessionId("company-user-session");
+        const companyId = getCompanyId("company-user-session");
+
         try {
             const result = await clientFetch("/company/role/list", {
                 method: "POST",
@@ -131,6 +134,9 @@ const EditUser = ({ id }: { id: string }) => {
     }
 
     async function updateUser(data: any): Promise<void> {
+        const sessionId = getSessionId("company-user-session");
+        const companyId = getCompanyId("company-user-session");
+
         try {
             const result = await clientFetch("/company/update-user/" + Number(id), {
                 method: "PUT",

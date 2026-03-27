@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 interface Props {
     next: () => void;
@@ -24,8 +24,25 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
 
     const [selectOption, setSelectOption] = useState<string>();
 
+    useEffect(() => {
+        console.log("form data: ", formData);
+    }, []);
+
+    useEffect(() => {
+        if (!formData.third_party_start_date) {
+            setSelectOption("");
+            updateForm("third_party_expiry_date", "");
+        }
+    }, [formData.third_party_start_date]);
+
+    // useEffect(() => {
+    //     if (selectOption !== SELECT_TRIGGER || formData.third_party_start_date) {
+    //         updateForm("third_party_expiry_date", "");
+    //     }
+    // }, [formData.third_party_start_date]);
+
     function handleSelectChange(e: any) {
-        if (!formData.third_party_start_date) return;
+        // if (!formData.third_party_start_date) return;
         const value = e.target.value;
 
         if (value === "") {
@@ -34,12 +51,17 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
 
         setSelectOption(value);
 
+        if (!formData.third_party_start_date) {
+            updateForm("third_party_expiry_date", "");
+            return;
+        }
+
         if (value !== SELECT_TRIGGER) {
             const startDate = new Date(formData.third_party_start_date);
             const newDate = new Date(startDate);
 
             newDate.setMonth(startDate.getMonth() + Number(value));
-            newDate.setDate(newDate.getDate() - 1); 
+            newDate.setDate(newDate.getDate() - 1);
 
             const newFormattedDate = newDate.toISOString().split("T")[0];
 
@@ -96,7 +118,9 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
                                             id='oem_certificate'
                                             type='file'
                                             name='oem_certificate'
-                                            onChange={(e) => updateForm("oem_certificate", e.target.files && e.target.files[0])}
+                                            onChange={(e) =>
+                                                updateForm("oem_certificate", e.target.files && e.target.files[0])
+                                            }
                                         />
                                         <div className='upload-icon bg-[#d7e0f9] rounded-[6px] justify-center items-center w-[40px] h-[40px] transition-colors duration-200 flex'>
                                             <svg
@@ -165,7 +189,9 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
                                         id='third_party_certificate'
                                         type='file'
                                         name='third_party_certificate'
-                                        onChange={(e) => updateForm("third_party_certificate", e.target.files && e.target.files[0])}
+                                        onChange={(e) =>
+                                            updateForm("third_party_certificate", e.target.files && e.target.files[0])
+                                        }
                                     />
                                     <div className='upload-icon bg-[#d7e0f9] rounded-[6px] justify-center items-center w-[40px] h-[40px] transition-colors duration-200 flex'>
                                         <svg
@@ -186,6 +212,9 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
                                     <button className='min-w-19 h-auto px-[5px] appearance-none cursor-pointer text-center bg-[#263f94] border border-[#263f94] text-white box-border rounded-[40px] justify-center items-center gap-[6px] h-[38px] px-[14px] py-[10px] text-[14px] font-medium transition-all duration-200 inline-flex '>
                                         Upload
                                     </button>
+                                    {errors.third_party_certificate && (
+                                        <p className='text-red-500 text-xs mt-1'>{errors.third_party_certificate}</p>
+                                    )}
                                 </div>
                                 <div className='row flex flex-wrap gap-4 w-full'>
                                     <div className='col-6 w-[calc(50%-8px)]'>
@@ -241,23 +270,32 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
                                         <div className='input-date-wrapper row flex justify-end gap-4 w-full flex-wrap'>
                                             <div className='col-4 w-[calc(33.33%-11px)]'>
                                                 <div className='form-group flex flex-col gap-2'>
-                                                    <div className='fancy-input start-date relative'>
+                                                    <div className='fancy-input relative'>
                                                         <input
                                                             id='third_party_start_date'
-                                                            className='form-input text-[#17181a] box-border bg-[#f5f6fa] border border-[#efefef] rounded-[10px] w-full h-[44px] pt-[18px] px-[14px] pb-[8px] font-sans text-[14px] font-medium'
                                                             type='date'
-                                                            // defaultValue='2026-03-10'
-                                                            value={formData.third_party_start_date}
                                                             name='third_party_start_date'
+                                                            value={formData.third_party_start_date || ""}
                                                             onChange={(e) =>
                                                                 updateForm("third_party_start_date", e.target.value)
                                                             }
+                                                            className='peer w-full h-12 border border-gray-300 rounded-lg px-3 pt-5 pb-2 text-sm focus:outline-none focus:border-blue-500'
                                                         />
+
                                                         <label
                                                             htmlFor='third_party_start_date'
-                                                            className='form-label text-[#676767] pointer-events-none bg-transparent px-[2px] text-[14px] transition-all duration-200 absolute top-1/2 left-[12px] -translate-y-1/2'>
-                                                            Start :
+                                                            className={`absolute left-3 px-1 bg-white text-gray-500 transition-all duration-200
+                                                            ${formData.third_party_start_date ? "top-1 text-xs text-blue-500" : "top-1/2 -translate-y-1/2 text-sm"}
+                                                            peer-focus:top-1 peer-focus:text-xs peer-focus:text-blue-500
+                                                            `}>
+                                                            Start Date
                                                         </label>
+
+                                                        {errors.third_party_start_date && (
+                                                            <p className='text-red-500 text-xs mt-1'>
+                                                                {errors.third_party_start_date}
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>
@@ -268,6 +306,7 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
                                                             id='days'
                                                             name='days'
                                                             // onChange={(e) => setSelectOption(e.target.value)}
+                                                            value={selectOption}
                                                             onChange={handleSelectChange}
                                                             className='form-select text-[#17181a] box-border bg-[#f5f6fa] border border-[#efefef] rounded-[10px] w-full h-[44px] pt-[18px] px-[14px] pb-[8px] font-sans text-[14px] font-medium'>
                                                             <option value=''>Select Frequency</option>
@@ -291,7 +330,7 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
                                                         <input
                                                             disabled={selectOption !== SELECT_TRIGGER}
                                                             id='third_party_expiry_date'
-                                                            className='form-input text-[#17181a] box-border bg-[#f5f6fa] border border-[#efefef] rounded-[10px] w-full h-[44px] pt-[18px] px-[14px] pb-[8px] font-sans text-[14px] font-medium'
+                                                            className='peer w-full h-12 border border-gray-300 rounded-lg px-3 pt-5 pb-2 text-sm focus:outline-none focus:border-blue-500'
                                                             min='2026-03-12'
                                                             type='date'
                                                             value={formData.third_party_expiry_date}
@@ -302,9 +341,17 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
                                                         />
                                                         <label
                                                             htmlFor='third_party_expiry_date'
-                                                            className='form-label text-[#676767] pointer-events-none bg-transparent px-[2px] text-[14px] transition-all duration-200 absolute top-1/2 left-[12px] -translate-y-1/2'>
+                                                            className={`absolute left-3 px-1 bg-white text-gray-500 transition-all duration-200
+                                                            ${formData.third_party_expiry_date ? "top-1 text-xs text-blue-500" : "top-1/2 -translate-y-1/2 text-sm"}
+                                                            peer-focus:top-1 peer-focus:text-xs peer-focus:text-blue-500
+                                                            `}>
                                                             Expiry :
                                                         </label>
+                                                        {errors.third_party_expiry_date && (
+                                                            <p className='text-red-500'>
+                                                                {errors.third_party_expiry_date}
+                                                            </p>
+                                                        )}
                                                     </div>
                                                 </div>
                                             </div>

@@ -98,7 +98,7 @@ const AddUser = () => {
             });
 
             console.log("API response:", result);
-
+            
             if (result.has_error && result.error_code == "PERMISSION_DENIED") {
                 setPermitted(result.message || "Permission denied to Update User");
                 return;

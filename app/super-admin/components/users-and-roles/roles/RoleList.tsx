@@ -5,7 +5,7 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { useRouter, useSearchParams } from "next/navigation";
-import { GetRolesList } from "@/app/services/super-admin/role";
+import { DeleteRole, GetRolesList } from "@/app/services/super-admin/role";
 
 interface Role {
     id: number;
@@ -84,19 +84,19 @@ const RoleList = ({ roleList }: { roleList: Role[] }) => {
         console.log("company permissions: ", userRole);
     }, [userRole]);
 
-    // async function handleDelete(id: number) {
-    //     const result = await DeleteTag(id);
-    //     if (result.has_error && result.error_code == "PERMISSION_DENIED") {
-    //         setError((prev) => ({
-    //             ...prev,
-    //             permission: result.message || "Permission Denied",
-    //         }));
-    //     }
-    //     if (!result.has_error) {
-    //         setShowMsg("Tag Dleted Successfully");
-    //         router.refresh();
-    //     }
-    // }
+    async function handleDelete(id: number) {
+        const result = await DeleteRole(id);
+        if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+            setError((prev) => ({
+                ...prev,
+                permission: result.message || "Permission Denied",
+            }));
+        }
+        if (!result.has_error) {
+            setList((prev) => prev.filter((role) => role.id !== id));
+            setShowMsg("Role Dleted Successfully");
+        }
+    }
 
     return (
         <div className='card-box bg-[#fff] border-gray-700 rounded-[18px] shadow-3xl shadow-white px-3 py-5.5'>
@@ -190,7 +190,7 @@ const RoleList = ({ roleList }: { roleList: Role[] }) => {
 
                                                                 {userRole.includes("delete") && (
                                                                     <button
-                                                                        // onClick={() => handleDelete(role.id)}
+                                                                        onClick={() => handleDelete(role.id)}
                                                                         className='icon-button delete inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
                                                                         type='button'>
                                                                         <span className='icon-circle'>

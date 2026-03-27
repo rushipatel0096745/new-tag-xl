@@ -11,7 +11,7 @@ const LocationAddPage = () => {
                 </div>
                 <div className='page-body'>
                     <Suspense fallback={<p>Loading....</p>}>
-                        <LocationForm action={createLocation}/>
+                        <LocationForm action={createLocation} />
                     </Suspense>
                 </div>
             </div>

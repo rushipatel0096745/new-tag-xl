@@ -50,6 +50,11 @@ const EditRole = ({ id }: { id: string }) => {
 
             console.log("API response:", result);
 
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermitted(result.message || "Permission denied to update");
+                return;
+            }
+
             if (result?.has_error) {
                 console.error("roles fetching failed:", result.message);
                 return;

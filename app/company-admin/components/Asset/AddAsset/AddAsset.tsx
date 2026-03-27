@@ -33,7 +33,7 @@ const AddAsset = () => {
         pre_use_template_id: "",
         maintenance_template_id: "",
         asset_pre_use_questions: "",
-        asset_maintenance_questions: ""
+        asset_maintenance_questions: "",
     });
 
     const [errors, setErrors] = useState<any>({});
@@ -58,17 +58,21 @@ const AddAsset = () => {
         assetFormData.append("name", formData.name);
         assetFormData.append("location_id", formData.location_id);
         assetFormData.append("batch_code", formData.batch_code);
-        assetFormData.append("image", formData.image);
-        assetFormData.append("manual_template_id", formData.manual_template_id);
+        formData.image && assetFormData.append("image", formData.image);
+        formData.manual_template_id && assetFormData.append("manual_template_id", formData.manual_template_id);
         assetFormData.append("status", String(Number(formData.status) || 0));
         assetFormData.append("oem_certificate", formData.oem_certificate);
-        formData.third_party_certificate && assetFormData.append("third_party_certificate", formData.third_party_certificate);
-        assetFormData.append("third_party_start_date", formData.third_party_start_date);
-        assetFormData.append("third_party_expiry_date", formData.third_party_expiry_date);
+        if (formData.third_party_certificate) {
+            assetFormData.append("third_party_certificate", formData.third_party_certificate);
+            assetFormData.append("third_party_start_date", formData.third_party_start_date);
+            assetFormData.append("third_party_expiry_date", formData.third_party_expiry_date);
+        }
         assetFormData.append("pre_use_template_id", formData.pre_use_template_id);
         assetFormData.append("maintenance_template_id", formData.maintenance_template_id);
-        formData.asset_pre_use_questions && assetFormData.append("asset_pre_use_questions", formData.asset_pre_use_questions)
-        formData.asset_maintenance_questions && assetFormData.append("asset_maintenance_questions", formData.asset_maintenance_questions)
+        formData.asset_pre_use_questions &&
+            assetFormData.append("asset_pre_use_questions", formData.asset_pre_use_questions);
+        formData.asset_maintenance_questions &&
+            assetFormData.append("asset_maintenance_questions", formData.asset_maintenance_questions);
 
         console.log([...assetFormData.entries()]);
 
@@ -77,7 +81,7 @@ const AddAsset = () => {
         console.log("response for create asset: ", response);
 
         if (response.success) {
-            router.push("/company-admin/asset");
+            router.push("/company-admin/asset?create=true");
             return;
         }
 
@@ -105,6 +109,18 @@ const AddAsset = () => {
 
         if (currentStep === 3) {
             if (!formData.oem_certificate) newErrors.oem_certificate = "OEM Certificate is required";
+            if (formData.third_party_certificate) {
+                if (!formData.third_party_start_date)
+                    newErrors.third_party_start_date = "Third party start date required";
+                if (!formData.third_party_expiry_date)
+                    newErrors.third_party_expiry_date = "Third party expiry date required";
+            }
+            if (
+                (formData.third_party_start_date || formData.third_party_expiry_date) &&
+                !formData.third_party_certificate
+            ) {
+                newErrors.third_party_certificate = "Third party certificate is required";
+            }
         }
 
         if (currentStep === 4) {

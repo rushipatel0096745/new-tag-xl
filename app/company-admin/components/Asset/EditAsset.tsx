@@ -14,6 +14,9 @@ import { editAsset } from "@/app/services/company-admin/asset-actions";
 import { useRouter } from "next/navigation";
 import UpdateQuestionModal from "../Templates/UpdateQuestionModal";
 import { DeleteAsset, GetAsset } from "@/app/services/company-admin/assets";
+import AssignTagModal from "../Tag/AssignTagModal";
+import TagAssign from "./TagAssignModal";
+import TagAssignModal from "./TagAssignModal";
 
 interface Props {
     initialAssetData: AssetData;
@@ -60,33 +63,40 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
     const [preuseTemplateQuestions, setPreuseTemplateQuestions] = useState<Question[] | undefined>([]);
     const [maintenanceTemplateQuestions, setMaintenanceTemplateQuestions] = useState<Question[] | undefined>([]);
 
-    const [tagUid, setTagUid] = useState(initialData?.tag.uid);
+    const [tagUid, setTagUid] = useState(initialData?.tag?.uid);
     const [name, setName] = useState(initialData?.name);
-    const [location, setLocation] = useState(Number(initialData?.location.id));
+    const [location, setLocation] = useState(Number(initialData?.location?.id));
     const [batchCode, setBatchCode] = useState(initialData?.batch_code);
     const [status, setStatus] = useState(initialData?.status);
-    const [manualTemplateId, setManualTemplateId] = useState(String(initialData?.manual_template.id));
+    const [manualTemplateId, setManualTemplateId] = useState<number | undefined>(initialData?.manual_template?.id);
     const [preuseTemplateId, setPreuseTemplateId] = useState<number | undefined>(initialData?.pre_use_template?.id);
     const [maintenanceTemplateId, setMaintenanceTemplateId] = useState(initialData?.maintenance_template?.id);
     const [image, setImage] = useState<any>();
-    const [third_party_certificate, set_third_party_certificate] = useState<any>();
+    const [third_party_certificate, set_third_party_certificate] = useState<any>(
+        initialData?.third_party_certificate?.third_party_certificate
+    );
+    const [third_party_start_date, set_third_party_start_date] = useState(
+        initialData?.third_party_certificate?.third_party_start_date ?? ""
+    );
+    const [third_party_expiry_date, set_third_party_expiry_date] = useState(
+        initialData?.third_party_certificate?.third_party_expiry_date ?? ""
+    );
 
     const [errors, setErrors] = useState<Record<string, string>>();
     const [formError, setFormError] = useState("");
-    const [showMsg, setShowMsg] = useState<string>();
+    const [showMsg, setShowMsg] = useState<string>("");
 
-    useEffect(() => {
-        async function fetchAsset() {
-            const response = await GetAsset(Number(id));
-            if (!response.success) {
-                setFormError(response.error);
-                return;
-            }
-            if (response.success) {
-                setInitialData(response.data);
-            }
+    async function fetchAsset() {
+        const response = await GetAsset(Number(id));
+        if (!response.success) {
+            setFormError(response.error);
+            return;
         }
-
+        if (response.success) {
+            setInitialData(response.data);
+        }
+    }
+    useEffect(() => {
         fetchAsset();
     }, []);
 
@@ -132,7 +142,14 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
         if (!name) newErrors.name = "Name is required";
         if (!location) newErrors.location = "Location is required";
         if (!batchCode) newErrors.batchCode = "Batch code is required";
-        // if(!manualTemplateId) newErrors.name = "Select is required";
+        if (status === undefined || status === null) newErrors.status = "Select the status";
+        if (!maintenanceTemplateId) newErrors.maintenanceTemplateId = "Select the Maintenance Template";
+        if (!preuseTemplateId) newErrors.preuseTemplateId = "Select Preuse Template";
+        if (third_party_certificate) {
+            if (!third_party_start_date) newErrors.third_party_start_date = "Select the start date";
+            if (!third_party_expiry_date) newErrors.third_party_expiry_date = "Select the expiry date";
+        }
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     }
@@ -158,13 +175,34 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
     }
 
     useEffect(() => {
-        // console.log(typeof initialData.manual_template.id);
-        console.log(typeof manualTemplateId);
         getData();
+        // setPreuseTemplateQuestions(initialData?.pre_use_template?.questions as Question[]);
+        // setMaintenanceTemplateQuestions(initialData?.maintenance_template?.questions as Question[]);
+        // console.log("preuse id: ", preuseTemplateId);
+    }, []);
+
+    useEffect(() => {
+        if (!initialData) return;
+
+        setTagUid(initialData?.tag?.uid ?? "");
+        setName(initialData?.name);
+        setLocation(Number(initialData?.location?.id));
+        setBatchCode(initialData?.batch_code);
+        setStatus(initialData?.status);
+        setManualTemplateId(initialData?.manual_template?.id);
+        setPreuseTemplateId(initialData?.pre_use_template?.id);
+        setMaintenanceTemplateId(initialData?.maintenance_template?.id);
+        set_third_party_certificate(initialData?.third_party_certificate?.third_party_certificate);
+        set_third_party_start_date(initialData?.third_party_certificate?.third_party_start_date ?? "");
+        set_third_party_expiry_date(initialData?.third_party_certificate?.third_party_expiry_date ?? "");
         setPreuseTemplateQuestions(initialData?.pre_use_template?.questions as Question[]);
         setMaintenanceTemplateQuestions(initialData?.maintenance_template?.questions as Question[]);
-        console.log("preuse id: ", preuseTemplateId);
-    }, []);
+
+        const maintenanceQs = reverseFormatQuestionBody(initialData?.asset_maintenance_questions) || [];
+        const preuseQs = reverseFormatQuestionBody(initialData?.asset_pre_use_questions) || [];
+        setNewMaintenanceQuestions(maintenanceQs);
+        setNewPreuseQuestions(preuseQs);
+    }, [initialData]);
 
     const questionTypes: QuestionTypes = {
         boolean: "Yes/No",
@@ -322,11 +360,16 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
             location && formData.append("location_id", String(location));
             batchCode && formData.append("batch_code", batchCode);
             status && formData.append("status", String(status));
-            manualTemplateId && formData.append("manual_template_id", String(manualTemplateId));
+            if (manualTemplateId) formData.append("manual_template_id", String(manualTemplateId));
             preuseTemplateId && formData.append("pre_use_template_id", String(preuseTemplateId));
             maintenanceTemplateId && formData.append("maintenance_template_id", String(maintenanceTemplateId));
             image && formData.append("image", image);
             third_party_certificate && formData.append("third_party_certificate", third_party_certificate);
+            if (third_party_certificate) {
+                if (third_party_start_date) formData.append("third_party_start_date", third_party_start_date);
+                if (third_party_expiry_date) formData.append("third_party_expiry_date", third_party_expiry_date);
+            }
+
             newPreuseQuestions.length !== 0 &&
                 formData.append("asset_pre_use_questions", JSON.stringify(formatQuestionBody(newPreuseQuestions)));
             newMaintenanceQuestions.length !== 0 &&
@@ -388,8 +431,34 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
         return newQuestions;
     }
 
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
+    const openModal = () => setIsModalOpen(true);
+    const closeModal = () => setIsModalOpen(false);
+
+    const [imagePreview, setImagePreview] = useState<string | null>(null);
+
+    // const [showMsg, setShowMsg] = useState("")
+    const [permError, setPermError] = useState("");
+
+    const imageInputRef = useRef<HTMLInputElement>(null);
+
+    function handleRemoveImage() {
+        setImagePreview(null);
+        if (imageInputRef.current) {
+            imageInputRef.current.value = "";
+        }
+    }
     return (
         <>
+            <TagAssignModal
+                isOpen={isModalOpen}
+                isClose={closeModal}
+                permError={setPermError}
+                showMsg={setShowMsg}
+                assetId={initialData?.id}
+                fetchAssets={fetchAsset}
+            />
             {editingQuestion && (
                 <UpdateQuestionModal
                     question={editingQuestion}
@@ -406,6 +475,12 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                 {showMsg && (
                     <div className='text-green-600'>
                         <p>{showMsg}</p>
+                    </div>
+                )}
+
+                {permError && (
+                    <div className='text-red-500'>
+                        <p>{permError}</p>
                     </div>
                 )}
                 {/* {formError && <div className='text-red-500'>{formError}</div>} */}
@@ -431,6 +506,15 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                             className='px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm'>
                             Save
                         </button>
+
+                        {!initialData?.tag?.id && (
+                            <button
+                                type='button'
+                                onClick={openModal}
+                                className='px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm'>
+                                Assign Tag
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -440,7 +524,7 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                         {/* UID */}
                         <div className='col-span-2'>
                             <label className='form-label'>UID</label>
-                            <input type='text' value={tagUid} readOnly className='form-input' />
+                            <input type='text' placeholder={tagUid} readOnly className='form-input' />
                         </div>
 
                         {/* Name */}
@@ -453,6 +537,7 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                 name='name'
                                 onChange={(e) => setName(e.target.value)}
                             />
+                            {errors?.name && <p className='text-red-500'>{errors?.name}</p>}
                         </div>
 
                         {/* Location */}
@@ -470,6 +555,7 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                 ))}
                                 <option>Test</option>
                             </select>
+                            {errors?.location && <p className='text-red-500'>{errors?.location}</p>}
                         </div>
 
                         {/* Batch Code */}
@@ -482,6 +568,7 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                 name='batch_code'
                                 onChange={(e) => setBatchCode(e.target.value)}
                             />
+                            {errors?.batchCode && <p className='text-red-500 inline-block'>{errors?.batchCode}</p>}
                         </div>
 
                         {/* Status */}
@@ -492,9 +579,11 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                 value={status}
                                 name='status'
                                 onChange={(e) => setStatus(Number(e.target.value))}>
+                                <option value=''>Select Status</option>
                                 <option value='1'>Active</option>
                                 <option value='0'>Inactive</option>
                             </select>
+                            {errors?.status && <p className='text-red-500 inline-block'>{errors?.status}</p>}
                         </div>
                     </div>
 
@@ -506,20 +595,46 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                             <div className='upload-box'>
                                 <label className='cursor-pointer flex flex-col items-center gap-2 text-gray-500 w-full'>
                                     <input
+                                        ref={imageInputRef}
                                         type='file'
                                         className='hidden'
                                         name='image'
-                                        onChange={(e) => setImage(e.target.files && e.target.files[0])}
+                                        onChange={(e) => {
+                                            const file = e.target.files?.[0];
+                                            if (file) {
+                                                setImage(file);
+                                                setImagePreview(URL.createObjectURL(file));
+                                            }
+                                        }}
                                     />
-
                                     <span className='text-sm font-medium'>Upload Image</span>
                                     <span className='text-xs'>Max 5 MB</span>
                                 </label>
                             </div>
-                            {image && (
-                                <div className='show-image'>
-                                    <p>Asset Image: </p>
-                                    {image.name}
+
+                            {/* for already uploaded images */}
+                            {initialData?.image && (
+                                <div className='relative w-[180px] h-[180px] rounded-[10px] overflow-hidden border border-solid border-[#c9d5ff]'>
+                                    <h4>Uploaded Image</h4>
+                                    <img
+                                        src={"https://api.tagxl.com/" + initialData?.image}
+                                        alt='Preview'
+                                        className='w-full h-full object-cover'
+                                    />
+                                </div>
+                            )}
+
+                            {image && imagePreview && (
+                                <div className='relative w-[180px] h-[180px] rounded-[10px] overflow-hidden border border-solid border-[#c9d5ff]'>
+                                    <p>Asset Image: {image?.name}</p>
+
+                                    <img src={imagePreview} alt='Preview' className='w-full h-full object-cover' />
+                                    <button
+                                        type='button'
+                                        onClick={handleRemoveImage}
+                                        className='absolute top-1.5 right-1.5 z-20 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-xs shadow'>
+                                        ✕
+                                    </button>
                                 </div>
                             )}
                         </div>
@@ -533,7 +648,9 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                         type='file'
                                         className='hidden'
                                         name='third_party_certificate'
-                                        onChange={(e) => set_third_party_certificate(e.target.files && e.target.files[0])}
+                                        onChange={(e) =>
+                                            set_third_party_certificate(e.target.files && e.target.files[0])
+                                        }
                                     />
 
                                     <div className='flex flex-col items-center gap-2 text-gray-500'>
@@ -542,13 +659,71 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                     </div>
                                 </label>
                             </div>
+                            {initialData?.third_party_certificate?.third_party_certificate && (
+                                <p>Third party certificate: {third_party_certificate.name}</p>
+                            )}
+                            {third_party_certificate && (
+                                <div className='show-certificate flex justify-around gap-2'>
+                                    <p>Third party certificate: {third_party_certificate.name}</p>
+
+                                    <div className='form-group flex flex-col gap-2'>
+                                        <div className='fancy-input relative'>
+                                            <input
+                                                id='third_party_start_date'
+                                                type='date'
+                                                name='third_party_start_date'
+                                                value={third_party_start_date}
+                                                onChange={(e) => set_third_party_start_date(e.target.value)}
+                                                className='peer w-full h-12 border border-gray-300 rounded-lg px-3 pt-5 pb-2 text-sm focus:outline-none focus:border-blue-500'
+                                            />
+
+                                            <label
+                                                htmlFor='third_party_start_date'
+                                                className={`absolute left-3 px-1 bg-white text-gray-500 transition-all duration-200
+                                                            ${third_party_start_date ? "top-1 text-xs text-blue-500" : "top-1/2 -translate-y-1/2 text-sm"}
+                                                            peer-focus:top-1 peer-focus:text-xs peer-focus:text-blue-500
+                                                            `}>
+                                                Start Date
+                                            </label>
+
+                                            {errors?.third_party_start_date && (
+                                                <p className='text-red-500 text-xs mt-1'>
+                                                    {errors.third_party_start_date}
+                                                </p>
+                                            )}
+                                        </div>
+
+                                        <div className='form-group flex gap-2'>
+                                            <div className='fancy-input relative'>
+                                                <input
+                                                    id='third_party_end_date'
+                                                    type='date'
+                                                    name='third_party_end_date'
+                                                    value={third_party_expiry_date}
+                                                    onChange={(e) => set_third_party_expiry_date(e.target.value)}
+                                                    className='peer w-full h-12 border border-gray-300 rounded-lg px-3 pt-5 pb-2 text-sm focus:outline-none focus:border-blue-500'
+                                                />
+
+                                                <label
+                                                    htmlFor='third_party_start_date'
+                                                    className={`absolute left-3 px-1 bg-white text-gray-500 transition-all duration-200
+                                                            ${third_party_start_date ? "top-1 text-xs text-blue-500" : "top-1/2 -translate-y-1/2 text-sm"}
+                                                            peer-focus:top-1 peer-focus:text-xs peer-focus:text-blue-500
+                                                            `}>
+                                                    Expiry Date
+                                                </label>
+
+                                                {errors?.third_party_end_date && (
+                                                    <p className='text-red-500 text-xs mt-1'>
+                                                        {errors.third_party_end_date}
+                                                    </p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                         </div>
-                        {third_party_certificate && (
-                            <div className='show-certificate'>
-                                <p>Third party certificate: </p>
-                                {third_party_certificate.name}
-                            </div>
-                        )}
                     </div>
 
                     {/* oem certificate */}
@@ -556,11 +731,15 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                         <h3 className='mb-4 font-bold'>OEM Ceritficate</h3>
                         <div className='oem-certificate-block flex justify-between'>
                             <p className='underline text-sm'>{initialData?.oem_certificate}</p>
-                            <button
-                                type='button'
-                                className='px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm'>
-                                Download
-                            </button>
+                            {initialData?.oem_certificate && (
+                                <Link
+                                    href={"https://api.tagxl.com/" + initialData?.oem_certificate}
+                                    download={initialData?.oem_certificate}
+                                    type='button'
+                                    className='px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded text-sm'>
+                                    Download
+                                </Link>
+                            )}
                         </div>
                     </div>
 
@@ -572,10 +751,13 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                             <select
                                 className='form-input'
                                 value={manualTemplateId}
-                                onChange={(e) => setManualTemplateId(e.target.value)}>
-                                <option value=''>Select</option>
+                                onChange={(e) => {
+                                    const value = parseInt(e.target.value);
+                                    setManualTemplateId(value);
+                                }}>
+                                <option value={0}>Select</option>
                                 {manualTemplateList.map((temp: any) => (
-                                    <option value={String(temp.id)} key={temp.id}>
+                                    <option value={temp.id} key={temp.id}>
                                         {temp.name}
                                     </option>
                                 ))}
@@ -597,13 +779,17 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                         setPreuseTemplateId(value);
                                         handlePreuseQuestions(e.target.value);
                                     }}>
-                                    <option value=''>Select</option>
+                                    {/* <option value=''>Select</option> */}
                                     {preuseTemplateList.map((tmp: any) => (
                                         <option value={tmp.id} key={tmp.id}>
                                             {tmp.title}
                                         </option>
                                     ))}
                                 </select>
+
+                                {errors?.preuseTemplateId && (
+                                    <p className='text-red-500 inline-block'>{errors.preuseTemplateId}</p>
+                                )}
                             </div>
                             <div>
                                 <h5 className='font-semibold'>All Pre Use Check Questions</h5>
@@ -792,13 +978,16 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                         setMaintenanceTemplateId(Number(e.target.value));
                                         handleMaintenanceQuestions(e.target.value);
                                     }}>
-                                    <option value=''>Select</option>
+                                    {/* <option value=''>Select</option> */}
                                     {maintenanceTemplateList.map((item) => (
                                         <option value={item.id} key={item.id}>
                                             {item.title}
                                         </option>
                                     ))}
                                 </select>
+                                {errors?.maintenanceTemplateId && (
+                                    <p className='text-red-500 inline-block'>{errors.maintenanceTemplateId}</p>
+                                )}
                             </div>
                             <div>
                                 <h5 className='font-semibold'>All Maintenance Template Questions</h5>

@@ -13,7 +13,7 @@ export interface AssetData {
     manual_template: ManualTemplate;
     status: number;
     oem_certificate: string;
-    third_party_certificate: any[];
+    third_party_certificate?: ThirdPartyCertificate;
     pre_use_template: PreUseTemplate;
     maintenance_template: MaintenanceTemplate;
     asset_pre_use_questions: any;
@@ -25,6 +25,14 @@ export interface AssetData {
     is_certificate_expired: boolean;
     created_at: string;
     updated_at: string;
+}
+
+export interface ThirdPartyCertificate {
+    id: string;
+    third_party_certificate: string;
+    third_party_start_date: string;
+    third_party_expiry_date: string;
+    created_at: string;
 }
 
 export interface Tag {

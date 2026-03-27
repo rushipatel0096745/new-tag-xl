@@ -23,7 +23,7 @@ const ManualTemplateEditPage = async ({ params }: { params: Promise<{ id: string
 
     return (
         <div>
-            <ManualTemplateEdit initialData={initialData} />
+            <ManualTemplateEdit initialData={initialData || {}} id={id}/>
         </div>
     );
 };

@@ -142,6 +142,9 @@ const ManualTemplateList = ({ tempList }: Props) => {
             return;
         }
 
+        const sessionId = getSessionId("company-user-session");
+        const companyId = getCompanyId("company-user-session");
+
         try {
             const result = await clientFetch("/company/manual-template/delete/" + Number(id), {
                 method: "DELETE",
@@ -153,7 +156,7 @@ const ManualTemplateList = ({ tempList }: Props) => {
             });
 
             if (result.has_error && result.error_code == "PERMISSION_DENIED") {
-                setPermitted(result.message || "Permission denied to update");
+                setPermitted(result.message || "Permission denied to delete");
                 return;
             }
 
@@ -184,6 +187,12 @@ const ManualTemplateList = ({ tempList }: Props) => {
                 {showMsg && (
                     <div className='text-yellow-600'>
                         <p>{showMsg}</p>
+                    </div>
+                )}
+
+                {permitted && (
+                    <div className='text-red-500'>
+                    <p>{permitted}</p>
                     </div>
                 )}
                 <div className='actions-btn flex gap-2 items-center'>

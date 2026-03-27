@@ -25,7 +25,8 @@ const LocationForm = ({ action, locationId }: { action?: LocationFormAction; loc
         async function fetchLocation() {
             if (locationId) {
                 const location = await getLocation(locationId);
-                console.log("location: ", location);
+                // console.log("location: ", location);
+
                 if (location.has_error && location.error_code == "PERMISSION_DENIED") {
                     setPermError(location.message || "Permission denied");
                     return;
@@ -37,13 +38,12 @@ const LocationForm = ({ action, locationId }: { action?: LocationFormAction; loc
                 }
 
                 if (!location.has_error) {
-                    setLocation(location.name ?? "");
+                    setLocation(location.location.name ?? "");
                 }
             }
         }
         fetchLocation();
     }, []);
-
 
     const [location, setLocation] = useState("");
 
@@ -68,8 +68,14 @@ const LocationForm = ({ action, locationId }: { action?: LocationFormAction; loc
         if (!locationId) {
             setLocation("");
         }
-        setShowMsg("Location successfully updated");
     }
+
+    useEffect(() => {
+        if (state?.success) {
+            setShowMsg("Location successfully updated");
+            setLocation("");
+        }
+    }, [state]);
 
     return (
         <div className='card-box bg-white rounded-[18px]'>
@@ -77,6 +83,17 @@ const LocationForm = ({ action, locationId }: { action?: LocationFormAction; loc
                 <h3 className='title h3 text-[18px] font-semibold leading-6'>
                     {locationId ? "Edit Location" : "Add Location"}
                 </h3>
+                {permError && (
+                    <div className='text-red-500'>
+                        <p>{permError}</p>
+                    </div>
+                )}
+
+                {state?.error && (
+                    <div className='text-red-500'>
+                        <p>{state?.error}</p>
+                    </div>
+                )}
                 <div className='actions-btn flex gap-2 items-center'>
                     <Link
                         className='icon-text-button default all-unset cursor-pointer bg-white border border-[#845adf26] rounded-full items-center pt-1 pr-3 pb-1 pl-1 text-[14px] font-medium transition-colors duration-200 inline-flex'

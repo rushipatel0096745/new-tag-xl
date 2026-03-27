@@ -35,7 +35,8 @@ const UnassignTagModal = ({ isOpen, isClose, uid, permError, showMsg, fetchTag }
         const unassignedTag = await UnassignTag(data);
 
         if (unassignedTag.has_error && unassignedTag.error_code == "PERMISSION_DENIED") {
-            permError(unassignedTag.message);
+            permError("Permissoin Denied to Unassign Tag");
+            isClose();
         }
 
         if (!unassignedTag.has_error) {

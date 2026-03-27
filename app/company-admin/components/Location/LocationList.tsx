@@ -5,7 +5,7 @@ import React, { useEffect, useState } from "react";
 import { Location } from "../../(admin)/location-master/page";
 import { getCompanyUserPermissions, getSuperAdminFlag } from "@/app/utils/user-helper";
 import Cookies from "js-cookie";
-import { GetLocationList } from "@/app/services/company-admin/location";
+import { DeleteLocation, GetLocationList } from "@/app/services/company-admin/location";
 
 const LocationList = ({ locationList }: { locationList: Location[] }) => {
     const [list, setList] = useState<Location[]>(locationList);
@@ -77,6 +77,21 @@ const LocationList = ({ locationList }: { locationList: Location[] }) => {
             window.removeEventListener("LocationFiltersChanged", handleFiltersChanged);
         };
     }, [page, pageSize, is_super_admin]);
+
+    async function handleDelete(id: number) {
+        const result = await DeleteLocation(id);
+        if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+            setError((prev) => ({
+                ...prev,
+                permission: result.message || "Permission Denied",
+            }));
+        }
+        if (!result.has_error) {
+            // router.refresh();
+            window.dispatchEvent(new Event("LocationFiltersChanged"));
+            setShowMsg("Location Dleted Successfully");
+        }
+    }
 
     return (
         <div className='card-box bg-[#fff] border-gray-700 rounded-[18px] shadow-3xl shadow-white px-3 py-5.5'>
@@ -160,6 +175,7 @@ const LocationList = ({ locationList }: { locationList: Location[] }) => {
                                                                 )}
                                                                 {(is_super_admin || userRole.includes("delete")) && (
                                                                     <button
+                                                                        onClick={() => handleDelete(location.id)}
                                                                         className='icon-button delete inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
                                                                         type='button'>
                                                                         <span className='icon-circle'>

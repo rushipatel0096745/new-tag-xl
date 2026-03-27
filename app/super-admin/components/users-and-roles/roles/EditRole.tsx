@@ -38,7 +38,7 @@ const EditRole = ({ id }: { id: string }) => {
 
     async function getRole() {
         const result = await GetRole(Number(id));
-        if (result.has_error && result.error_code == "PERMISSION_ERROR") {
+        if (result?.has_error && result.error_code == "PERMISSION_DENIED") {
             setPermitted("Permission Denied to Update");
         }
         if (!result.has_error) {

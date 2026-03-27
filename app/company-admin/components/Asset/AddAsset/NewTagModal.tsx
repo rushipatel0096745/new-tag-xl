@@ -36,12 +36,10 @@ const NewTagModal = ({ isOpen, isClosed, updateForm, formData, next }: NewTagMod
 
     function handleTagTypeSelect(value: string) {
         setTagType(value);
-        updateForm("tag_type", value);
     }
 
     function handleUid(value: string) {
         setUid(value);
-        updateForm("uid", value);
     }
 
     function validate() {
@@ -73,8 +71,10 @@ const NewTagModal = ({ isOpen, isClosed, updateForm, formData, next }: NewTagMod
 
         if (!createTag.has_error) {
             const checkAssigned = await CheckTagAssigned(uid);
-            updateForm("tag_id", createTag?.created_tags[0]?.tag_id)
-            
+            updateForm("tag_id", createTag?.created_tags[0]?.tag_id);
+            updateForm("uid", uid);
+            updateForm("tag_type", tag_type);
+
             if (checkAssigned.has_error && checkAssigned.error_code == "RECORD_ALREADY_USED") {
                 setAssignError(checkAssigned.message);
                 return;

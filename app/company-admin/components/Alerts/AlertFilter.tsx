@@ -284,7 +284,7 @@ const AlertsFilter = () => {
                                                         <option value=''>Select Type</option>
                                                         <option value='0'>Pending</option>
                                                         <option value='1'>Processing</option>
-                                                        <option value='1'>Completed</option>
+                                                        <option value='2'>Completed</option>
                                                     </select>
                                                 </div>
                                             </div>

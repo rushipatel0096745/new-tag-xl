@@ -7,7 +7,7 @@ import { deleteAsset } from "@/app/services/company-admin/asset-actions";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getCompanyUserPermissions, getSuperAdminFlag } from "@/app/utils/user-helper";
 import Cookies from "js-cookie";
-import { GetAssetList } from "@/app/services/company-admin/assets";
+import { DeleteAsset, GetAssetList } from "@/app/services/company-admin/assets";
 
 interface AssetProps {
     assets: Asset[];
@@ -30,6 +30,10 @@ const AssetList = ({ assets }: AssetProps) => {
     useEffect(() => {
         if (searchParams.get("delete") === "true") {
             setShowMsg("Asset Deleted Successfully");
+            router.refresh();
+        }
+        if (searchParams.get("create") === "true") {
+            setShowMsg("Asset Created Successfully");
             router.refresh();
         }
         router.replace("/company-admin/asset");
@@ -100,12 +104,22 @@ const AssetList = ({ assets }: AssetProps) => {
     const [showMsg, setShowMsg] = useState<string>("");
 
     const handleDelete = async function (id: number) {
-        const response = await deleteAsset(id);
-        if (response.success) {
-            setShowMsg("Asset deleted successfully");
-            router.refresh();
+        let isConfirmed = confirm("Are you sure to delete Asset?");
+        if (isConfirmed) {
+            const result = await DeleteAsset(id);
+            if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+                setError((prev) => ({
+                    ...prev,
+                    permission: result.message || "Permission Denied",
+                }));
+            }
+            if (!result.has_error) {
+                // router.refresh();
+                setList((prev) => prev.filter((asset) => asset.id !== id));
+                setShowMsg("Asset Dleted Successfully");
+            }
         } else {
-            setShowMsg("Failed to delet the Asset");
+            return
         }
     };
 
@@ -190,13 +204,13 @@ const AssetList = ({ assets }: AssetProps) => {
                                                             {asset.id}
                                                         </td>
                                                         <td className='text-[13px] p-2 font-medium text-[#474a54]'>
-                                                            {asset.tag.uid}
+                                                            {asset?.tag?.uid}
                                                         </td>
                                                         <td className='text-[13px] p-2 font-medium text-[#474a54]'>
                                                             {asset.name}
                                                         </td>
                                                         <td className='text-[13px] p-2 font-medium text-[#474a54]'>
-                                                            {asset.tag.tag_type}
+                                                            {asset?.tag?.tag_type}
                                                         </td>
                                                         <td className='text-[13px] p-2 font-medium text-[#474a54]'>
                                                             {asset.batch_code}

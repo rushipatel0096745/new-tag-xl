@@ -10,11 +10,12 @@ type LocationModalProps = {
     isOpen: boolean;
     isClosed: () => void;
     getLocations: () => void;
+    updateForm: (name: string, value: any | null) => void;
 };
 
 type TagType = "RFID" | "QR" | "Manual" | "";
 
-const LocationModal = ({ isOpen, isClosed, getLocations }: LocationModalProps) => {
+const LocationModal = ({ isOpen, isClosed, getLocations, updateForm }: LocationModalProps) => {
     const [location, setLocation] = useState("");
     const [assignError, setAssignError] = useState("");
 
@@ -35,6 +36,7 @@ const LocationModal = ({ isOpen, isClosed, getLocations }: LocationModalProps) =
 
         if (!createLocation.has_error) {
             getLocations();
+            updateForm("location_id", createLocation.location_id)
             isClosed();
         }
     }
@@ -71,7 +73,6 @@ const LocationModal = ({ isOpen, isClosed, getLocations }: LocationModalProps) =
                                     id='name'
                                     placeholder=''
                                     type='text'
-                                    // defaultValue=''
                                     value={location}
                                     name='location_name'
                                     onChange={(e) => {

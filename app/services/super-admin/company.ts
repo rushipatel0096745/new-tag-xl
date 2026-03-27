@@ -25,10 +25,10 @@ export const GetCompanyList = async function (page: number = 1, pageSize: number
             }),
         });
 
-        if (!result.ok) {
-            console.error("API error:", result.status, result.statusText);
-            return null;
-        }
+        // if (!result.ok) {
+        //     console.error("API error:", result.status, result.statusText);
+        //     return null;
+        // }
 
         const data = await result.json();
         return data;
@@ -75,10 +75,35 @@ export const GetCompany = async function (id: number) {
             },
         });
 
-        if (!result.ok) {
-            console.error("API error:", result.status, result.statusText);
-            return null;
-        }
+        // if (!result.ok) {
+        //     console.error("API error:", result.status, result.statusText);
+        //     return null;
+        // }
+
+        const data = await result.json();
+        return data;
+    } catch (err) {
+        console.error("Fetch failed:", err);
+        return null;
+    }
+};
+
+export const DeleteCompany = async function (id: number) {
+    try {
+        const sessionId = getSessionId("super-user-session");
+
+        const result = await fetch("/proxy/super-user/company/delete/" + id, {
+            method: "DELETE",
+            headers: {
+                "X-Session-ID": sessionId,
+                "Content-Type": "application/json",
+            },
+        });
+
+        // if (!result.ok) {
+        //     console.error("API error:", result.status, result.statusText);
+        //     return null;
+        // }
 
         const data = await result.json();
         return data;
@@ -106,10 +131,10 @@ export const LoginToCompany = async function (companyId: number) {
             }),
         });
 
-        if (!result.ok) {
-            console.error("API error:", result.status, result.statusText);
-            return null;
-        }
+        // if (!result.ok) {
+        //     console.error("API error:", result.status, result.statusText);
+        //     return null;
+        // }
 
         const data = await result.json();
 

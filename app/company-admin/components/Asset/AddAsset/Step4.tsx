@@ -3,6 +3,7 @@ import PreuseTemplate from "./PreuseTemplate";
 import MaintenanceTemplate from "./MaintenanceTemplate";
 import BooleanInput from "./BooleanInput";
 import TextInput from "./TextInput";
+import { useSearchParams } from "next/navigation";
 
 interface Props {
     next: () => void;
@@ -21,6 +22,10 @@ const Step4 = ({ prev, next, updateForm, formData, validate, errors, handleSubmi
         console.log("formdata: ", formData);
         await handleSubmit();
     };
+
+    const searchParmas = useSearchParams();
+
+    
 
     useEffect(() => console.log("formData: ", formData), []);
     return (
@@ -91,7 +96,7 @@ const Step4 = ({ prev, next, updateForm, formData, validate, errors, handleSubmi
                     type='submit'
                     onClick={(e: any) => handleTemplateSubmit(e)}
                     className='btn continue py-2.5 pr-3 pl-3.5 ml-auto all-unset cursor-pointer text-center bg-[#263f94] border border-[#263f94] text-white box-border rounded-[40px] justify-center items-center gap-[6px] h-[38px] px-[14px] py-[10px] text-[14px] font-500 transition-all duration-200 inline-flex'>
-                    Continue
+                    Save
                     <svg
                         xmlns='http://www.w3.org/2000/svg'
                         className='align-bottom'

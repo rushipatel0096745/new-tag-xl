@@ -107,6 +107,8 @@ const MaintenanceTemplateList = ({ tmpList }: Props) => {
     }
 
     async function getTemplate() {
+        const sessionId = getSessionId("company-user-session");
+        const companyId = getCompanyId("company-user-session");
         try {
             const result = await clientFetch("/company/maintenance-template/list", {
                 method: "POST",
@@ -141,6 +143,9 @@ const MaintenanceTemplateList = ({ tmpList }: Props) => {
             return;
         }
 
+        const sessionId = getSessionId("company-user-session");
+        const companyId = getCompanyId("company-user-session");
+
         try {
             const result = await clientFetch("/company/maintenance-template/delete/" + Number(id), {
                 method: "DELETE",
@@ -151,14 +156,14 @@ const MaintenanceTemplateList = ({ tmpList }: Props) => {
                 },
             });
 
-            if (result?.has_error) {
-                console.error("Template deletion failed:", result.message);
+            if (result?.has_error && result.error_code == "PERMISSION_DENIED") {
+                // console.error("Template deletion failed:", result.message);
+                setPermError(result.message);
                 return;
             }
 
-            if (result?.has_error && result.error_code == "PERMISSION_DENIED") {
+            if (result?.has_error) {
                 console.error("Template deletion failed:", result.message);
-                setPermError(result.message);
                 return;
             }
 

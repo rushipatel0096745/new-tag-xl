@@ -8,9 +8,10 @@ import React, { useEffect, useState } from "react";
 
 interface Props {
     initialData: EditManualTemplate;
+    id: string;
 }
 
-const ManualTemplateEdit = ({ initialData }: Props) => {
+const ManualTemplateEdit = ({ initialData, id }: Props) => {
     const [showMsg, setShowMsg] = useState("");
     const [title, setTitle] = useState(initialData.name);
     const [description, setDescription] = useState(initialData.description || "");
@@ -52,6 +53,10 @@ const ManualTemplateEdit = ({ initialData }: Props) => {
         await updateTemplate(formData);
     }
 
+    useEffect(() => {
+        getTemplate(id);
+    }, []);
+
     async function getTemplate(id: any) {
         try {
             const result = await clientFetch("/company/manual-template/get/" + Number(id), {
@@ -85,7 +90,7 @@ const ManualTemplateEdit = ({ initialData }: Props) => {
 
     async function updateTemplate(data: any) {
         try {
-            const result = await clientFetch("/company/manual-template/update/"+initialData.id, {
+            const result = await clientFetch("/company/manual-template/update/" + initialData.id, {
                 method: "PUT",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -153,7 +158,7 @@ const ManualTemplateEdit = ({ initialData }: Props) => {
 
                 <div className='flex gap-2'>
                     <Link
-                        href='/company-admin/template-master/maintenance-check-template'
+                        href='/company-admin/template-master/manual-template'
                         className='px-4 py-2 bg-yellow-400 hover:bg-yellow-500 rounded text-sm font-medium'>
                         Back
                     </Link>

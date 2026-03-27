@@ -66,7 +66,7 @@ const CompanyEdit = ({
 
     async function getCompany() {
         const result = await GetCompany(Number(id));
-        if (result.has_error && result.error_code == "PERMISSION_ERROR") {
+        if (result.has_error && result.error_code == "PERMISSION_DENIED") {
             setPermitted("Permission Denied to Update");
         }
         if (!result.has_error) {

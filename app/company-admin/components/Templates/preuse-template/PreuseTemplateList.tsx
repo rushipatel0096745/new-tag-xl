@@ -60,7 +60,7 @@ const PreuseTemplateList = ({ tempList }: Props) => {
                 return;
             }
 
-            if (response.has_error && response.message === "Asset not found") {
+            if (response.has_error && response.message === "Template not found") {
                 setLoading(false);
                 setList([]);
                 setTotal(0);
@@ -107,6 +107,8 @@ const PreuseTemplateList = ({ tempList }: Props) => {
     }
 
     async function getTemplate() {
+        const sessionId = getSessionId("company-user-session");
+        const companyId = getCompanyId("company-user-session");
         try {
             const result = await clientFetch("/company/pre-use-template/list", {
                 method: "POST",
@@ -141,6 +143,9 @@ const PreuseTemplateList = ({ tempList }: Props) => {
             return;
         }
 
+        const sessionId = getSessionId("company-user-session");
+        const companyId = getCompanyId("company-user-session");
+
         try {
             const result = await clientFetch("/company/pre-use-template/delete/" + Number(id), {
                 method: "DELETE",
@@ -151,8 +156,14 @@ const PreuseTemplateList = ({ tempList }: Props) => {
                 },
             });
 
+            if (result?.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermError("Permission Denied to delete");
+                return;
+            }
+
             if (result?.has_error) {
-                console.error("Template deletion failed:", result.message);
+                // console.error("Template deletion failed:", result.message);
+                setPermError(result.message);
                 return;
             }
 
@@ -178,6 +189,11 @@ const PreuseTemplateList = ({ tempList }: Props) => {
                 {showMsg && (
                     <div className='text-yellow-600'>
                         <p>{showMsg}</p>
+                    </div>
+                )}
+                 {permError && (
+                    <div className='text-red-600'>
+                        <p>{permError}</p>
                     </div>
                 )}
                 <div className='actions-btn flex gap-2 items-center'>

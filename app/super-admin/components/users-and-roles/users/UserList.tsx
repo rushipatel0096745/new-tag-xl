@@ -5,7 +5,7 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { useRouter, useSearchParams } from "next/navigation";
-import { GetUsersList } from "@/app/services/super-admin/user";
+import { DeleteUser, GetUsersList } from "@/app/services/super-admin/user";
 
 interface User {
     id: number;
@@ -106,19 +106,20 @@ const UserList = ({ userList }: { userList: User[] }) => {
         console.log("company permissions: ", userRole);
     }, [userRole]);
 
-    // async function handleDelete(id: number) {
-    //     const result = await DeleteTag(id);
-    //     if (result.has_error && result.error_code == "PERMISSION_DENIED") {
-    //         setError((prev) => ({
-    //             ...prev,
-    //             permission: result.message || "Permission Denied",
-    //         }));
-    //     }
-    //     if (!result.has_error) {
-    //         setShowMsg("Tag Dleted Successfully");
-    //         router.refresh();
-    //     }
-    // }
+    async function handleDelete(id: number) {
+        const result = await DeleteUser(id);
+        if (result.has_error && result.error_code == "PERMISSION_DENIED") {
+            setError((prev) => ({
+                ...prev,
+                permission: result.message || "Permission Denied",
+            }));
+        }
+        if (!result.has_error) {
+            setList((prev) => prev.filter((user) => user.id !== id));
+            // setTotal((prev) => prev - 1);
+            setShowMsg("User Deleted Successfully");
+        }
+    }
 
     return (
         <div className='card-box bg-[#fff] border-gray-700 rounded-[18px] shadow-3xl shadow-white px-3 py-5.5'>
@@ -231,7 +232,7 @@ const UserList = ({ userList }: { userList: User[] }) => {
 
                                                                 {userRole.includes("delete") && (
                                                                     <button
-                                                                        // onClick={() => handleDelete(comp.id)}
+                                                                        onClick={() => handleDelete(user.id)}
                                                                         className='icon-button delete inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
                                                                         type='button'>
                                                                         <span className='icon-circle'>

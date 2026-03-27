@@ -3,38 +3,43 @@
 import React, { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Modal from "../Modal";
 import Select from "react-select";
-import { Asset } from "../../(admin)/tag/edit/[id]/page";
-import { GetAssetList } from "@/app/services/company-admin/assets";
-import { AssignTag } from "@/app/services/company-admin/tags";
+import { AssignTag, GetUnassignedTagList } from "@/app/services/company-admin/tags";
+import { Tag } from "../Tag/TagList";
 
-const AssignTagModal = ({
+const TagAssignModal = ({
     isOpen,
     isClose,
-    assetList,
-    uid,
     permError,
     showMsg,
-    fetchTag,
+    assetId,
+    fetchAssets,
 }: {
     isOpen: boolean;
     isClose: () => void;
-    assetList: Asset[];
-    uid: string;
     permError: Dispatch<SetStateAction<string>>;
     showMsg: Dispatch<SetStateAction<string>>;
-    fetchTag: () => void;
+    assetId: number | undefined;
+    fetchAssets: () => void;
 }) => {
     const [selected, setSelected] = useState<{ value: number; label: string }>();
+    
+    const [list, setList] = useState<Tag[]>();
 
-    const [list, setList] = useState<Asset[]>();
-
-    async function fetchAssets() {
-        const assets = await GetAssetList(1, 100, [{ field: "tag_id", condition: "is_null", text: "" }], 1);
-        setList(assets.assets);
+    async function fetchTags() {
+        const tag = await GetUnassignedTagList(1, 1000, [], 1);
+        if (tag.has_error && tag.error_code == "PERMISSION_DENIED") {
+            permError(tag.message);
+        }
+        if (tag.has_error) {
+            permError(tag.message);
+        }
+        if (!tag.has_error) {
+            setList(tag?.tags);
+        }
     }
 
     useEffect(() => {
-        fetchAssets();
+        fetchTags();
     }, []);
 
     function handleChange(selectedOptions: any) {
@@ -44,8 +49,8 @@ const AssignTagModal = ({
     async function saveSelection() {
         console.log("selected options: ", selected);
         const data = {
-            asset_id: selected?.value,
-            uid: uid,
+            asset_id: assetId,
+            uid: selected?.value,
         };
         // console.log(data)
 
@@ -58,7 +63,7 @@ const AssignTagModal = ({
 
         if (!assignTag.has_error) {
             showMsg("Tag Assigned Succesfully");
-            fetchTag();
+            fetchAssets();
             isClose();
         }
     }
@@ -92,13 +97,13 @@ const AssignTagModal = ({
                         <div className='add-question-wrapper'>
                             <div className='fancy-input relative'>
                                 <Select
-                                    options={list?.map((asset) => ({
-                                        value: asset.id,
-                                        label: asset.name,
+                                    options={list?.map((tag) => ({
+                                        value: tag.uid,
+                                        label: tag.uid,
                                     }))}
                                     onMenuOpen={() => console.log("menu is open")}
                                     onChange={handleChange}
-                                    placeholder='Search Assets'
+                                    placeholder='Search Tags'
                                 />
                             </div>
                         </div>
@@ -121,4 +126,4 @@ const AssignTagModal = ({
     );
 };
 
-export default AssignTagModal;
+export default TagAssignModal;

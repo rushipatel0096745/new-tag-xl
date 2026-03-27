@@ -45,13 +45,18 @@ export const GetTag = async function (id: number) {
     return result;
 };
 
-export const GetUnassignedTagList = async function (page: number = 1, pageSize: number = 10, filters: Filter[] = []) {
+export const GetUnassignedTagList = async function (
+    page: number = 1,
+    pageSize: number = 10,
+    filters: Filter[] = [],
+    show_all_records: number = 0
+) {
     const companyId = getCompanyId("company-user-session");
     const sessionId = getSessionId("company-user-session");
 
     // console.log("company id: ", companyId);
 
-    const result = await clientFetch("/company/unassign-tag/list", {
+    const result = await clientFetch("/company/tag/unassigned-list", {
         method: "POST",
         headers: {
             "X-Session-ID": sessionId,
@@ -62,6 +67,7 @@ export const GetUnassignedTagList = async function (page: number = 1, pageSize: 
             page,
             pageSize,
             filters,
+            show_all_records,
         }),
     });
     return result;

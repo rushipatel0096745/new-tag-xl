@@ -126,9 +126,11 @@ const UserList = ({ tempList }: Props) => {
         }
     }
 
-    async function deleteTemplate(id: number | string) {
+    async function deleteUser(id: number | string) {
+        const sessionId = getSessionId("company-user-session");
+        const companyId = getCompanyId("company-user-session");
         try {
-            const result = await clientFetch("/company/users/delete/" + Number(id), {
+            const result = await clientFetch("/company/delete-user/" + Number(id), {
                 method: "DELETE",
                 headers: {
                     "X-Session-ID": sessionId,
@@ -137,13 +139,19 @@ const UserList = ({ tempList }: Props) => {
                 },
             });
 
-            if (result?.has_error) {
-                console.error("Template deletion failed:", result.message);
+            if (result?.has_error && result.error_code == "PERMISSION_DENIED") {
+                setPermError("Permission Denied to delete");
                 return;
             }
 
-            setList((prev) => prev.filter((item) => item.id !== id));
-            setShowMsg("Template deleted successfully");
+            if (result?.has_error) {
+                setPermError(result.message);
+            }
+
+            if (!result.has_error) {
+                setList((prev) => prev.filter((item) => item.id !== id));
+                setShowMsg("Template deleted successfully");
+            }
         } catch (error) {
             console.error("Delete template error:", error);
         }
@@ -166,7 +174,7 @@ const UserList = ({ tempList }: Props) => {
                         </div>
                     )}
                     <div className='actions-btn flex gap-2 items-center'>
-                        {userRole?.includes("create") && (
+                        {(is_super_admin || userRole?.includes("create")) && (
                             <Link
                                 className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
                                 href='/company-admin/users-and-roles/users/add'>
@@ -210,7 +218,7 @@ const UserList = ({ tempList }: Props) => {
                         </Link>
                         <Link
                             className='icon-text-button primary cursor-pointer bg-[#fff] border border-solid border-[#845adf26] rounded-4xl inline-flex items-center text-[14px] pt-1 pr-3 pb-1 pl-1 font-medium'
-                            href='/company-admin/template-master/maintenance-check-template'>
+                            href='/company-admin/users-and-roles/users'>
                             <span className='icon-circle'>
                                 <svg
                                     xmlns='http://www.w3.org/2000/svg'
@@ -326,7 +334,7 @@ const UserList = ({ tempList }: Props) => {
                                                                             userRole.includes("delete")) && (
                                                                             <button
                                                                                 onClick={() =>
-                                                                                    deleteTemplate(Number(temp.id))
+                                                                                    deleteUser(Number(temp.id))
                                                                                 }
                                                                                 className='icon-button delete inline-flex items-center justify-center cursor-pointer p-0 decoration-0'
                                                                                 type='button'>

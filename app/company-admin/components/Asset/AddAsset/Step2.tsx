@@ -103,7 +103,7 @@ const Step2 = ({ next, prev, updateForm, validate, errors, formData }: Props) =>
 
     return (
         <>
-            <LocationModal isOpen={isModalOpen} isClosed={closeModal} getLocations={getLocations} />
+            <LocationModal isOpen={isModalOpen} isClosed={closeModal} getLocations={getLocations} updateForm={updateForm}/>
             <form action='' method='POST' className='block' onSubmit={handleSubmit}>
                 <div className='card-box-inner border-3 border-solid border-[#f5f6fa] rounded-3xl p-5.5'>
                     <div className='card-box-block'>
@@ -142,9 +142,9 @@ const Step2 = ({ next, prev, updateForm, validate, errors, formData }: Props) =>
                                         onChange={(e) => updateForm("location_id", e.target.value)}
                                         className='form-select box-border text-[#17181a] bg-[#f5f6fa] border border-solid border-[#efefef] rounded-[10px] w-full h-11 pt-[18px] px-[14px] pb-2 text-[14px] font-medium'>
                                         <option value=''>Select Location</option>
-                                        {loactions.map((location) => (
-                                            <option value={location.id} key={location.id}>
-                                                {location.name}
+                                        {loactions?.map((location) => (
+                                            <option value={location?.id} key={location?.id}>
+                                                {location?.name}
                                             </option>
                                         ))}
                                     </select>

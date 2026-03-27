@@ -68,43 +68,26 @@ export const GetAsset = async function (id: number): Promise<{ success: boolean;
     return result;
 };
 
-export const DeleteAsset = async function (id: number): Promise<{ success: boolean; error: string; data: any | null }> {
+export const DeleteAsset = async function (id: number) {
     const companyId = getCompanyId("company-user-session");
     const sessionId = getSessionId("company-user-session");
 
-    return {
-        success: true,
-        error: "",
-        data: "asset deleted",
-    };
+    try {
+        const result = await fetch("/proxy/company/asset/delete/" + id, {
+            method: "DELETE",
+            headers: {
+                "X-Session-ID": sessionId,
+                "X-Company-ID": companyId,
+                "Content-Type": "application/json",
+            },
+        });
 
-    // console.log("company id: ", companyId);
-
-    // const result = await clientFetch("/company/asset/delete/" + id, {
-    //     method: "DELETE",
-    //     headers: {
-    //         "X-Session-ID": sessionId,
-    //         "X-Company-ID": companyId,
-    //         "Content-Type": "application/json",
-    //     },
-    // });
-
-    // if (result.has_error && result.error_code == "PERMISSIO_DENIED") {
-    //     return {
-    //         success: false,
-    //         error: result.message,
-    //         data: null,
-    //     };
-    // }
-    // if (!result.has_error) {
-    //     return {
-    //         success: true,
-    //         error: "",
-    //         data: result.message,
-    //     };
-    // }
-
-    // return result;
+        const data = await result.json();
+        return data;
+    } catch (err) {
+        console.error("Fetch failed:", err);
+        return null;
+    }
 };
 
 export const CheckTagAssigned = async function (tagId: string) {

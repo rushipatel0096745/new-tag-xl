@@ -57,8 +57,8 @@ export const getLocation = async function (id: number) {
             });
 
             const result = await response.json();
-            console.log(result);
-            return result?.location || {};
+            // console.log(result);
+            return result || {};
         } catch (error) {
             console.log("error: ", error);
             return [];
@@ -132,6 +132,23 @@ export const CreateLocations = async function (locationName: string) {
         body: JSON.stringify({
             name: locationName,
         }),
+    });
+    return result;
+};
+
+export const DeleteLocation = async function (id: number) {
+    const companyId = getCompanyId("company-user-session");
+    const sessionId = getSessionId("company-user-session");
+
+    // console.log("company id: ", companyId);
+
+    const result = await clientFetch("/company/location/delete/" + id, {
+        method: "DELETE",
+        headers: {
+            "X-Session-ID": sessionId,
+            "X-Company-ID": companyId,
+            "Content-Type": "application/json",
+        },
     });
     return result;
 };
