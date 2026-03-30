@@ -109,11 +109,13 @@ const AddAsset = () => {
 
         if (currentStep === 3) {
             if (!formData.oem_certificate) newErrors.oem_certificate = "OEM Certificate is required";
+            // if(formData.oem_certificate.name)
             if (formData.third_party_certificate) {
                 if (!formData.third_party_start_date)
                     newErrors.third_party_start_date = "Third party start date required";
                 if (!formData.third_party_expiry_date)
                     newErrors.third_party_expiry_date = "Third party expiry date required";
+
             }
             if (
                 (formData.third_party_start_date || formData.third_party_expiry_date) &&
@@ -124,8 +126,8 @@ const AddAsset = () => {
         }
 
         if (currentStep === 4) {
-            if (!formData.pre_use_template_id) newErrors.pre_use_template_id = "Selct the pre use template";
-            if (!formData.maintenance_template_id) newErrors.maintenance_template_id = "Selct the maintenance template";
+            if (!formData.pre_use_template_id) newErrors.pre_use_template_id = "Select the pre use template";
+            if (!formData.maintenance_template_id) newErrors.maintenance_template_id = "Select the maintenance template";
         }
 
         setErrors(newErrors);

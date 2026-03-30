@@ -91,6 +91,7 @@ const MaintenanceTemplate = ({ updateForm, errors }: Props) => {
     const [maintenanceQuestionType, setMaintenanceQuestionType] = useState("");
     const [maintenanceQuestionOptions, setMaintenanceQuestionOptions] = useState<string[]>([]);
     const [maintenanceQuestionOption, setMaintenanceQuestionOption] = useState("");
+    const [questionErrors, setQuestionErrors] = useState<Record<string, string>>({});
 
     const dragItem = useRef<number | null>(null);
     const dragOverItem = useRef<number | null>(null);
@@ -119,7 +120,41 @@ const MaintenanceTemplate = ({ updateForm, errors }: Props) => {
         updateForm("asset_maintenance_questions", JSON.stringify(formattedQuestions));
     }, [newMaintenanceQuestions]);
 
+    useEffect(() => {
+        if (maintenanceQuestionType === "select" || maintenanceQuestionType === "checkbox") {
+            setMaintenanceQuestionOptions((prev: string[]) => (prev.length === 0 ? [""] : prev));
+        }
+    }, [maintenanceQuestionType]);
+
+    function questionValidate() {
+        const newErrors: Record<string, string> = {};
+        if (!maintenanceQuestionText.trim()) newErrors.maintenanceQuestionText = "Question Text is required";
+        if (!maintenanceQuestionType) newErrors.maintenanceQuestionType = "Question Type is required";
+
+        if (maintenanceQuestionType === "select" || maintenanceQuestionType === "checkbox") {
+            if (maintenanceQuestionOptions.filter((opt) => opt.trim() !== "").length === 0) {
+                newErrors.maintenanceQuestionOptions = "At least one option is required";
+            }
+        }
+
+        const hasEmpty = maintenanceQuestionOptions.some((opt) => !opt.trim());
+        if (hasEmpty) {
+            newErrors.maintenanceQuestionOptions = "Options can not be empty";
+        }
+
+        const uniqueOptions = new Set(maintenanceQuestionOptions);
+
+        if (uniqueOptions.size !== maintenanceQuestionOptions.length) {
+            newErrors.maintenanceQuestionOptions = "Remove the duplicate options";
+        }
+
+        setQuestionErrors(newErrors);
+        return Object.entries(newErrors).length === 0;
+    }
+
     function handleMaintenanceNewAddQuestion() {
+        if (!questionValidate()) return;
+
         const questionObj: Question = {
             id: Date.now(),
             question: maintenanceQuestionText,
@@ -360,16 +395,16 @@ const MaintenanceTemplate = ({ updateForm, errors }: Props) => {
                                                 maintenanceQuestionType === "checkbox") && (
                                                 <>
                                                     {maintenanceQuestionOptions.map((option, index) => (
-                                                        <div className='select-options flex gap-2 mt-4' key={index}>
+                                                        <div className='select-options flex gap-2 mb-2' key={index}>
                                                             <input
                                                                 type='text'
                                                                 className='form-input'
                                                                 value={option}
+                                                                placeholder={`Option ${index + 1}`}
                                                                 onChange={(e) =>
                                                                     handleUpdateMaintenanceOption(e.target.value, index)
                                                                 }
                                                             />
-
                                                             <button
                                                                 type='button'
                                                                 onClick={() => handleDeleteMaintenanceOption(index)}
@@ -379,24 +414,21 @@ const MaintenanceTemplate = ({ updateForm, errors }: Props) => {
                                                         </div>
                                                     ))}
 
-                                                    <div className='flex gap-2 mt-4'>
-                                                        <input
-                                                            type='text'
-                                                            className='form-input'
-                                                            value={maintenanceQuestionOption}
-                                                            onChange={(e) =>
-                                                                setMaintenanceQuestionOption(e.target.value)
-                                                            }
-                                                            placeholder='Add option'
-                                                        />
-
+                                                    <div className='flex gap-2'>
                                                         <button
                                                             type='button'
-                                                            onClick={handleMaintenanceQuestionOptions}
+                                                            onClick={() =>
+                                                                setMaintenanceQuestionOptions((prev) => [...prev, ""])
+                                                            }
                                                             className='bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 text-sm rounded'>
                                                             Add Option
                                                         </button>
                                                     </div>
+                                                    {questionErrors.maintenanceQuestionOptions && (
+                                                        <p className='text-red-500'>
+                                                            {questionErrors.maintenanceQuestionOptions}
+                                                        </p>
+                                                    )}
                                                 </>
                                             )}
                                         </div>

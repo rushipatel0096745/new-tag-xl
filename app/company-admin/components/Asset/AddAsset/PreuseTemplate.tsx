@@ -45,6 +45,7 @@ const PreuseTemplate = ({ updateForm, errors }: Props) => {
     const [preuseQuestionType, setPreuseQuestionType] = useState("");
     const [preuseQuestionOptions, setPreuseQuestionOptions] = useState<string[]>([]);
     const [preuseQuestionOption, setPreuseQuestionOption] = useState("");
+    const [questionErrors, setQuestionErrors] = useState<Record<string, string>>({});
 
     const dragItem = useRef<number | null>(null);
     const dragOverItem = useRef<number | null>(null);
@@ -76,9 +77,41 @@ const PreuseTemplate = ({ updateForm, errors }: Props) => {
 
     useEffect(() => {
         console.log("new maintenace questions: ", newPreuseQuestions);
-        const formattedQuestions = formatQuestionBody(newPreuseQuestions)
+        const formattedQuestions = formatQuestionBody(newPreuseQuestions);
         updateForm("asset_pre_use_questions", JSON.stringify(formattedQuestions));
     }, [newPreuseQuestions]);
+
+    useEffect(() => {
+        if (preuseQuestionType === "select" || preuseQuestionType === "checkbox") {
+            setPreuseQuestionOptions((prev: string[]) => (prev.length === 0 ? [""] : prev));
+        }
+    }, [preuseQuestionType]);
+
+    function questionValidate() {
+        const newErrors: Record<string, string> = {};
+        if (!preuseQuestionText.trim()) newErrors.preuseQuestionText = "Question Text is required";
+        if (!preuseQuestionType) newErrors.preuseQuestionType = "Question Type is required";
+
+        if (preuseQuestionType === "select" || preuseQuestionType === "checkbox") {
+            if (preuseQuestionOptions.filter((opt) => opt.trim() !== "").length === 0) {
+                newErrors.preuseQuestionOptions = "At least one option is required";
+            }
+        }
+
+        const hasEmpty = preuseQuestionOptions.some((opt) => !opt.trim());
+        if (hasEmpty) {
+            newErrors.preuseQuestionOptions = "Options can not be empty";
+        }
+
+        const uniqueOptions = new Set(preuseQuestionOptions);
+
+        if (uniqueOptions.size !== preuseQuestionOptions.length) {
+            newErrors.preuseQuestionOptions = "Remove the duplicate options";
+        }
+
+        setQuestionErrors(newErrors);
+        return Object.entries(newErrors).length === 0;
+    }
 
     function handlePreuseNewAddQuestion() {
         if (!preuseQuestionText.trim()) return;
@@ -357,16 +390,16 @@ const PreuseTemplate = ({ updateForm, errors }: Props) => {
                                             {(preuseQuestionType === "select" || preuseQuestionType === "checkbox") && (
                                                 <>
                                                     {preuseQuestionOptions.map((option, index) => (
-                                                        <div className='select-options flex gap-2 mt-4' key={index}>
+                                                        <div className='select-options flex gap-2 mb-2' key={index}>
                                                             <input
                                                                 type='text'
                                                                 className='form-input'
                                                                 value={option}
+                                                                placeholder={`Option ${index + 1}`}
                                                                 onChange={(e) =>
                                                                     handleUpdatePreuseOption(e.target.value, index)
                                                                 }
                                                             />
-
                                                             <button
                                                                 type='button'
                                                                 onClick={() => handleDeletePreuseOption(index)}
@@ -376,22 +409,21 @@ const PreuseTemplate = ({ updateForm, errors }: Props) => {
                                                         </div>
                                                     ))}
 
-                                                    <div className='flex gap-2 mt-4'>
-                                                        <input
-                                                            type='text'
-                                                            className='form-input'
-                                                            value={preuseQuestionOption}
-                                                            onChange={(e) => setPreuseQuestionOption(e.target.value)}
-                                                            placeholder='Add option'
-                                                        />
-
+                                                    <div className='flex gap-2'>
                                                         <button
                                                             type='button'
-                                                            onClick={handlePreuseQuestionOptions}
+                                                            onClick={() =>
+                                                                setPreuseQuestionOptions((prev) => [...prev, ""])
+                                                            }
                                                             className='bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 text-sm rounded'>
                                                             Add Option
                                                         </button>
                                                     </div>
+                                                    {questionErrors.preuseQuestionOptions && (
+                                                        <p className='text-red-500'>
+                                                            {questionErrors.preuseQuestionOptions}
+                                                        </p>
+                                                    )}
                                                 </>
                                             )}
                                         </div>

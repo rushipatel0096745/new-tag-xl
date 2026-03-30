@@ -195,14 +195,14 @@ const UnassignTagList = ({ tagList }: { tagList: Tag[] }) => {
                                                 <tr
                                                     className='table-row border-1 border-solid border-[#f5f6f1] align-middle'
                                                     key={tag.id}>
-                                                    <td className='text-[13px] font-medium text-[#474a54]'>{tag.id}</td>
+                                                    <td className='text-[13px] p-2 font-medium text-[#474a54]'>{tag.id}</td>
                                                     <td className='text-[13px] font-medium text-[#474a54]'>
                                                         {tag.uid}
                                                     </td>
-                                                    <td className='text-[13px] font-medium text-[#474a54]'>
+                                                    <td className='text-[13px] p-2 font-medium text-[#474a54]'>
                                                         {tag.tag_type}
                                                     </td>
-                                                    <td className='text-[13px] font-medium text-[#474a54]'>
+                                                    <td className='text-[13px] p-2 font-medium text-[#474a54]'>
                                                         {tag.is_assigned ? (
                                                             <span className='status processing text-[#2aa466] bg-[#e0f2e9] border-[#2aa466] border border-solid rounded-[40px] uppercase px-[2px] py-2.5 text-[10px] inline font-extrabold tracking-[0.5px] '>
                                                                 ASSIGNED
@@ -213,7 +213,7 @@ const UnassignTagList = ({ tagList }: { tagList: Tag[] }) => {
                                                             </span>
                                                         )}
                                                     </td>
-                                                    <td>
+                                                    <td className="p-2">
                                                         <div className='actions-btn flex gap-2 items-center'>
                                                             <div className='actions-btn flex gap-2 items-center'>
                                                                 {is_super_admin || userRole.includes("update") && (

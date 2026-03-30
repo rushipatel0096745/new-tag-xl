@@ -31,8 +31,8 @@ export const getAllLocations = async function (page: number = 1, filters: any[] 
             });
 
             const result = await response.json();
-            // console.log(result);
-            return result?.locations || [];
+            console.log(result);
+            return result?.locations;
         } catch (error) {
             console.log("error: ", error);
             return [];

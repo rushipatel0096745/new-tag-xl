@@ -19,13 +19,10 @@ interface Props {
 const Step4 = ({ prev, next, updateForm, formData, validate, errors, handleSubmit, formError }: Props) => {
     const handleTemplateSubmit = async function (e: React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault();
+        if (!validate()) return;
         console.log("formdata: ", formData);
         await handleSubmit();
     };
-
-    const searchParmas = useSearchParams();
-
-    
 
     useEffect(() => console.log("formData: ", formData), []);
     return (

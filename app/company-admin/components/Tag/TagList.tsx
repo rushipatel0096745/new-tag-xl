@@ -14,7 +14,7 @@ export type Tag = {
     is_assigned: boolean;
     created_at: string;
     updated_at: any;
-}
+};
 
 const TagList = ({ tagList }: { tagList: Tag[] }) => {
     const [list, setList] = useState<Tag[]>(tagList);
@@ -104,6 +104,9 @@ const TagList = ({ tagList }: { tagList: Tag[] }) => {
     }, [userRole]);
 
     async function handleDelete(id: number) {
+        if (!confirm("Are you sure you want to delete this Tag ? ")) {
+            return;
+        }
         const result = await DeleteTag(id);
         if (result.has_error && result.error_code == "PERMISSION_DENIED") {
             setError((prev) => ({

@@ -153,7 +153,16 @@ const ManualTemplateAdd = () => {
                             <p>Uploaded Document: </p>
                             <ul>
                                 {files.map((file, index) => (
-                                    <li key={index}>{file.name}</li>
+                                    <li key={index} className='flex items-center gap-2'>
+                                        {file.name}
+                                        <button
+                                            type='button'
+                                            onClick={() => setFiles((prev) => prev.filter((_, i) => i !== index))}
+                                            className='text-red-500 hover:text-red-700 cursor-pointer border-0 bg-none p-0 text-2xl float-right'>
+                                            {/* Remove */}
+                                            &times;
+                                        </button>
+                                    </li>
                                 ))}
                             </ul>
                         </div>

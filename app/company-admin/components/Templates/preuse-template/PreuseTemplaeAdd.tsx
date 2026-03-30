@@ -5,7 +5,7 @@ import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
 import UpdateQuestionModal from "../UpdateQuestionModal";
 
-type QuestionType = "boolean" | "text" | "checkbox" | "select" ;
+type QuestionType = "boolean" | "text" | "checkbox" | "select";
 
 type Question = {
     id: number;
@@ -69,6 +69,7 @@ const PreuseTemplateAdd = () => {
 
     const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
     const [error, setError] = useState<any>({});
+    const [questionErrors, setQuestionErrors] = useState<Record<string, string>>({});
 
     // Save updated question from modal
     function handleSaveUpdatedQuestion(updated: Question) {
@@ -77,10 +78,44 @@ const PreuseTemplateAdd = () => {
     }
 
     useEffect(() => {
-        console.log("new maintenace questions: ", newMaintenanceQuestions);
+        console.log("new preuse questions: ", newMaintenanceQuestions);
     }, [newMaintenanceQuestions]);
 
+    useEffect(() => {
+        if (maintenanceQuestionType === "select" || maintenanceQuestionType === "checkbox") {
+            setMaintenanceQuestionOptions((prev: string[]) => (prev.length === 0 ? [""] : prev));
+        }
+    }, [maintenanceQuestionType]);
+
+    function questionValidate() {
+        const newErrors: Record<string, string> = {};
+        if (!maintenanceQuestionText.trim()) newErrors.maintenanceQuestionText = "Question Text is required";
+        if (!maintenanceQuestionType) newErrors.maintenanceQuestionType = "Question Type is required";
+
+        if (maintenanceQuestionType === "select" || maintenanceQuestionType === "checkbox") {
+            if (maintenanceQuestionOptions.filter((opt) => opt.trim() !== "").length === 0) {
+                newErrors.maintenanceQuestionOptions = "At least one option is required";
+            }
+        }
+
+        const hasEmpty = maintenanceQuestionOptions.some((opt) => !opt.trim());
+        if (hasEmpty) {
+            newErrors.maintenanceQuestionOptions = "Options can not be empty";
+        }
+
+        const uniqueOptions = new Set(maintenanceQuestionOptions);
+
+        if (uniqueOptions.size !== maintenanceQuestionOptions.length) {
+            newErrors.maintenanceQuestionOptions = "Remove the duplicate options";
+        }
+
+        setQuestionErrors(newErrors);
+        return Object.entries(newErrors).length === 0;
+    }
+
     function handleMaintenanceNewAddQuestion() {
+        if (!questionValidate()) return;
+
         const questionObj: Question = {
             id: Date.now(),
             question: maintenanceQuestionText,
@@ -265,6 +300,9 @@ const PreuseTemplateAdd = () => {
                                     placeholder='Type your question here'
                                     onChange={(e) => setMaintenanceQuestionText(e.target.value)}
                                 />
+                                {questionErrors.maintenanceQuestionText && (
+                                    <p className='text-red-500'>{questionErrors.maintenanceQuestionText}</p>
+                                )}
                             </div>
                             <div className='select-input w-full'>
                                 <label className='form-label'>Select question type</label>
@@ -278,6 +316,9 @@ const PreuseTemplateAdd = () => {
                                     <option value='checkbox'>Checkbox</option>
                                     <option value='select'>Select</option>
                                 </select>
+                                {questionErrors.maintenanceQuestionType && (
+                                    <p className='text-red-500'>{questionErrors.maintenanceQuestionType}</p>
+                                )}
                             </div>
                             {(maintenanceQuestionType === "select" || maintenanceQuestionType === "checkbox") && (
                                 <>
@@ -287,9 +328,9 @@ const PreuseTemplateAdd = () => {
                                                 type='text'
                                                 className='form-input'
                                                 value={option}
+                                                placeholder={`Option ${index + 1}`}
                                                 onChange={(e) => handleUpdateMaintenanceOption(e.target.value, index)}
                                             />
-
                                             <button
                                                 type='button'
                                                 onClick={() => handleDeleteMaintenanceOption(index)}
@@ -300,21 +341,16 @@ const PreuseTemplateAdd = () => {
                                     ))}
 
                                     <div className='flex gap-2'>
-                                        <input
-                                            type='text'
-                                            className='form-input'
-                                            value={maintenanceQuestionOption}
-                                            onChange={(e) => setMaintenanceQuestionOption(e.target.value)}
-                                            placeholder='Add option'
-                                        />
-
                                         <button
                                             type='button'
-                                            onClick={handleMaintenanceQuestionOptions}
+                                            onClick={() => setMaintenanceQuestionOptions((prev) => [...prev, ""])}
                                             className='bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 text-sm rounded'>
                                             Add Option
                                         </button>
                                     </div>
+                                    {questionErrors.maintenanceQuestionOptions && (
+                                        <p className='text-red-500'>{questionErrors.maintenanceQuestionOptions}</p>
+                                    )}
                                 </>
                             )}
 
@@ -363,7 +399,8 @@ const PreuseTemplateAdd = () => {
                                         <div className='title w-full'>
                                             <h5>New Asset-Specific Maintenace Template Questions</h5>
                                         </div>
-                                        {/* {newMaintenanceQuestions.map((question) => {
+                                        {/*
+                                         {newMaintenanceQuestions.map((question) => {
                                             const question_type = questionTypes[question.type];
 
                                             return (

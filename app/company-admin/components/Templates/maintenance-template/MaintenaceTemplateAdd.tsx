@@ -73,6 +73,7 @@ const MaintenaceTemplateAdd = () => {
 
     const [editingQuestion, setEditingQuestion] = useState<Question | null>(null);
     const [error, setError] = useState<Record<string, string>>({});
+    const [questionErrors, setQuestionErrors] = useState<Record<string, string>>({});
 
     // Save updated question from modal
     function handleSaveUpdatedQuestion(updated: Question) {
@@ -84,7 +85,41 @@ const MaintenaceTemplateAdd = () => {
         console.log("new maintenace questions: ", newMaintenanceQuestions);
     }, [newMaintenanceQuestions]);
 
+    useEffect(() => {
+        if (maintenanceQuestionType === "select" || maintenanceQuestionType === "checkbox") {
+            setMaintenanceQuestionOptions((prev: string[]) => (prev.length === 0 ? [""] : prev));
+        }
+    }, [maintenanceQuestionType]);
+
+    function questionValidate() {
+        const newErrors: Record<string, string> = {};
+        if (!maintenanceQuestionText.trim()) newErrors.maintenanceQuestionText = "Question Text is required";
+        if (!maintenanceQuestionType) newErrors.maintenanceQuestionType = "Question Type is required";
+
+        if (maintenanceQuestionType === "select" || maintenanceQuestionType === "checkbox") {
+            if (maintenanceQuestionOptions.filter((opt) => opt.trim() !== "").length === 0) {
+                newErrors.maintenanceQuestionOptions = "At least one option is required";
+            }
+        }
+
+        const hasEmpty = maintenanceQuestionOptions.some((opt) => !opt.trim());
+        if (hasEmpty) {
+            newErrors.maintenanceQuestionOptions = "Options can not be empty";
+        }
+
+        const uniqueOptions = new Set(maintenanceQuestionOptions);
+
+        if (uniqueOptions.size !== maintenanceQuestionOptions.length) {
+            newErrors.maintenanceQuestionOptions = "Remove the duplicate options";
+        }
+
+        setQuestionErrors(newErrors);
+        return Object.entries(newErrors).length === 0;
+    }
+
     function handleMaintenanceNewAddQuestion() {
+        if (!questionValidate()) return;
+
         const questionObj: Question = {
             id: Date.now(),
             question: maintenanceQuestionText,
@@ -178,6 +213,14 @@ const MaintenaceTemplateAdd = () => {
 
         await createTemplate(data);
     }
+
+    useEffect(() => {
+        if (maintenanceQuestionType === "select" || maintenanceQuestionType === "checkbox") {
+            setMaintenanceQuestionOptions([""]);
+        } else {
+            setMaintenanceQuestionOptions([]);
+        }
+    }, [maintenanceQuestionType]);
 
     async function createTemplate(data: any) {
         try {
@@ -294,6 +337,9 @@ const MaintenaceTemplateAdd = () => {
                                     placeholder='Type your question here'
                                     onChange={(e) => setMaintenanceQuestionText(e.target.value)}
                                 />
+                                {questionErrors.maintenanceQuestionText && (
+                                    <p className='text-red-500'>{questionErrors.maintenanceQuestionText}</p>
+                                )}
                             </div>
                             <div className='select-input w-full'>
                                 <label className='form-label'>Select question type</label>
@@ -301,14 +347,17 @@ const MaintenaceTemplateAdd = () => {
                                     className='form-input'
                                     value={maintenanceQuestionType}
                                     onChange={(e) => setMaintenanceQuestionType(e.target.value)}>
-                                    <option value={""}>Selct the question type</option>
+                                    <option value=''>Selct the question type</option>
                                     <option value='boolean'>Yes/No</option>
                                     <option value='text'>Textfield</option>
                                     <option value='checkbox'>Checkbox</option>
                                     <option value='select'>Select</option>
                                 </select>
+                                {questionErrors.maintenanceQuestionType && (
+                                    <p className='text-red-500'>{questionErrors.maintenanceQuestionType}</p>
+                                )}
                             </div>
-                            {(maintenanceQuestionType === "select" || maintenanceQuestionType === "checkbox") && (
+                            {/* {(maintenanceQuestionType === "select" || maintenanceQuestionType === "checkbox") && (
                                 <>
                                     {maintenanceQuestionOptions.map((option, index) => (
                                         <div className='select-options flex gap-2 mb-2' key={index}>
@@ -345,8 +394,40 @@ const MaintenaceTemplateAdd = () => {
                                         </button>
                                     </div>
                                 </>
-                            )}
+                            )} */}
+                            {(maintenanceQuestionType === "select" || maintenanceQuestionType === "checkbox") && (
+                                <>
+                                    {maintenanceQuestionOptions.map((option, index) => (
+                                        <div className='select-options flex gap-2 mb-2' key={index}>
+                                            <input
+                                                type='text'
+                                                className='form-input'
+                                                value={option}
+                                                placeholder={`Option ${index + 1}`}
+                                                onChange={(e) => handleUpdateMaintenanceOption(e.target.value, index)}
+                                            />
+                                            <button
+                                                type='button'
+                                                onClick={() => handleDeleteMaintenanceOption(index)}
+                                                className='bg-red-500 text-white py-1 px-2 text-sm rounded'>
+                                                Delete
+                                            </button>
+                                        </div>
+                                    ))}
 
+                                    <div className='flex gap-2'>
+                                        <button
+                                            type='button'
+                                            onClick={() => setMaintenanceQuestionOptions((prev) => [...prev, ""])}
+                                            className='bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 text-sm rounded'>
+                                            Add Option
+                                        </button>
+                                    </div>
+                                    {questionErrors.maintenanceQuestionOptions && (
+                                        <p className='text-red-500'>{questionErrors.maintenanceQuestionOptions}</p>
+                                    )}
+                                </>
+                            )}
                             <div className='action-btn'>
                                 <button
                                     onClick={(e) => {

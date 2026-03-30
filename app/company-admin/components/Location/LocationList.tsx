@@ -79,6 +79,9 @@ const LocationList = ({ locationList }: { locationList: Location[] }) => {
     }, [page, pageSize, is_super_admin]);
 
     async function handleDelete(id: number) {
+         if (!confirm("Are you sure you want to delete this Location ? ")) {
+            return;
+        }
         const result = await DeleteLocation(id);
         if (result.has_error && result.error_code == "PERMISSION_DENIED") {
             setError((prev) => ({
@@ -142,16 +145,16 @@ const LocationList = ({ locationList }: { locationList: Location[] }) => {
                                         {list?.map((location) => {
                                             return (
                                                 <tr
-                                                    className='table-row border-1 border-solid border-[#f5f6f1] align-middle'
+                                                    className='table-row border p-2 border-solid border-[#f5f6f1] align-middle'
                                                     key={location.id}>
-                                                    <td className='text-[13px] font-medium text-[#474a54]'>
+                                                    <td className='text-[13px] p-2 font-medium text-[#474a54]'>
                                                         {location.id}
                                                     </td>
-                                                    <td className='text-[13px] font-medium text-[#474a54]'>
+                                                    <td className='text-[13px] p-2 font-medium text-[#474a54]'>
                                                         {location.name}
                                                     </td>
 
-                                                    <td>
+                                                    <td className="p-2">
                                                         <div className='actions-btn flex gap-2 items-center'>
                                                             <div className='actions-btn flex gap-2 items-center'>
                                                                 {(is_super_admin || userRole.includes("update")) && (

@@ -103,6 +103,9 @@ const RoleList = ({ tempList }: Props) => {
     }
 
     async function deleteRole(id: number | string) {
+        if (!confirm("Are you sure you want to delete this Role ? ")) {
+            return;
+        }
         try {
             const result = await DeleteRole(Number(id));
 

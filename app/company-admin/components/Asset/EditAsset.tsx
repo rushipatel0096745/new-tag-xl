@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import React, { useEffect, useRef, useState } from "react";
-import { AssetData } from "../../(admin)/asset/edit/[id]/page";
+import { AssetData, ThirdPartyCertificate } from "../../(admin)/asset/edit/[id]/page";
 import { getAssetLocations } from "@/app/services/company-admin/location";
 import {
     getMaintenanceTemplateAssetList,
@@ -72,14 +72,18 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
     const [preuseTemplateId, setPreuseTemplateId] = useState<number | undefined>(initialData?.pre_use_template?.id);
     const [maintenanceTemplateId, setMaintenanceTemplateId] = useState(initialData?.maintenance_template?.id);
     const [image, setImage] = useState<any>();
-    const [third_party_certificate, set_third_party_certificate] = useState<any>(
-        initialData?.third_party_certificate?.third_party_certificate
+    const [third_party_certificate, set_third_party_certificate] = useState<ThirdPartyCertificate | File | undefined>(
+        initialData?.third_party_certificate?.[0] ?? undefined
     );
     const [third_party_start_date, set_third_party_start_date] = useState(
-        initialData?.third_party_certificate?.third_party_start_date ?? ""
+        (!(third_party_certificate instanceof File)
+            ? initialData?.third_party_certificate?.[0]?.third_party_start_date
+            : "") ?? ""
     );
     const [third_party_expiry_date, set_third_party_expiry_date] = useState(
-        initialData?.third_party_certificate?.third_party_expiry_date ?? ""
+        (!(third_party_certificate instanceof File)
+            ? initialData?.third_party_certificate?.[0]?.third_party_expiry_date
+            : "") ?? ""
     );
 
     const [errors, setErrors] = useState<Record<string, string>>();
@@ -192,9 +196,9 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
         setManualTemplateId(initialData?.manual_template?.id);
         setPreuseTemplateId(initialData?.pre_use_template?.id);
         setMaintenanceTemplateId(initialData?.maintenance_template?.id);
-        set_third_party_certificate(initialData?.third_party_certificate?.third_party_certificate);
-        set_third_party_start_date(initialData?.third_party_certificate?.third_party_start_date ?? "");
-        set_third_party_expiry_date(initialData?.third_party_certificate?.third_party_expiry_date ?? "");
+        set_third_party_certificate(initialData?.third_party_certificate?.[0]);
+        set_third_party_start_date(initialData?.third_party_certificate?.[0]?.third_party_start_date ?? "");
+        set_third_party_expiry_date(initialData?.third_party_certificate?.[0]?.third_party_expiry_date ?? "");
         setPreuseTemplateQuestions(initialData?.pre_use_template?.questions as Question[]);
         setMaintenanceTemplateQuestions(initialData?.maintenance_template?.questions as Question[]);
 
@@ -220,12 +224,47 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
     const [maintenanceQuestionType, setMaintenanceQuestionType] = useState("");
     const [maintenanceQuestionOptions, setMaintenanceQuestionOptions] = useState<string[]>([]);
     const [maintenanceQuestionOption, setMaintenanceQuestionOption] = useState("");
+    const [mQsErrors, setMQsErrors] = useState<Record<string, string>>({});
 
     useEffect(() => {
         console.log("new maintenace questions: ", newMaintenanceQuestions);
     }, [newMaintenanceQuestions]);
 
+    useEffect(() => {
+        if (maintenanceQuestionType === "select" || maintenanceQuestionType === "checkbox") {
+            setMaintenanceQuestionOptions((prev: string[]) => (prev.length === 0 ? [""] : prev));
+        }
+    }, [maintenanceQuestionType]);
+
+    function maintenaceQsValidate() {
+        const newErrors: Record<string, string> = {};
+        if (!maintenanceQuestionText.trim()) newErrors.maintenanceQuestionText = "Question Text is required";
+        if (!maintenanceQuestionType) newErrors.maintenanceQuestionType = "Question Type is required";
+
+        if (maintenanceQuestionType === "select" || maintenanceQuestionType === "checkbox") {
+            if (maintenanceQuestionOptions.filter((opt) => opt.trim() !== "").length === 0) {
+                newErrors.maintenanceQuestionOptions = "At least one option is required";
+            }
+        }
+
+        const hasEmpty = maintenanceQuestionOptions.some((opt) => !opt.trim());
+        if (hasEmpty) {
+            newErrors.maintenanceQuestionOptions = "Options can not be empty";
+        }
+
+        const uniqueOptions = new Set(maintenanceQuestionOptions);
+
+        if (uniqueOptions.size !== maintenanceQuestionOptions.length) {
+            newErrors.maintenanceQuestionOptions = "Remove the duplicate options";
+        }
+
+        setMQsErrors(newErrors);
+        return Object.entries(newErrors).length === 0;
+    }
+
     function handleMaintenanceNewAddQuestion() {
+        if (!maintenaceQsValidate()) return;
+
         const questionObj: Question = {
             id: Date.now(),
             question: maintenanceQuestionText,
@@ -274,6 +313,7 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
     const [preuseQuestionType, setPreuseQuestionType] = useState("");
     const [preuseQuestionOptions, setPreuseQuestionOptions] = useState<string[]>([]);
     const [preuseQuestionOption, setPreuseQuestionOption] = useState("");
+    const [preQsErrors, setPreQsErrors] = useState<Record<string, string>>({});
 
     const [sortSource, setSortSource] = useState<"preuse" | "maintenance" | null>(null);
 
@@ -304,7 +344,41 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
         console.log("new maintenance questions: ", newMaintenanceQuestions);
     }, [newPreuseQuestions, newMaintenanceQuestions]);
 
+    useEffect(() => {
+        if (preuseQuestionType === "select" || preuseQuestionType === "checkbox") {
+            setPreuseQuestionOptions((prev: string[]) => (prev.length === 0 ? [""] : prev));
+        }
+    }, [preuseQuestionType]);
+
+    function presuseQsValidate() {
+        const newErrors: Record<string, string> = {};
+        if (!preuseQuestionText.trim()) newErrors.preuseQuestionText = "Question Text is required";
+        if (!preuseQuestionType) newErrors.preuseQuestionType = "Question Type is required";
+
+        if (preuseQuestionType === "select" || preuseQuestionType === "checkbox") {
+            if (preuseQuestionOptions.filter((opt) => opt.trim() !== "").length === 0) {
+                newErrors.preuseQuestionOptions = "At least one option is required";
+            }
+        }
+
+        const hasEmpty = preuseQuestionOptions.some((opt) => !opt.trim());
+        if (hasEmpty) {
+            newErrors.preuseQuestionOptions = "Options can not be empty";
+        }
+
+        const uniqueOptions = new Set(preuseQuestionOptions);
+
+        if (uniqueOptions.size !== preuseQuestionOptions.length) {
+            newErrors.preuseQuestionOptions = "Remove the duplicate options";
+        }
+
+        setPreQsErrors(newErrors);
+        return Object.entries(newErrors).length === 0;
+    }
+
     function handlePreuseNewAddQuestion() {
+        if (!presuseQsValidate()) return;
+
         const questionObj: Question = {
             id: Date.now(),
             question: preuseQuestionText,
@@ -332,11 +406,11 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
         setNewPreuseQuestions(newPreuseQuestions.filter((q) => q.id !== id));
     }
 
-    function handleDeleteOption(index: number) {
+    function handlePreuseDeleteOption(index: number) {
         setPreuseQuestionOptions((prev) => prev.filter((_, i) => i !== index));
     }
 
-    function handleUpdateOption(value: string, index: number) {
+    function handlePreuseUpdateOption(value: string, index: number) {
         const updated = [...preuseQuestionOptions];
         updated[index] = value;
         setPreuseQuestionOptions(updated);
@@ -364,10 +438,20 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
             preuseTemplateId && formData.append("pre_use_template_id", String(preuseTemplateId));
             maintenanceTemplateId && formData.append("maintenance_template_id", String(maintenanceTemplateId));
             image && formData.append("image", image);
-            third_party_certificate && formData.append("third_party_certificate", third_party_certificate);
             if (third_party_certificate) {
-                if (third_party_start_date) formData.append("third_party_start_date", third_party_start_date);
-                if (third_party_expiry_date) formData.append("third_party_expiry_date", third_party_expiry_date);
+                if (third_party_certificate instanceof File) {
+                    // New file being uploaded
+                    formData.append("third_party_certificate", third_party_certificate);
+                    formData.append("third_party_start_date", third_party_start_date);
+                    formData.append("third_party_expiry_date", third_party_expiry_date);
+                }
+                // else {
+                //     // Existing certificate object — append its identifier or URL
+                //     formData.append("third_party_certificate", third_party_certificate.third_party_certificate);
+                // }
+
+                // if (third_party_start_date) formData.append("third_party_start_date", third_party_start_date);
+                // if (third_party_expiry_date) formData.append("third_party_expiry_date", third_party_expiry_date);
             }
 
             newPreuseQuestions.length !== 0 &&
@@ -481,6 +565,12 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                 {permError && (
                     <div className='text-red-500'>
                         <p>{permError}</p>
+                    </div>
+                )}
+
+                {formError && (
+                    <div className='text-red-500'>
+                        <p>{formError}</p>
                     </div>
                 )}
                 {/* {formError && <div className='text-red-500'>{formError}</div>} */}
@@ -648,9 +738,11 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                         type='file'
                                         className='hidden'
                                         name='third_party_certificate'
-                                        onChange={(e) =>
-                                            set_third_party_certificate(e.target.files && e.target.files[0])
-                                        }
+                                        onChange={(e) => {
+                                            set_third_party_certificate(e.target.files?.[0] ?? undefined);
+                                            set_third_party_start_date("");
+                                            set_third_party_expiry_date("");
+                                        }}
                                     />
 
                                     <div className='flex flex-col items-center gap-2 text-gray-500'>
@@ -659,13 +751,29 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                     </div>
                                 </label>
                             </div>
-                            {initialData?.third_party_certificate?.third_party_certificate && (
-                                <p>Third party certificate: {third_party_certificate.name}</p>
-                            )}
-                            {third_party_certificate && (
-                                <div className='show-certificate flex justify-around gap-2'>
-                                    <p>Third party certificate: {third_party_certificate.name}</p>
 
+                            {third_party_certificate && !(third_party_certificate instanceof File) && (
+                                <div className='show-certificate flex justify-around '>
+                                    <p className='text-sm font-semibold'>
+                                        Third party certificate:
+                                        <span>{third_party_certificate.third_party_certificate.split("/")[3]}</span>
+                                    </p>
+                                    <div className='dates flex '>
+                                        <p className='text-sm font-semibold'>
+                                            start date:{" "}
+                                            <span>{third_party_certificate.third_party_start_date.split("T")[0]} </span>
+                                        </p>
+                                        <p className='text-sm font-semibold'>
+                                            end date:
+                                            <span>{third_party_certificate.third_party_expiry_date.split("T")[0]}</span>
+                                        </p>
+                                    </div>
+                                </div>
+                            )}
+
+                            {third_party_certificate && third_party_certificate instanceof File && (
+                                <div className='show-certificate flex justify-around'>
+                                    <p>{third_party_certificate.name}</p>
                                     <div className='form-group flex flex-col gap-2'>
                                         <div className='fancy-input relative'>
                                             <input
@@ -676,7 +784,6 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                                 onChange={(e) => set_third_party_start_date(e.target.value)}
                                                 className='peer w-full h-12 border border-gray-300 rounded-lg px-3 pt-5 pb-2 text-sm focus:outline-none focus:border-blue-500'
                                             />
-
                                             <label
                                                 htmlFor='third_party_start_date'
                                                 className={`absolute left-3 px-1 bg-white text-gray-500 transition-all duration-200
@@ -897,6 +1004,9 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                             placeholder='Type your question here'
                                             onChange={(e) => setPreuseQuestionText(e.target.value)}
                                         />
+                                        {preQsErrors.preuseQuestionText && (
+                                            <p className='text-red-500'>{preQsErrors.preuseQuestionText}</p>
+                                        )}
                                     </div>
                                     <div className='select-input w-full'>
                                         <label className='form-label'>Select question type</label>
@@ -910,6 +1020,9 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                             <option value='checkbox'>Checkbox</option>
                                             <option value='select'>Select</option>
                                         </select>
+                                        {preQsErrors.preuseQuestionType && (
+                                            <p className='text-red-500'>{preQsErrors.preuseQuestionType}</p>
+                                        )}
                                     </div>
                                     {(preuseQuestionType === "select" || preuseQuestionType === "checkbox") && (
                                         <>
@@ -919,12 +1032,14 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                                         type='text'
                                                         className='form-input'
                                                         value={option}
-                                                        onChange={(e) => handleUpdateOption(e.target.value, index)}
+                                                        placeholder={`Option ${index + 1}`}
+                                                        onChange={(e) =>
+                                                            handlePreuseUpdateOption(e.target.value, index)
+                                                        }
                                                     />
-
                                                     <button
                                                         type='button'
-                                                        onClick={() => handleDeleteOption(index)}
+                                                        onClick={() => handlePreuseDeleteOption(index)}
                                                         className='bg-red-500 text-white py-1 px-2 text-sm rounded'>
                                                         Delete
                                                     </button>
@@ -932,21 +1047,17 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                             ))}
 
                                             <div className='flex gap-2'>
-                                                <input
-                                                    type='text'
-                                                    className='form-input'
-                                                    value={preuseQuestionOption}
-                                                    onChange={(e) => setPreuseQuestionOption(e.target.value)}
-                                                    placeholder='Add option'
-                                                />
-
                                                 <button
                                                     type='button'
-                                                    onClick={handlePreuseQuestionOptions}
+                                                    onClick={() => setPreuseQuestionOptions((prev) => [...prev, ""])}
                                                     className='bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 text-sm rounded'>
                                                     Add Option
                                                 </button>
                                             </div>
+
+                                            {preQsErrors.preuseQuestionOptions && (
+                                                <p className='text-red-500'>{preQsErrors.preuseQuestionOptions}</p>
+                                            )}
                                         </>
                                     )}
 
@@ -1096,6 +1207,9 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                             placeholder='Type your question here'
                                             onChange={(e) => setMaintenanceQuestionText(e.target.value)}
                                         />
+                                        {mQsErrors.maintenanceQuestionText && (
+                                            <p className='text-red-500'>{mQsErrors.maintenanceQuestionText}</p>
+                                        )}
                                     </div>
                                     <div className='select-input w-full'>
                                         <label className='form-label'>Select question type</label>
@@ -1109,6 +1223,9 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                             <option value='checkbox'>Checkbox</option>
                                             <option value='select'>Select</option>
                                         </select>
+                                        {mQsErrors.maintenanceQuestionType && (
+                                            <p className='text-red-500'>{mQsErrors.maintenanceQuestionType}</p>
+                                        )}
                                     </div>
                                     {(maintenanceQuestionType === "select" ||
                                         maintenanceQuestionType === "checkbox") && (
@@ -1119,11 +1236,11 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                                         type='text'
                                                         className='form-input'
                                                         value={option}
+                                                        placeholder={`Option ${index + 1}`}
                                                         onChange={(e) =>
                                                             handleUpdateMaintenanceOption(e.target.value, index)
                                                         }
                                                     />
-
                                                     <button
                                                         type='button'
                                                         onClick={() => handleDeleteMaintenanceOption(index)}
@@ -1134,21 +1251,18 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                             ))}
 
                                             <div className='flex gap-2'>
-                                                <input
-                                                    type='text'
-                                                    className='form-input'
-                                                    value={maintenanceQuestionOption}
-                                                    onChange={(e) => setMaintenanceQuestionOption(e.target.value)}
-                                                    placeholder='Add option'
-                                                />
-
                                                 <button
                                                     type='button'
-                                                    onClick={handleMaintenanceQuestionOptions}
+                                                    onClick={() =>
+                                                        setMaintenanceQuestionOptions((prev) => [...prev, ""])
+                                                    }
                                                     className='bg-blue-500 hover:bg-blue-700 text-white py-1 px-2 text-sm rounded'>
                                                     Add Option
                                                 </button>
                                             </div>
+                                            {mQsErrors.maintenanceQuestionOptions && (
+                                                <p className='text-red-500'>{mQsErrors.maintenanceQuestionOptions}</p>
+                                            )}
                                         </>
                                     )}
 

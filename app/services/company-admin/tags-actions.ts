@@ -18,7 +18,7 @@ export const getAllTagList = async function (page: number = 1, filters: any[] = 
                 },
                 body: JSON.stringify({
                     page: page,
-                    pageSize: 10,
+                    pageSize: 30,
                     filters: filters,
                 }),
             });
@@ -101,7 +101,7 @@ export const createTags = async function (prevState: any, formData: any) {
             return {
                 success: true,
                 error: "",
-                data: "",
+                data: result,
             };
         } catch (error) {
             console.log("error: ", error);

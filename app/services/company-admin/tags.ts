@@ -6,7 +6,7 @@ type Filter = {
     text: string;
 };
 
-export const GetTagList = async function (page: number = 1, pageSize: number = 10, filters: Filter[] = []) {
+export const GetTagList = async function (page: number = 1, pageSize: number = 30, filters: Filter[] = []) {
     const companyId = getCompanyId("company-user-session");
     const sessionId = getSessionId("company-user-session");
 
@@ -154,4 +154,23 @@ export const UnassignTag = async function (data: any) {
 
     return result;
 };
+
+export const ImportTag = async function (data: any) {
+    const companyId = getCompanyId("company-user-session");
+    const sessionId = getSessionId("company-user-session");
+
+    // console.log("company id: ", companyId);
+
+    const result = await clientFetch("/company/tag/upload-excel", {
+        method: "POST",
+        headers: {
+            "X-Session-ID": sessionId,
+            "X-Company-ID": companyId,
+        },
+        body: data,
+    });
+
+    return result;
+};
+
 // 16.1.6

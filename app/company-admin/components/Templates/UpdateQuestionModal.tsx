@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type QuestionType = "boolean" | "text" | "checkbox" | "select";
 
@@ -25,10 +25,30 @@ type UpdateModalProps = {
 export const UpdateQuestionModal = ({ question, onClose, onSave }: UpdateModalProps) => {
     const [text, setText] = useState(question.question);
     const [type, setType] = useState(question.type);
-    const [options, setOptions] = useState<string[]>(question.options ?? []);
+    // const [options, setOptions] = useState<string[]>(question.options ?? []);
+    const [options, setOptions] = useState<string[]>(
+        question.options?.length
+            ? question.options
+            : question.type === "select" || question.type === "checkbox"
+              ? [""]
+              : []
+    );
     const [newOption, setNewOption] = useState("");
+    const [errors, setErrors] = useState<Record<string, string>>({});
 
     const needsOptions = type === "select" || type === "checkbox";
+
+    function validate() {
+        const newErrors: Record<string, string> = {};
+        if (!text.trim()) newErrors.text = "Question text required";
+        if (!type) newErrors.type = "Question type required";
+        if (needsOptions && options.filter((o) => o.trim() !== "").length === 0) {
+            newErrors.options = "At least one option is required";
+        }
+
+        setErrors(newErrors);
+        return Object.entries(newErrors).length === 0;
+    }
 
     function handleAddOption() {
         if (!newOption.trim()) return;
@@ -47,14 +67,25 @@ export const UpdateQuestionModal = ({ question, onClose, onSave }: UpdateModalPr
     }
 
     function handleSave() {
-        if (!text.trim() || !type) return;
+        if (!validate()) return;
+
         onSave({
             ...question,
             question: text.trim(),
             type,
-            options: needsOptions ? options : null,
+            options: needsOptions ? options.filter((o) => o.trim() !== "") : null,
         });
     }
+
+    // function handleSave() {
+    //     if (!text.trim() || !type) return;
+    //     onSave({
+    //         ...question,
+    //         question: text.trim(),
+    //         type,
+    //         options: needsOptions ? options : null,
+    //     });
+    // }
 
     function handleBackdrop(e: React.MouseEvent<HTMLDivElement>) {
         if (e.target === e.currentTarget) onClose();
@@ -85,6 +116,7 @@ export const UpdateQuestionModal = ({ question, onClose, onSave }: UpdateModalPr
                             onChange={(e) => setText(e.target.value)}
                             placeholder='Type your question here'
                         />
+                        {errors.text && <p className='text-red-500'>{errors.text}</p>}
                     </div>
 
                     <div className='flex flex-col gap-1.5'>
@@ -92,9 +124,19 @@ export const UpdateQuestionModal = ({ question, onClose, onSave }: UpdateModalPr
                         <select
                             className='form-input'
                             value={type}
+                            // onChange={(e) => {
+                            //     setType(e.target.value as QuestionType);
+                            //     setOptions([]);
+                            // }}
+
+                            // onChange={(e) => {
+                            //     setType(e.target.value as QuestionType);
+                            //     const newType = e.target.value as QuestionType;
+                            //     setOptions(newType === "select" || newType === "checkbox" ? [""] : []);
+                            // }}
                             onChange={(e) => {
-                                setType(e.target.value as QuestionType);
-                                setOptions([]);
+                                const newType = e.target.value as QuestionType;
+                                setType(newType);
                             }}>
                             <option value=''>Select the question type</option>
                             <option value='boolean'>Yes/No</option>
@@ -102,9 +144,10 @@ export const UpdateQuestionModal = ({ question, onClose, onSave }: UpdateModalPr
                             <option value='checkbox'>Checkbox</option>
                             <option value='select'>Select</option>
                         </select>
+                        {errors.type && <p className='text-red-500'>{errors.type}</p>}
                     </div>
 
-                    {needsOptions && (
+                    {/* {needsOptions && (
                         <div className='flex flex-col gap-3'>
                             <label className='text-sm font-medium text-gray-700'>Options</label>
 
@@ -146,6 +189,39 @@ export const UpdateQuestionModal = ({ question, onClose, onSave }: UpdateModalPr
                                 </button>
                             </div>
                         </div>
+                    )} */}
+
+                    {needsOptions && (
+                        <div className='flex flex-col gap-3'>
+                            <label className='text-sm font-medium text-gray-700'>Options</label>
+
+                            {options.map((opt, index) => (
+                                <div key={index} className='flex gap-2 items-center'>
+                                    <input
+                                        type='text'
+                                        className='form-input flex-1'
+                                        value={opt}
+                                        placeholder={`Option ${index + 1}`}
+                                        onChange={(e) => handleUpdateOption(e.target.value, index)}
+                                    />
+                                    <button
+                                        type='button'
+                                        onClick={() => handleDeleteOption(index)}
+                                        className='bg-red-500 hover:bg-red-600 text-white py-1.5 px-3 text-sm rounded transition-colors'>
+                                        Delete
+                                    </button>
+                                </div>
+                            ))}
+
+                            {errors.options && <p className='text-red-500'>{errors.options}</p>}
+
+                            <button
+                                type='button'
+                                onClick={() => setOptions((prev) => [...prev, ""])}
+                                className='self-start bg-blue-500 hover:bg-blue-700 text-white py-1.5 px-3 text-sm rounded transition-colors'>
+                                Add Option
+                            </button>
+                        </div>
                     )}
                 </div>
 
@@ -159,7 +235,7 @@ export const UpdateQuestionModal = ({ question, onClose, onSave }: UpdateModalPr
                     <button
                         type='button'
                         onClick={handleSave}
-                        disabled={!text.trim() || !type}
+                        // disabled={!text.trim() || !type}
                         className='px-4 py-2 rounded text-sm font-medium bg-green-600 hover:bg-green-700 text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed'>
                         Save Changes
                     </button>
@@ -170,3 +246,6 @@ export const UpdateQuestionModal = ({ question, onClose, onSave }: UpdateModalPr
 };
 
 export default UpdateQuestionModal;
+
+
+// i dont want to reset options it should persist across all types but they just show for checkbox and select type

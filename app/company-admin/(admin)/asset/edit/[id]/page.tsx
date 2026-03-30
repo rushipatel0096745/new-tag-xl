@@ -13,7 +13,7 @@ export interface AssetData {
     manual_template: ManualTemplate;
     status: number;
     oem_certificate: string;
-    third_party_certificate?: ThirdPartyCertificate;
+    third_party_certificate?: ThirdPartyCertificate[];
     pre_use_template: PreUseTemplate;
     maintenance_template: MaintenanceTemplate;
     asset_pre_use_questions: any;

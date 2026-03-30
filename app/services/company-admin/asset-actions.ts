@@ -81,7 +81,6 @@ export const createAsset = async function (formData: FormData) {
             const result = await response.json();
             console.log(result);
 
-         
             if (result.has_error && result.error_code === "PERMISSION_DENIED") {
                 // console.log(result);
                 return {
@@ -175,6 +174,8 @@ export const editAsset = async function (id: number, formData: FormData) {
     const companyData = await getComapnyData();
     const companyId = companyData?.company_id;
 
+    console.log("Form data for edit asset: ", Object.fromEntries(formData));
+
     if (companyId && sessionId) {
         try {
             const response = await fetch("https://tagxl.com/api/company/asset/update/" + id, {
@@ -196,6 +197,15 @@ export const editAsset = async function (id: number, formData: FormData) {
                     data: "",
                 };
             }
+
+            if (result.has_error && result.error_code === "EXCEPTION") {
+                return {
+                    success: false,
+                    error: result.message,
+                    data: "",
+                };
+            }
+
             console.log(result);
             return {
                 success: true,
