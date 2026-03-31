@@ -85,7 +85,7 @@ const EditRole = ({ id }: { id: string }) => {
     useEffect(() => {
         if (state?.success) {
             setShowMsg("User updated suucessfully");
-            getRole()
+            getRole();
         } else {
             setShowMsg("");
         }
@@ -99,20 +99,45 @@ const EditRole = ({ id }: { id: string }) => {
         setSelectedPermissions((prev) => {
             const modulePermissions = prev[module] || [];
 
+            let updatedModulePermissions;
+
             if (modulePermissions.includes(action)) {
-                // remove
-                return {
-                    ...prev,
-                    [module]: modulePermissions.filter((a) => a !== action),
-                };
+                updatedModulePermissions = modulePermissions.filter((a) => a !== action);
             } else {
-                // add
-                return {
-                    ...prev,
-                    [module]: [...modulePermissions, action],
-                };
+                updatedModulePermissions = [...modulePermissions, action];
             }
+
+            let updatedPermissions = {
+                ...prev,
+                [module]: updatedModulePermissions,
+            };
+
+            updatedPermissions = enforceDependencies(updatedPermissions);
+
+            return updatedPermissions;
         });
+    };
+
+    const enforceDependencies = (permissions: Record<string, string[]>) => {
+        let updated = { ...permissions };
+
+        if (updated["user"]?.includes("create")) {
+            const rolePermissions = updated["role"] || [];
+
+            if (!rolePermissions.includes("list")) {
+                updated["role"] = [...rolePermissions, "list"];
+            }
+        }
+
+        if (updated["tags"]?.includes("assigned-asset")) {
+            const assetPermissions = updated["asset"] || [];
+
+            if (!assetPermissions.includes("list")) {
+                updated["asset"] = [...assetPermissions, "list"];
+            }
+        }
+
+        return updated;
     };
 
     const isAllSelected = (module: string, actions: string[]) => {
@@ -122,10 +147,16 @@ const EditRole = ({ id }: { id: string }) => {
     const handleSelectAllChange = (module: string, actions: string[]) => {
         const allSelected = isAllSelected(module, actions);
 
-        setSelectedPermissions((prev) => ({
-            ...prev,
-            [module]: allSelected ? [] : actions,
-        }));
+        setSelectedPermissions((prev) => {
+            let updated = {
+                ...prev,
+                [module]: allSelected ? [] : actions,
+            };
+
+            updated = enforceDependencies(updated);
+
+            return updated;
+        });
     };
 
     function transfromName(name: string): string {

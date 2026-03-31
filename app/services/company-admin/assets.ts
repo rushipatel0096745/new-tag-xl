@@ -107,3 +107,43 @@ export const CheckTagAssigned = async function (tagId: string) {
     });
     return result;
 };
+
+export const CreateAsset = async function (formData: FormData) {
+    const companyId = getCompanyId("company-user-session");
+    const sessionId = getSessionId("company-user-session");
+
+    const response = await fetch("/proxy/company/asset/create", {
+        method: "POST",
+        headers: {
+            "X-Session-ID": sessionId,
+            "X-Company-ID": companyId,
+        },
+        body: formData,
+    });
+    const result = await response.json();
+    console.log(result);
+
+    if (result.has_error && result.error_code === "PERMISSION_DENIED") {
+        return {
+            success: false,
+            error: "PERMISSION DENIED",
+            data: "",
+        };
+    }
+
+    if (result.has_error && result.error_code === "VALIDATION_ERROR") {
+        return {
+            success: false,
+            error: result.message,
+            data: "",
+        };
+    }
+
+    if (!result.has_error) {
+        return {
+            success: true,
+            error: "",
+            data: "",
+        };
+    }
+};

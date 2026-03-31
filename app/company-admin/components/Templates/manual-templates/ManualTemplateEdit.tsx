@@ -27,12 +27,32 @@ const ManualTemplateEdit = ({ initialData, id }: Props) => {
 
     function validate() {
         const newError = {} as Record<string, string>;
+
         if (!title) newError.title = "Title is required";
-        if (files.length === 0 && initialFiles.length === 0) newError.files = "Document is required";
+
+        if (files.length === 0) {
+            newError.files = "Document is required";
+        } else {
+            let temp: string[] = [];
+
+            files.forEach((file) => {
+                if (file instanceof File) {
+                    if (!["image/png", "image/jpg", "image/jpeg", "application/pdf"].includes(file.type)) {
+                        temp.push(`${file.name} type not valid`);
+                    } else if (file.size > 5 * 1024 * 1024) {
+                        temp.push(`${file.name} is more than 5mb`);
+                    }
+                }
+            });
+
+            if (temp.length > 0) {
+                newError.files = temp.join(", ");
+            }
+        }
 
         setError(newError);
 
-        return Object.entries(newError).length === 0;
+        return Object.keys(newError).length === 0;
     }
 
     async function handleSubmit() {

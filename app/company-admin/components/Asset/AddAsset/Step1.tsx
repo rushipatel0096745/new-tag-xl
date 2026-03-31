@@ -1,6 +1,6 @@
 import { CheckTagAssigned } from "@/app/services/company-admin/assets";
 import { checkTagAssigned } from "@/app/services/company-admin/tags-actions";
-import React, { startTransition, useActionState, useEffect, useState } from "react";
+import React, { useState } from "react";
 import NewTagModal from "./NewTagModal";
 
 type TagType = "RFID" | "QR" | "Manual" | "";
@@ -61,50 +61,13 @@ const Step1 = ({ next, updateForm, validate, errors, formData }: Props) => {
 
     const handleSave = async (event: any) => {
         event.preventDefault();
-        // if (tagList.tag_type === "" || tagList.uid === "") {
-        //     // console.log("form data", tagList);
-        //     setError("Please fill required fields");
-        //     return;
-        // }
 
         const flag = validate();
         if (!flag) {
             return;
         }
 
-        // const checkAssigned = await checkTagAssigned(formData.uid);
-
-        // if (!checkAssigned?.success) {
-        //     setAssignError(checkAssigned?.message || "");
-        //     return;
-        // }
-
-        // if (checkAssigned?.success) {
-        //     setTagList(initialList);
-
-        //     // tag is created but not assigned to any asset
-        //     if (checkAssigned?.data) {
-        //         setTagData(checkAssigned.data);
-        //         setTagId(checkAssigned.data);
-        //         // console.log("tag id: ", tagId)
-        //         updateForm("tag_id", checkAssigned.data);
-        //         console.log("form data", formData);
-        //         next();
-        //         return;
-        //     }
-
-        //     // create the new tag as it is not assigned with any assets
-
-        //     setShowMsg("Tag created successfully");
-        //     // setError("");
-        //     setAssignError("");
-        //     next();
-        // }
-        // next()
-
-        // after creating new tag add tag uid and tag type to the formdata
-
-        const checkAssigned = await CheckTagAssigned(tagId);
+        const checkAssigned = await CheckTagAssigned(tagId || formData.uid);
 
         if (checkAssigned.has_error && checkAssigned.error_code == "RECORD_ALREADY_USED") {
             setAssignError(checkAssigned.message);

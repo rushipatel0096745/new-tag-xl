@@ -103,7 +103,12 @@ const Step2 = ({ next, prev, updateForm, validate, errors, formData }: Props) =>
 
     return (
         <>
-            <LocationModal isOpen={isModalOpen} isClosed={closeModal} getLocations={getLocations} updateForm={updateForm}/>
+            <LocationModal
+                isOpen={isModalOpen}
+                isClosed={closeModal}
+                getLocations={getLocations}
+                updateForm={updateForm}
+            />
             <form action='' method='POST' className='block' onSubmit={handleSubmit}>
                 <div className='card-box-inner border-3 border-solid border-[#f5f6fa] rounded-3xl p-5.5'>
                     <div className='card-box-block'>
@@ -220,6 +225,8 @@ const Step2 = ({ next, prev, updateForm, validate, errors, formData }: Props) =>
                                                 Upload
                                             </button>
                                         </div>
+
+                                        {errors.image && <p className='text-red-500'>{errors.image}</p>}
 
                                         {imagePreview && (
                                             <div className='relative w-[180px] h-[180px] rounded-[10px] overflow-hidden border border-solid border-[#c9d5ff]'>

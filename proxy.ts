@@ -42,12 +42,10 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { getSessionId } from "./app/utils/user-helper";
 
-
 const PUBLIC_PATHS = ["/super-admin/login", "/company-admin/login"];
 
 const SUPER_ADMIN_PREFIX = "/super-admin";
 const COMPANY_ADMIN_PREFIX = "/company-admin";
-
 
 function isPublicPath(pathname: string): boolean {
     return PUBLIC_PATHS.some((path) => pathname === path || pathname.startsWith(path + "/"));
@@ -77,8 +75,8 @@ export async function proxy(request: NextRequest) {
     // const superAdminSessionId = getSessionId("super-user-session");
     // const companySessionId = getSessionId("company-user-session");
 
-    const superAdminSessionId = request.cookies.get('super-user-session')?.value
-    const companySessionId = request.cookies.get('company-user-session')?.value
+    const superAdminSessionId = request.cookies.get("super-user-session")?.value;
+    const companySessionId = request.cookies.get("company-user-session")?.value;
 
     const hasSuperAdminSession = Boolean(superAdminSessionId);
     const hasCompanySession = Boolean(companySessionId);
@@ -88,9 +86,13 @@ export async function proxy(request: NextRequest) {
     //     hasCompanySession,
     // });
 
+    // if (pathname === "/") {
+    //     redirectTo("/company-admin/login", request);
+    // }
+
     // ── Allow public paths unconditionally ──────────────────────────────────────
     if (isPublicPath(pathname)) {
-        // If already authenticated, redirect away from login pages
+        // If already authenticated, redirect away from login pages 
         if (pathname.startsWith(SUPER_ADMIN_PREFIX) && hasSuperAdminSession) {
             return redirectTo("/super-admin/", request);
         }

@@ -31,9 +31,10 @@ type FormattedQuestion = {
 interface Props {
     updateForm: (name: string, value: any) => void;
     errors: any;
+    formData: any;
 }
 
-const PreuseTemplate = ({ updateForm, errors }: Props) => {
+const PreuseTemplate = ({ updateForm, errors, formData }: Props) => {
     const [list, setList] = useState<PreUseTemplate[]>([]);
 
     const [selectOption, setSelectOption] = useState<string>();
@@ -114,8 +115,10 @@ const PreuseTemplate = ({ updateForm, errors }: Props) => {
     }
 
     function handlePreuseNewAddQuestion() {
-        if (!preuseQuestionText.trim()) return;
-        if (!preuseQuestionType) return;
+        // if (!preuseQuestionText.trim()) return;
+        // if (!preuseQuestionType) return;
+
+        if (!questionValidate()) return;
 
         const questionObj: Question = {
             id: Date.now(),
@@ -215,6 +218,13 @@ const PreuseTemplate = ({ updateForm, errors }: Props) => {
 
     useEffect(() => {
         getList();
+        // getQuestions()
+    }, []);
+
+    useEffect(() => {
+        if (formData.pre_use_template_id) {
+            getQuestions(formData.pre_use_template_id);
+        }
     }, []);
 
     return (
@@ -241,6 +251,7 @@ const PreuseTemplate = ({ updateForm, errors }: Props) => {
                                         <select
                                             id='pre_use_template_id'
                                             name='pre_use_template_id'
+                                            value={formData.pre_use_template_id}
                                             onChange={(e) => {
                                                 updateForm("pre_use_template_id", e.target.value);
                                                 handleSelection(e);

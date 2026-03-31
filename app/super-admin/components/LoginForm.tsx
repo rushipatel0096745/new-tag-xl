@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 const LoginForm = ({ loginAction }: { loginAction: (prevState: any, formData: FormData) => Promise<any> }) => {
     const router = useRouter();
     const [state, formAction, isPending] = useActionState(loginAction, { success: null, error: "" });
+    const [show, setShow] = useState<boolean>(false);
     const {
         register,
         handleSubmit,
@@ -20,6 +21,10 @@ const LoginForm = ({ loginAction }: { loginAction: (prevState: any, formData: Fo
 
         startTransition(() => formAction(formData));
     };
+
+    function togglePassword() {
+        setShow((prev) => !prev);
+    }
 
     useEffect(() => {
         if (state.success === true) {
@@ -59,13 +64,14 @@ const LoginForm = ({ loginAction }: { loginAction: (prevState: any, formData: Fo
                                             />
                                         </svg>
                                     </div>
+                                    {errors.email && <p className="text-red-500">{errors.email.message as string}</p>}
                                 </div>
                                 <div>
                                     <label className='text-slate-900 text-sm font-medium mb-2 block'>Password</label>
                                     <div className='relative flex items-center'>
                                         <input
                                             // name='password'
-                                            type='password'
+                                            type={show ? "text" : "password"}
                                             className='w-full text-slate-900 text-sm border border-slate-300 px-4 py-3 pr-8 rounded-md outline-blue-600'
                                             placeholder='Enter password'
                                             {...register("password", { required: "Password is required" })}
@@ -74,6 +80,7 @@ const LoginForm = ({ loginAction }: { loginAction: (prevState: any, formData: Fo
                                             xmlns='http://www.w3.org/2000/svg'
                                             fill='#bbb'
                                             stroke='#bbb'
+                                            onClick={togglePassword}
                                             className='w-4 h-4 absolute right-4 cursor-pointer'
                                             viewBox='0 0 128 128'>
                                             <path
@@ -82,6 +89,7 @@ const LoginForm = ({ loginAction }: { loginAction: (prevState: any, formData: Fo
                                             />
                                         </svg>
                                     </div>
+                                    {errors.password && <p className="text-red-500">{errors.password.message as string}</p>}
                                 </div>
                                 <div className='flex flex-wrap items-center justify-between gap-4'>
                                     <div className='text-sm'>

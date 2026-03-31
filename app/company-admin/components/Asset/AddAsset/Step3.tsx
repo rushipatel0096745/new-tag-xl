@@ -212,10 +212,10 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
                                     <button className='min-w-19 h-auto px-[5px] appearance-none cursor-pointer text-center bg-[#263f94] border border-[#263f94] text-white box-border rounded-[40px] justify-center items-center gap-[6px] h-[38px] px-[14px] py-[10px] text-[14px] font-medium transition-all duration-200 inline-flex '>
                                         Upload
                                     </button>
-                                    {errors.third_party_certificate && (
-                                        <p className='text-red-500 text-xs mt-1'>{errors.third_party_certificate}</p>
-                                    )}
                                 </div>
+                                {errors.third_party_certificate && (
+                                    <p className='text-red-500'>{errors.third_party_certificate}</p>
+                                )}
                                 <div className='row flex flex-wrap gap-4 w-full'>
                                     <div className='col-6 w-[calc(50%-8px)]'>
                                         {formData.third_party_certificate && (
@@ -324,6 +324,7 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
                                                     </div>
                                                 </div>
                                             </div>
+
                                             <div className='col-4  w-[calc(33.33%-11px)]'>
                                                 <div className='form-group flex flex-col gap-2'>
                                                     <div className='fancy-input end-date relative'>
@@ -331,7 +332,17 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
                                                             disabled={selectOption !== SELECT_TRIGGER}
                                                             id='third_party_expiry_date'
                                                             className='peer w-full h-12 border border-gray-300 rounded-lg px-3 pt-5 pb-2 text-sm focus:outline-none focus:border-blue-500'
-                                                            min='2026-03-12'
+                                                            min={
+                                                                formData.third_party_start_date
+                                                                    ? new Date(
+                                                                          new Date(
+                                                                              formData.third_party_start_date
+                                                                          ).getTime() + 86400000    
+                                                                      )
+                                                                          .toISOString()
+                                                                          .split("T")[0]
+                                                                    : undefined
+                                                            }
                                                             type='date'
                                                             value={formData.third_party_expiry_date}
                                                             name='third_party_expiry_date'
@@ -348,7 +359,7 @@ const Step3 = ({ next, prev, updateForm, formData, validate, errors }: Props) =>
                                                             Expiry :
                                                         </label>
                                                         {errors.third_party_expiry_date && (
-                                                            <p className='text-red-500'>
+                                                            <p className='text-red-500 text-xs mt-1'>
                                                                 {errors.third_party_expiry_date}
                                                             </p>
                                                         )}

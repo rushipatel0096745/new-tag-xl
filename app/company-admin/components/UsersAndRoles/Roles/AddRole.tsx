@@ -139,21 +139,66 @@ const AddRole = () => {
         setSelectedPermissions((prev) => {
             const modulePermissions = prev[module] || [];
 
+            let updatedModulePermissions;
+
             if (modulePermissions.includes(action)) {
-                // remove
-                return {
-                    ...prev,
-                    [module]: modulePermissions.filter((a) => a !== action),
-                };
+                updatedModulePermissions = modulePermissions.filter((a) => a !== action);
             } else {
-                // add
-                return {
-                    ...prev,
-                    [module]: [...modulePermissions, action],
-                };
+                updatedModulePermissions = [...modulePermissions, action];
             }
+
+            let updatedPermissions = {
+                ...prev,
+                [module]: updatedModulePermissions,
+            };
+
+            updatedPermissions = enforceDependencies(updatedPermissions);
+
+            return updatedPermissions;
         });
     };
+
+    const enforceDependencies = (permissions: Record<string, string[]>) => {
+        let updated = { ...permissions };
+
+        if (updated["user"]?.includes("create")) {
+            const rolePermissions = updated["role"] || [];
+
+            if (!rolePermissions.includes("list")) {
+                updated["role"] = [...rolePermissions, "list"];
+            }
+        }
+
+        if (updated["tags"]?.includes("assigned-asset")) {
+            const assetPermissions = updated["asset"] || [];
+
+            if (!assetPermissions.includes("list")) {
+                updated["asset"] = [...assetPermissions, "list"];
+            }
+        }
+
+        return updated;
+    };
+
+    // const handleCheckboxChange2 = (module: string, action: string) => {
+    //     setSelectedPermissions((prev) => {
+    //         const modulePermissions = prev[module] || [];
+
+    //         if (modulePermissions.includes(action)) {
+    //             // remove
+    //             return {
+    //                 ...prev,
+    //                 [module]: modulePermissions.filter((a) => a !== action),
+    //             };
+    //         } else {
+    //             // add
+    //             return {
+    //                 ...prev,
+    //                 [module]: [...modulePermissions, action],
+    //             };
+    //         }
+    //     });
+    // };
 
     // const handleSelectAll = (module: string, actions: string[]) => {
     //     const allSelected = selectedPermissions[module]?.length === actions.length;
@@ -171,10 +216,16 @@ const AddRole = () => {
     const handleSelectAllChange = (module: string, actions: string[]) => {
         const allSelected = isAllSelected(module, actions);
 
-        setSelectedPermissions((prev) => ({
-            ...prev,
-            [module]: allSelected ? [] : actions,
-        }));
+        setSelectedPermissions((prev) => {
+            let updated = {
+                ...prev,
+                [module]: allSelected ? [] : actions,
+            };
+
+            updated = enforceDependencies(updated);
+
+            return updated;
+        });
     };
 
     function transfromName(name: string): string {
@@ -250,6 +301,11 @@ const AddRole = () => {
                                                 type='checkbox'
                                                 checked={selectedPermissions[module]?.includes(action) || false}
                                                 onChange={() => handleCheckboxChange(module, action)}
+                                                // disabled={
+                                                //     module === "role" &&
+                                                //     action === "list" &&
+                                                //     selectedPermissions["user"]?.includes("create")
+                                                // }
                                             />
                                             {transfromActionName(action)}
                                         </label>

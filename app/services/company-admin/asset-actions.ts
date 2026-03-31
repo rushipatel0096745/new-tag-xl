@@ -66,6 +66,8 @@ export const createAsset = async function (formData: FormData) {
     const companyData = await getComapnyData();
     const companyId = companyData?.company_id;
 
+    console.log("create asset data: ", formData);
+
     if (companyId && sessionId) {
         try {
             const response = await fetch("https://tagxl.com/api/company/asset/create", {

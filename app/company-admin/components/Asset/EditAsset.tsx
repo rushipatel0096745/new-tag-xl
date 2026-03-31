@@ -150,6 +150,13 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
         if (!maintenanceTemplateId) newErrors.maintenanceTemplateId = "Select the Maintenance Template";
         if (!preuseTemplateId) newErrors.preuseTemplateId = "Select Preuse Template";
         if (third_party_certificate) {
+            if (third_party_certificate instanceof File) {
+                if (!["image/png", "image/jpg", "image/jpeg"].includes(third_party_certificate.type)) {
+                    newErrors.third_party_certificate = "Only PNG, JPG, or JPEG images are allowed";
+                } else if (third_party_certificate.size > 5 * 1024 * 1024) {
+                    newErrors.third_party_certificate = "Upload File Less than 5MB";
+                }
+            }
             if (!third_party_start_date) newErrors.third_party_start_date = "Select the start date";
             if (!third_party_expiry_date) newErrors.third_party_expiry_date = "Select the expiry date";
         }
@@ -751,12 +758,32 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                     </div>
                                 </label>
                             </div>
+                            {errors?.third_party_certificate && (
+                                <p className='text-red-500 text-xs mt-1'>{errors.third_party_certificate}</p>
+                            )}
 
                             {third_party_certificate && !(third_party_certificate instanceof File) && (
                                 <div className='show-certificate flex justify-around '>
                                     <p className='text-sm font-semibold'>
                                         Third party certificate:
                                         <span>{third_party_certificate.third_party_certificate.split("/")[3]}</span>
+                                        <button
+                                            type='button'
+                                            onClick={async () => {
+                                                const url = `https://api.tagxl.com/${third_party_certificate.third_party_certificate}`;
+                                                const res = await fetch(url);
+                                                const blob = await res.blob();
+                                                const blobUrl = URL.createObjectURL(blob);
+                                                const a = document.createElement("a");
+                                                a.href = blobUrl;
+                                                a.download =
+                                                    third_party_certificate.third_party_certificate.split("/")[3];
+                                                a.click();
+                                                URL.revokeObjectURL(blobUrl);
+                                            }}
+                                            className='text-sm p-2 border-0 rounded-sm bg-green-600 text-white'>
+                                            Download
+                                        </button>
                                     </p>
                                     <div className='dates flex '>
                                         <p className='text-sm font-semibold'>
@@ -806,6 +833,15 @@ const EditAsset = ({ initialAssetData, id }: Props) => {
                                                     id='third_party_end_date'
                                                     type='date'
                                                     name='third_party_end_date'
+                                                    min={
+                                                        third_party_start_date
+                                                            ? new Date(
+                                                                  new Date(third_party_start_date).getTime() + 86400000
+                                                              )
+                                                                  .toISOString()
+                                                                  .split("T")[0]
+                                                            : undefined
+                                                    }
                                                     value={third_party_expiry_date}
                                                     onChange={(e) => set_third_party_expiry_date(e.target.value)}
                                                     className='peer w-full h-12 border border-gray-300 rounded-lg px-3 pt-5 pb-2 text-sm focus:outline-none focus:border-blue-500'

@@ -31,9 +31,10 @@ type FormattedQuestion = {
 interface Props {
     updateForm: (name: string, value: any) => void;
     errors: any;
+    formData: any;
 }
 
-const MaintenanceTemplate = ({ updateForm, errors }: Props) => {
+const MaintenanceTemplate = ({ updateForm, errors, formData }: Props) => {
     const [list, setList] = useState<PreUseTemplate[]>([]);
 
     const [selectOption, setSelectOption] = useState<string>();
@@ -84,6 +85,12 @@ const MaintenanceTemplate = ({ updateForm, errors }: Props) => {
     useEffect(() => {
         getList();
         // console.log("list: ", list)
+    }, []);
+
+    useEffect(() => {
+        if (formData.maintenance_template_id) {
+            getQuestions(formData.maintenance_template_id);
+        }
     }, []);
 
     const [newMaintenanceQuestions, setNewMaintenanceQuestions] = useState<Question[]>([]);
@@ -245,6 +252,7 @@ const MaintenanceTemplate = ({ updateForm, errors }: Props) => {
                                         <select
                                             id='maintenance_template_id'
                                             name='maintenance_template_id'
+                                            value={formData.maintenance_template_id}
                                             onChange={(e) => {
                                                 updateForm("maintenance_template_id", e.target.value);
                                                 handleSelection(e);

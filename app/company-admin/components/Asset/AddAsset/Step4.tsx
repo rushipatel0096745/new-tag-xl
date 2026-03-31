@@ -1,9 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import PreuseTemplate from "./PreuseTemplate";
 import MaintenanceTemplate from "./MaintenanceTemplate";
-import BooleanInput from "./BooleanInput";
-import TextInput from "./TextInput";
-import { useSearchParams } from "next/navigation";
+import { GetManualTemplateList } from "@/app/services/company-admin/manual_template";
+import { ManualTemplate } from "@/app/company-admin/(admin)/template-master/manual-template/page";
 
 interface Props {
     next: () => void;
@@ -17,12 +16,24 @@ interface Props {
 }
 
 const Step4 = ({ prev, next, updateForm, formData, validate, errors, handleSubmit, formError }: Props) => {
+    const [manualTemplateList, setManualTemplateList] = useState<ManualTemplate[]>([]);
     const handleTemplateSubmit = async function (e: React.SubmitEvent<HTMLFormElement>) {
         e.preventDefault();
         if (!validate()) return;
         console.log("formdata: ", formData);
         await handleSubmit();
     };
+
+    async function fetchManualTemplates() {
+        const response = await GetManualTemplateList();
+        setManualTemplateList(response?.manual_templates);
+
+        // if(response.has_error && response.error_code === "PERMISSION_DENIED") {}
+    }
+
+    useEffect(() => {
+        fetchManualTemplates();
+    }, []);
 
     useEffect(() => console.log("formData: ", formData), []);
     return (
@@ -46,11 +57,15 @@ const Step4 = ({ prev, next, updateForm, formData, validate, errors, handleSubmi
                                                 <select
                                                     name='manual_template_id'
                                                     id='manual_template_id'
+                                                    value={formData.manual_template_id}
                                                     onChange={(e) => updateForm("manual_template_id", e.target.value)}
                                                     className='form-select text-[#17181a] box-border bg-[#f5f6fa] border border-[#efefef] rounded-[10px] w-full h-[44px] pt-[18px] px-[14px] pb-[8px] font-sans text-[14px] font-medium'>
                                                     <option value=''>Select Manual Template</option>
-                                                    <option value={2}>asd</option>
-                                                    <option value={1}>Test manual template</option>
+                                                    {manualTemplateList?.map((item) => (
+                                                        <option value={item.id} key={item.id}>
+                                                            {item.name}
+                                                        </option>
+                                                    ))}
                                                 </select>
                                                 <label
                                                     className='form-label text-[#676767] pointer-events-none bg-transparent px-[2px] text-[14px] transition-all duration-200 absolute top-1/2 left-[12px] -translate-y-1/2'
@@ -66,11 +81,11 @@ const Step4 = ({ prev, next, updateForm, formData, validate, errors, handleSubmi
                     </div>
                 </div>
                 <div className='col w-full'>
-                    <PreuseTemplate updateForm={updateForm} errors={errors} />
+                    <PreuseTemplate formData={formData} updateForm={updateForm} errors={errors} />
                 </div>
 
                 <div className='col w-full'>
-                    <MaintenanceTemplate updateForm={updateForm} errors={errors} />
+                    <MaintenanceTemplate formData={formData} updateForm={updateForm} errors={errors} />
                 </div>
             </div>
             <div className='actions-btn next_step-btn flex items-center justify-between gap-2 mt-6 '>
